@@ -7,7 +7,7 @@ import React from "react"
 import { useState, useTransition, useEffect } from "react"
 import { useWriteCookieJarFactoryCreateCookieJar } from "@/generated"
 import { useWaitForTransactionReceipt, useAccount } from "wagmi"
-import { parseEther } from "viem"
+import { parseEther, isAddress } from "viem"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,6 +21,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { LoadingOverlay } from "@/components/design/loading-overlay"
 import { AlertCircle } from "lucide-react"
 import { BackButton } from "@/components/design/back-button"
+import { z } from "zod"
 
 // Known address constants
 const ETH_ADDRESS = "0x0000000000000000000000000000000000000003"
@@ -47,7 +48,19 @@ export default function CreateCookieJarForm() {
   const [currentStep, setCurrentStep] = useState(1)
   const totalSteps = 4
 
+  // Form validation state
+  const [validationErrors, setValidationErrors] = useState({
+    network: "",
+    jarOwner: "",
+    supportedCurrency: "",
+    maxWithdrawal: "",
+    fixedAmount: "",
+    withdrawalInterval: "",
+    metadata: ""
+  })
+
   // Form state
+  const [selectedNetwork, setSelectedNetwork] = useState("baseSepolia")
   const [jarOwnerAddress, setJarOwnerAddress] = useState<`0x${string}`>("0x0000000000000000000000000000000000000000")
   const [supportedCurrency, setSupportedCurrency] = useState<`0x${string}`>(ETH_ADDRESS)
   const [accessType, setAccessType] = useState<AccessType>(AccessType.Whitelist)
@@ -147,6 +160,23 @@ export default function CreateCookieJarForm() {
   // Replace the existing handleSubmit function with this one
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Final validation before showing confirmation dialog
+    const errors = {
+      network: validateNetwork(selectedNetwork),
+      jarOwner: jarOwnerAddress !== address ? validateEthAddress(jarOwnerAddress as string) : "",
+      supportedCurrency: currencyType === "token" ? validateTokenAddress(supportedCurrency as string) : "",
+      fixedAmount: withdrawalOption === WithdrawalTypeOptions.Fixed ? validateNumber(fixedAmount) : "",
+      maxWithdrawal: withdrawalOption === WithdrawalTypeOptions.Variable ? validateNumber(maxWithdrawal) : "",
+      withdrawalInterval: validateNumber((Number(withdrawalInterval) / 86400).toString()),
+      metadata: validateMetadata(metadata)
+    }
+    
+    setValidationErrors(errors)
+    
+    // Check if there are any errors
+    if (Object.values(errors).some(error => error !== "")) return
+    
     setShowConfirmDialog(true)
   }
 
@@ -226,8 +256,78 @@ export default function CreateCookieJarForm() {
     }
   }, [createError])
 
+  // Validation functions
+  const validateNetwork = (value: string): string => {
+    return value ? "" : "Please select a network"
+  }
+  
+  const validateEthAddress = (value: string): string => {
+    if (value === "") return "" // Empty addresses are allowed for jarOwner
+    return isAddress(value as `0x${string}`) ? "" : "Invalid Ethereum address"
+  }
+
+  const validateTokenAddress = (value: string): string => {
+    return isAddress(value as `0x${string}`) ? "" : "Invalid token address"
+  }
+
+  const validateNumber = (value: string): string => {
+    const num = parseFloat(value)
+    if (isNaN(num)) return "Must be a valid number"
+    if (num < 0) return "Must be a positive number"
+    return ""
+  }
+
+  const validateMetadata = (value: string): string => {
+    return value.length >= 10 ? "" : "Description must be at least 10 characters"
+  }
+
   // Navigation functions
   const nextStep = () => {
+    // Validate current step before proceeding
+    if (currentStep === 1) {
+      // Validate Step 1 fields
+      const networkError = validateNetwork(selectedNetwork)
+      const jarOwnerError = jarOwnerAddress !== address ? validateEthAddress(jarOwnerAddress as string) : ""
+      const currencyError = currencyType === "token" ? validateTokenAddress(supportedCurrency as string) : ""
+      const metadataError = validateMetadata(metadata)
+      
+      setValidationErrors(prev => ({ 
+        ...prev, 
+        network: networkError,
+        jarOwner: jarOwnerError,
+        supportedCurrency: currencyError,
+        metadata: metadataError
+      }))
+      
+      // Don't proceed if there are validation errors
+      if (networkError || jarOwnerError || currencyError || metadataError) return
+    }
+    
+    if (currentStep === 3) {
+      // Validate Step 3 fields
+      const fixedAmountError = withdrawalOption === WithdrawalTypeOptions.Fixed 
+        ? validateNumber(fixedAmount) 
+        : ""
+        
+      const maxWithdrawalError = withdrawalOption === WithdrawalTypeOptions.Variable 
+        ? validateNumber(maxWithdrawal) 
+        : ""
+        
+      const intervalValue = (Number(withdrawalInterval) / 86400).toString()
+      const intervalError = validateNumber(intervalValue)
+      
+      setValidationErrors(prev => ({ 
+        ...prev, 
+        fixedAmount: fixedAmountError,
+        maxWithdrawal: maxWithdrawalError,
+        withdrawalInterval: intervalError
+      }))
+      
+      // Don't proceed if there are validation errors
+      if (fixedAmountError || maxWithdrawalError || intervalError) return
+    }
+    
+    // If validation passes, proceed to next step
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1)
     }
@@ -276,8 +376,14 @@ export default function CreateCookieJarForm() {
               <Label htmlFor="network" className="text-[#3c2a14] text-base">
                 Network
               </Label>
-              <Select defaultValue="baseSepolia">
-                <SelectTrigger className="w-full bg-white border-gray-300 placeholder:text-[#3c2a14]">
+              <Select 
+                value={selectedNetwork} 
+                onValueChange={(value) => {
+                  setSelectedNetwork(value)
+                  setValidationErrors(prev => ({ ...prev, network: validateNetwork(value) }))
+                }}
+              >
+                <SelectTrigger className={`w-full bg-white border-gray-300 placeholder:text-[#3c2a14] ${validationErrors.network ? 'border-red-500' : ''}`}>
                   <SelectValue placeholder="Select network" />
                 </SelectTrigger>
                 <SelectContent>
@@ -290,6 +396,7 @@ export default function CreateCookieJarForm() {
                   </SelectItem>
                 </SelectContent>
               </Select>
+              {validationErrors.network && <p className="text-sm text-red-500">{validationErrors.network}</p>}
               <p className="text-sm text-[#8b7355]">Select the network where you want to deploy your jar</p>
             </div>
 
@@ -301,17 +408,21 @@ export default function CreateCookieJarForm() {
               <Input
                 id="jarOwner"
                 placeholder="0x... (leave empty to use your address)"
-                className="bg-white border-gray-300 placeholder:text-[#3c2a14] text-[#3c2a14]"
+                className={`bg-white border-gray-300 placeholder:text-[#3c2a14] text-[#3c2a14] ${validationErrors.jarOwner ? 'border-red-500' : ''}`}
                 defaultValue=""
                 onChange={(e) => {
                   const value = e.target.value
                   if (value === "") {
                     setJarOwnerAddress(address as `0x${string}`)
+                    setValidationErrors(prev => ({ ...prev, jarOwner: "" }))
                   } else {
                     setJarOwnerAddress(value as `0x${string}`)
+                    const error = validateEthAddress(value)
+                    setValidationErrors(prev => ({ ...prev, jarOwner: error }))
                   }
                 }}
               />
+              {validationErrors.jarOwner && <p className="text-sm text-red-500">{validationErrors.jarOwner}</p>}
               <p className="text-sm text-[#8b7355]">
                 The address that will have owner/admin rights for this cookie jar. Leave empty to use your wallet
                 address.
@@ -355,13 +466,16 @@ export default function CreateCookieJarForm() {
                 <Input
                   id="supportedCurrency"
                   placeholder="0x..."
-                  className="bg-white border-gray-300 placeholder:text-[#3c2a14] text-[#3c2a14]"
+                  className={`bg-white border-gray-300 placeholder:text-[#3c2a14] text-[#3c2a14] ${validationErrors.supportedCurrency ? 'border-red-500' : ''}`}
                   defaultValue=""
                   onChange={(e) => {
                     const value = e.target.value
                     setSupportedCurrency(value as `0x${string}`)
+                    const error = validateTokenAddress(value)
+                    setValidationErrors(prev => ({ ...prev, supportedCurrency: error }))
                   }}
                 />
+                {validationErrors.supportedCurrency && <p className="text-sm text-red-500">{validationErrors.supportedCurrency}</p>}
                 <p className="text-sm text-[#8b7355]">Address of the ERC20 token contract</p>
               </div>
             )}
@@ -374,10 +488,16 @@ export default function CreateCookieJarForm() {
               <Textarea
                 id="metadata"
                 placeholder="Provide a description or any additional information"
-                className="min-h-24 bg-white border-gray-300 placeholder:text-[#3c2a14] text-[#3c2a14]"
+                className={`min-h-24 bg-white border-gray-300 placeholder:text-[#3c2a14] text-[#3c2a14] ${validationErrors.metadata ? 'border-red-500' : ''}`}
                 value={metadata}
-                onChange={(e) => setMetadata(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value
+                  setMetadata(value)
+                  const error = validateMetadata(value)
+                  setValidationErrors(prev => ({ ...prev, metadata: error }))
+                }}
               />
+              {validationErrors.metadata && <p className="text-sm text-red-500">{validationErrors.metadata}</p>}
               <p className="text-sm text-[#8b7355]">Additional information about this cookie jar</p>
             </div>
           </div>
@@ -505,12 +625,20 @@ export default function CreateCookieJarForm() {
                 </Label>
                 <Input
                   id="fixedAmount"
-                  type="text"
+                  type="number"
                   placeholder={getAmountPlaceholder}
-                  className="bg-white border-gray-300 placeholder:text-[#3c2a14] text-[#3c2a14]"
+                  min="0"
+                  step="0.01"
+                  className={`bg-white border-gray-300 placeholder:text-[#3c2a14] text-[#3c2a14] ${validationErrors.fixedAmount ? 'border-red-500' : ''}`}
                   value={fixedAmount}
-                  onChange={(e) => setFixedAmount(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setFixedAmount(value)
+                    const error = validateNumber(value)
+                    setValidationErrors(prev => ({ ...prev, fixedAmount: error }))
+                  }}
                 />
+                {validationErrors.fixedAmount && <p className="text-sm text-red-500">{validationErrors.fixedAmount}</p>}
                 <p className="text-sm text-[#8b7355]">{getAmountDescription}</p>
               </div>
             )}
@@ -523,12 +651,20 @@ export default function CreateCookieJarForm() {
                 </Label>
                 <Input
                   id="maxWithdrawal"
-                  type="text"
+                  type="number"
                   placeholder={getAmountPlaceholder}
-                  className="bg-white border-gray-300 placeholder:text-[#3c2a14] text-[#3c2a14]"
+                  min="0"
+                  step="0.01"
+                  className={`bg-white border-gray-300 placeholder:text-[#3c2a14] text-[#3c2a14] ${validationErrors.maxWithdrawal ? 'border-red-500' : ''}`}
                   value={maxWithdrawal}
-                  onChange={(e) => setMaxWithdrawal(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setMaxWithdrawal(value)
+                    const error = validateNumber(value)
+                    setValidationErrors(prev => ({ ...prev, maxWithdrawal: error }))
+                  }}
                 />
+                {validationErrors.maxWithdrawal && <p className="text-sm text-red-500">{validationErrors.maxWithdrawal}</p>}
                 <p className="text-sm text-[#8b7355]">{getMaxWithdrawalDescription}</p>
               </div>
             )}
@@ -542,14 +678,20 @@ export default function CreateCookieJarForm() {
                 id="withdrawalInterval"
                 type="number"
                 placeholder="1"
-                className="bg-white border-gray-300 placeholder:text-[#3c2a14] text-[#3c2a14]"
+                min="0"
+                step="0.01"
+                className={`bg-white border-gray-300 placeholder:text-[#3c2a14] text-[#3c2a14] ${validationErrors.withdrawalInterval ? 'border-red-500' : ''}`}
                 value={(Number(withdrawalInterval) / 86400).toString()}
                 onChange={(e) => {
-                  const days = Number.parseFloat(e.target.value)
+                  const value = e.target.value
+                  const days = Number.parseFloat(value)
                   const seconds = isNaN(days) ? "" : (days * 86400).toString()
                   setWithdrawalInterval(seconds)
+                  const error = validateNumber(value)
+                  setValidationErrors(prev => ({ ...prev, withdrawalInterval: error }))
                 }}
               />
+              {validationErrors.withdrawalInterval && <p className="text-sm text-red-500">{validationErrors.withdrawalInterval}</p>}
               <p className="text-sm text-[#8b7355]">Time between allowed withdrawals</p>
             </div>
           </div>
