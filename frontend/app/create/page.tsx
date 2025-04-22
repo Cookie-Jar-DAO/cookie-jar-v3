@@ -166,8 +166,8 @@ export default function CreateCookieJarForm() {
       network: validateNetwork(selectedNetwork),
       jarOwner: jarOwnerAddress !== address ? validateEthAddress(jarOwnerAddress as string) : "",
       supportedCurrency: currencyType === "token" ? validateTokenAddress(supportedCurrency as string) : "",
-      fixedAmount: withdrawalOption === WithdrawalTypeOptions.Fixed ? validateNumber(fixedAmount) : "",
-      maxWithdrawal: withdrawalOption === WithdrawalTypeOptions.Variable ? validateNumber(maxWithdrawal) : "",
+      fixedAmount: withdrawalOption === WithdrawalTypeOptions.Fixed ? validatePositiveNumber(fixedAmount) : "",
+      maxWithdrawal: withdrawalOption === WithdrawalTypeOptions.Variable ? validatePositiveNumber(maxWithdrawal) : "",
       withdrawalInterval: validateNumber((Number(withdrawalInterval) / 86400).toString()),
       metadata: validateMetadata(metadata)
     }
@@ -276,6 +276,13 @@ export default function CreateCookieJarForm() {
     if (num < 0) return "Must be a positive number"
     return ""
   }
+  
+  const validatePositiveNumber = (value: string): string => {
+    const num = parseFloat(value)
+    if (isNaN(num)) return "Must be a valid number"
+    if (num <= 0) return "Must be greater than 0"
+    return ""
+  }
 
   const validateMetadata = (value: string): string => {
     return value.length >= 10 ? "" : "Description must be at least 10 characters"
@@ -306,11 +313,11 @@ export default function CreateCookieJarForm() {
     if (currentStep === 3) {
       // Validate Step 3 fields
       const fixedAmountError = withdrawalOption === WithdrawalTypeOptions.Fixed 
-        ? validateNumber(fixedAmount) 
+        ? validatePositiveNumber(fixedAmount) 
         : ""
         
       const maxWithdrawalError = withdrawalOption === WithdrawalTypeOptions.Variable 
-        ? validateNumber(maxWithdrawal) 
+        ? validatePositiveNumber(maxWithdrawal) 
         : ""
         
       const intervalValue = (Number(withdrawalInterval) / 86400).toString()
@@ -634,7 +641,7 @@ export default function CreateCookieJarForm() {
                   onChange={(e) => {
                     const value = e.target.value
                     setFixedAmount(value)
-                    const error = validateNumber(value)
+                    const error = validatePositiveNumber(value)
                     setValidationErrors(prev => ({ ...prev, fixedAmount: error }))
                   }}
                 />
@@ -660,7 +667,7 @@ export default function CreateCookieJarForm() {
                   onChange={(e) => {
                     const value = e.target.value
                     setMaxWithdrawal(value)
-                    const error = validateNumber(value)
+                    const error = validatePositiveNumber(value)
                     setValidationErrors(prev => ({ ...prev, maxWithdrawal: error }))
                   }}
                 />
