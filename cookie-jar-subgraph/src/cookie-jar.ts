@@ -27,7 +27,7 @@ import {
   WhitelistUpdated,
   Withdrawal,
   CookieJarRoleGranted,
-  CookieJarRoleRevoked
+  CookieJarRoleRevoked,
 } from "../generated/schema"
 import { Bytes } from "@graphprotocol/graph-ts"
 
