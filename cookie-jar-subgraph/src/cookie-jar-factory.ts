@@ -17,7 +17,7 @@ import {
   RoleRevoked
 } from "../generated/schema"
 import { Bytes } from "@graphprotocol/graph-ts"
-
+import { CookieJar } from "../generated/templates" // Import the template
 export function handleBlacklistRoleGranted(
   event: BlacklistRoleGrantedEvent
 ): void {
@@ -44,8 +44,9 @@ export function handleCookieJarCreated(event: CookieJarCreatedEvent): void {
   entity.blockNumber = event.block.number
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
-
   entity.save()
+  CookieJar.create(event.params.cookieJarAddress)
+
 }
 
 export function handleOwnershipTransferred(
@@ -62,6 +63,7 @@ export function handleOwnershipTransferred(
   entity.transactionHash = event.transaction.hash
 
   entity.save()
+
 }
 
 export function handleProtocolAdminUpdated(

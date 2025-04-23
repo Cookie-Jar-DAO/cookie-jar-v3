@@ -63,3 +63,139 @@ type RoleRevoked @entity(immutable: true) {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
+type AdminUpdated @entity(immutable: true) {
+  id: Bytes!
+  newAdmin: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  contractAddress: Bytes! # address
+
+}
+
+type BlacklistUpdated @entity(immutable: true) {
+  id: Bytes!
+  users: [Bytes!]! # address[]
+  statuses: Boolean! # bool
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  contractAddress: Bytes! # address
+
+}
+
+type Deposit @entity(immutable: true) {
+  id: Bytes!
+  sender: Bytes! # address
+  amount: BigInt! # uint256
+  token: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  contractAddress: Bytes! # address
+
+}
+
+type EmergencyWithdrawal @entity(immutable: true) {
+  id: Bytes!
+  admin: Bytes! # address
+  token: Bytes! # address
+  amount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  contractAddress: Bytes! # address
+
+}
+
+type FeeCollectorUpdated @entity(immutable: true) {
+  id: Bytes!
+  oldFeeCollector: Bytes! # address
+  newFeeCollector: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  contractAddress: Bytes! # address
+
+}
+
+type NFTGateAdded @entity(immutable: true) {
+  id: Bytes!
+  nftAddress: Bytes! # address
+  nftType: Int! # uint8
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  contractAddress: Bytes! # address
+
+}
+
+type NFTGateRemoved @entity(immutable: true) {
+  id: Bytes!
+  nftAddress: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  contractAddress: Bytes! # address
+
+}
+
+type CookieJarRoleAdminChanged @entity(immutable: true) {
+  id: Bytes!
+  role: Bytes! # bytes32
+  previousAdminRole: Bytes! # bytes32
+  newAdminRole: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  contractAddress: Bytes! # address
+
+}
+
+type CookieJarRoleGranted @entity(immutable: true) {
+  id: Bytes!
+  role: Bytes! # bytes32
+  account: Bytes! # address
+  sender: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  contractAddress: Bytes! # address
+
+}
+
+type CookieJarRoleRevoked @entity(immutable: true) {
+  id: Bytes!
+  role: Bytes! # bytes32
+  account: Bytes! # address
+  sender: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  contractAddress: Bytes! # address
+
+}
+
+type WhitelistUpdated @entity(immutable: true) {
+  id: Bytes!
+  users: [Bytes!]! # address[]
+  statuses: Boolean! # bool
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  contractAddress: Bytes! # address
+
+}
+
+type Withdrawal @entity(immutable: true) {
+  id: Bytes!
+  recipient: Bytes! # address
+  amount: BigInt! # uint256
+  purpose: String! # string
+  token: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  contractAddress: Bytes! # address
+
+}

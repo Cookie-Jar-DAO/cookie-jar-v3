@@ -42,3 +42,55 @@ dataSources:
         - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
           handler: handleRoleRevoked
       file: ./src/cookie-jar-factory.ts
+templates:
+  - kind: ethereum
+    name: CookieJar
+    network: base-sepolia
+    source:
+      abi: CookieJar
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - AdminUpdated
+        - BlacklistUpdated
+        - Deposit
+        - EmergencyWithdrawal
+        - FeeCollectorUpdated
+        - NFTGateAdded
+        - NFTGateRemoved
+        - CookieJarRoleAdminChanged
+        - CookieJarRoleGranted
+        - CookieJarRoleRevoked
+        - WhitelistUpdated
+        - Withdrawal
+      abis:
+        - name: CookieJar
+          file: ./abis/CookieJar.json
+      eventHandlers:
+        - event: AdminUpdated(indexed address)
+          handler: handleAdminUpdated
+        - event: BlacklistUpdated(address[],bool)
+          handler: handleBlacklistUpdated
+        - event: Deposit(indexed address,uint256,address)
+          handler: handleDeposit
+        - event: EmergencyWithdrawal(indexed address,address,uint256)
+          handler: handleEmergencyWithdrawal
+        - event: FeeCollectorUpdated(indexed address,indexed address)
+          handler: handleFeeCollectorUpdated
+        - event: NFTGateAdded(address,uint8)
+          handler: handleNFTGateAdded
+        - event: NFTGateRemoved(address)
+          handler: handleNFTGateRemoved
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
+        - event: WhitelistUpdated(address[],bool)
+          handler: handleWhitelistUpdated
+        - event: Withdrawal(indexed address,uint256,string,address)
+          handler: handleWithdrawal
+      file: ./src/cookie-jar.ts
