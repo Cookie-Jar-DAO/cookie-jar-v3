@@ -1,11 +1,12 @@
 "use client"
 
 // WhitelistWithdrawalSection.tsx
-import type React from "react"
+import React from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ArrowUpToLine } from "lucide-react"
+import { ETH_ADDRESS, useTokenInfo, parseTokenAmount, formatTokenAmount, checkDecimals } from "@/lib/utils/token-utils"
 
 interface WhitelistWithdrawalSectionProps {
   config: any // Ideally this would be more specifically typed
@@ -26,6 +27,13 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
   handleWithdrawWhitelist,
   handleWithdrawWhitelistVariable,
 }) => {
+  // Get token information using the token utils
+  const { symbol: tokenSymbol, decimals: tokenDecimals } = useTokenInfo(
+    config?.currency !== ETH_ADDRESS ? config?.currency : undefined
+  );
+  
+  // State for validation errors
+  const [amountError, setAmountError] = React.useState<string | null>(null);
   // Fixed amount withdrawal with purpose
   if (config.strictPurpose && config.withdrawalOption === "Fixed") {
     return (
@@ -58,7 +66,7 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
             ) : (
               <>
                 <ArrowUpToLine className="h-5 w-5 mr-2" />
-                Get Fixed Cookie ({config.fixedAmount ? Number(config.fixedAmount) / 1e18 : 0} ETH)
+                Get Fixed Cookie ({config.fixedAmount ? formatTokenAmount(BigInt(config.fixedAmount), tokenDecimals, tokenSymbol) : `0 ${tokenSymbol || 'ETH'}`})
               </>
             )}
           </Button>
@@ -72,7 +80,7 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
     return (
       <div className="space-y-6 py-8">
         <p className="text-[#ff5e14] font-medium text-xl text-center">
-          You can get a fixed cookie of {config.fixedAmount ? Number(config.fixedAmount) / 1e18 : 0} ETH from this jar.
+          You can get a fixed cookie of {config.fixedAmount ? formatTokenAmount(BigInt(config.fixedAmount), tokenDecimals , tokenSymbol ) : `0 ${tokenSymbol || 'ETH'}`} from this jar.
         </p>
         {Number(config.lastWithdrawalWhitelist) > 0 && (
           <p className="text-sm text-[#8b7355] text-center">
@@ -116,17 +124,23 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
             placeholder="Enter amount"
             value={withdrawAmount}
             onChange={(e) => {
-              // Only allow numbers and decimal points
-              const value = e.target.value
-              if (value === "" || /^[0-9]*\.?[0-9]*$/.test(value)) {
-                setWithdrawAmount(value)
+              // Only allow numbers and decimal points with validation based on decimal precision
+              const value = e.target.value;
+              const result = checkDecimals(value, tokenDecimals); 
+              setAmountError(result.error);
+              if (result.value !== null) {
+                setWithdrawAmount(result.value);
               }
             }}
-            className="border-[#f0e6d8] bg-white text-[#3c2a14]"
+            className={`border-[#f0e6d8] bg-white text-[#3c2a14] ${amountError ? 'border-red-500' : ''}`}
           />
-          <p className="text-sm text-[#8b7355]">
-            Maximum withdrawal: {config.maxWithdrawal ? Number(config.maxWithdrawal) / 1e18 : 0} ETH
-          </p>
+          {amountError ? (
+            <p className="text-sm text-red-500">{amountError}</p>
+          ) : (
+            <p className="text-sm text-[#8b7355]">
+              Maximum withdrawal: {config.maxWithdrawal ? formatTokenAmount(BigInt(config.maxWithdrawal), tokenDecimals, tokenSymbol) : `0 ${tokenSymbol}`}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -162,7 +176,7 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
             ) : (
               <>
                 <ArrowUpToLine className="h-4 w-4 mr-2" />
-                Get Cookie ({withdrawAmount || "0"} ETH)
+                Get Cookie ({withdrawAmount || "0"} {tokenSymbol})
               </>
             )}
           </Button>
@@ -185,24 +199,30 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
             placeholder="Enter amount"
             value={withdrawAmount}
             onChange={(e) => {
-              // Only allow numbers and decimal points
-              const value = e.target.value
-              if (value === "" || /^[0-9]*\.?[0-9]*$/.test(value)) {
-                setWithdrawAmount(value)
+              // Only allow numbers and decimal points with validation based on decimal precision
+              const value = e.target.value;
+              const result = checkDecimals(value, tokenDecimals); 
+              setAmountError(result.error);
+              if (result.value !== null) {
+                setWithdrawAmount(result.value);
               }
             }}
-            className="border-[#f0e6d8] bg-white text-[#3c2a14]"
+            className={`border-[#f0e6d8] bg-white text-[#3c2a14] ${amountError ? 'border-red-500' : ''}`}
           />
-          <p className="text-sm text-[#8b7355]">
-            Maximum withdrawal: {config.maxWithdrawal ? Number(config.maxWithdrawal) / 1e18 : 0} ETH
-          </p>
+          {amountError ? (
+            <p className="text-sm text-red-500">{amountError}</p>
+          ) : (
+            <p className="text-sm text-[#8b7355]">
+              Maximum withdrawal: {config.maxWithdrawal ? formatTokenAmount(BigInt(config.maxWithdrawal), tokenDecimals, tokenSymbol) : `0 ${tokenSymbol }`}
+            </p>
+          )}
         </div>
 
         <div className="pt-2">
           <Button
             onClick={handleWithdrawWhitelistVariable}
             className="w-full bg-[#ff5e14] hover:bg-[#e54d00] text-white"
-            disabled={!withdrawAmount || Number(withdrawAmount) <= 0 || config.isWithdrawPending}
+            disabled={!withdrawAmount || Number(withdrawAmount) <= 0 || !!amountError || config.isWithdrawPending}
           >
             {config.isWithdrawPending ? (
               <>
@@ -212,7 +232,7 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
             ) : (
               <>
                 <ArrowUpToLine className="h-4 w-4 mr-2" />
-                Get Cookie ({withdrawAmount || "0"} ETH)
+                Get Cookie ({withdrawAmount || "0"} {tokenSymbol || 'ETH'})
               </>
             )}
           </Button>

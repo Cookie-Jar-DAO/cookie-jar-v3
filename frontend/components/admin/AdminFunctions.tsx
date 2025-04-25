@@ -332,13 +332,13 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
             <AlertTriangle className="h-4 w-4 mr-2" />
             Emergency
           </TabsTrigger>
-          <TabsTrigger
+          {/* <TabsTrigger
             value="nft"
             className="data-[state=active]:bg-white data-[state=active]:text-[#ff5e14] data-[state=active]:shadow-sm text-[#4a3520]"
           >
             <Tag className="h-4 w-4 mr-2" />
             NFT Gates
-          </TabsTrigger>
+          </TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="ownership" className="mt-0">
