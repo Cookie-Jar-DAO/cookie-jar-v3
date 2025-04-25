@@ -22,8 +22,8 @@ import { LoadingOverlay } from "@/components/design/loading-overlay"
 import { AlertCircle } from "lucide-react"
 import { BackButton } from "@/components/design/back-button"
 
-// Known address constants
-const ETH_ADDRESS = "0x0000000000000000000000000000000000000003"
+// Import token utilities
+import { ETH_ADDRESS, useTokenInfo, parseTokenAmount, formatTokenAmount } from "@/lib/utils/token-utils"
 
 // Enums matching the contract
 enum AccessType {
@@ -69,6 +69,11 @@ export default function CreateCookieJarForm() {
 
   // Currency type state
   const [currencyType, setCurrencyType] = useState<"eth" | "token">("eth")
+  
+  // Token information using the useTokenInfo hook
+  const { symbol: tokenSymbol, decimals: tokenDecimals, isERC20, error: tokenError, errorMessage: tokenErrorMessage } = useTokenInfo(
+     supportedCurrency 
+  )
 
   // Then, add state variables for the confirmation dialog and loading overlay
   // Add these after the existing state declarations (around line 60)
@@ -119,8 +124,12 @@ export default function CreateCookieJarForm() {
         // For ETH, convert from ETH to wei
         return parseEther(amountStr)
       } else {
-        // For tokens, use the raw value (assuming it's already in the smallest unit)
-        return BigInt(amountStr)
+        // For tokens, ensure we have valid token data before attempting to parse
+        if (tokenError || tokenDecimals === undefined) {
+          throw new Error("Invalid token data: " + (tokenErrorMessage || "Unknown token error"))
+        }
+        // For tokens, convert from human-readable to smallest unit using token decimals
+        return parseTokenAmount(amountStr, tokenDecimals)
       }
     } catch (error) {
       console.error("Error parsing amount:", error)
@@ -228,6 +237,12 @@ export default function CreateCookieJarForm() {
 
   // Navigation functions
   const nextStep = () => {
+    // Check token error in step 1 when using token currency
+    if (currentStep === 1 && currencyType === "token" && tokenError) {
+      setErrorMessage("Please enter a valid ERC20 token address before proceeding.  " + tokenErrorMessage)
+      return
+    }
+    
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1)
     }
@@ -355,14 +370,20 @@ export default function CreateCookieJarForm() {
                 <Input
                   id="supportedCurrency"
                   placeholder="0x..."
-                  className="bg-white border-gray-300 placeholder:text-[#3c2a14] text-[#3c2a14]"
+                  className={`bg-white placeholder:text-[#3c2a14] text-[#3c2a14] ${tokenError ? 'border-red-500' : 'border-gray-300'}`}
                   defaultValue=""
                   onChange={(e) => {
                     const value = e.target.value
                     setSupportedCurrency(value as `0x${string}`)
                   }}
                 />
-                <p className="text-sm text-[#8b7355]">Address of the ERC20 token contract</p>
+                {tokenError && supportedCurrency && supportedCurrency !== '0x' ? (
+                  <p className="text-sm text-red-500 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" /> {tokenErrorMessage}
+                  </p>
+                ) : (
+                  <p className="text-sm text-[#8b7355]">Address of the ERC20 token contract</p>
+                )}
               </div>
             )}
 
@@ -400,7 +421,8 @@ export default function CreateCookieJarForm() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0">Whitelist</SelectItem>
-                  <SelectItem value="1">NFT Gated</SelectItem>
+                  {/* removed NFT Gated option for MVP launch to reduce complexity <3msg */}
+                  {/* <SelectItem value="1">NFT Gated</SelectItem> */}
                 </SelectContent>
               </Select>
               <p className="text-sm text-[#8b7355]">Determine who can access this cookie jar</p>
@@ -499,37 +521,45 @@ export default function CreateCookieJarForm() {
 
             {/* Fixed Amount (show if Fixed is selected) */}
             {withdrawalOption === WithdrawalTypeOptions.Fixed && (
-              <div className="space-y-2">
-                <Label htmlFor="fixedAmount" className="text-[#3c2a14] text-base">
-                  Fixed Amount
-                </Label>
-                <Input
-                  id="fixedAmount"
-                  type="text"
-                  placeholder={getAmountPlaceholder}
-                  className="bg-white border-gray-300 placeholder:text-[#3c2a14] text-[#3c2a14]"
-                  value={fixedAmount}
-                  onChange={(e) => setFixedAmount(e.target.value)}
-                />
-                <p className="text-sm text-[#8b7355]">{getAmountDescription}</p>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="fixedAmount" className="text-[#3c2a14]">
+                    Fixed Withdrawal Amount {isERC20 && `(${tokenSymbol})`}
+                  </Label>
+                  <Input
+                    id="fixedAmount"
+                    type="number"
+                    value={fixedAmount}
+                    onChange={(e) => setFixedAmount(e.target.value)}
+                    placeholder="0"
+                    min="0"
+                    step="any"
+                    className="border-[#e2c7a9] focus-visible:ring-[#ff5e14] text-[#3c2a14]"
+                  />
+                 
+                </div>
               </div>
             )}
 
             {/* Max Withdrawal (show if Variable is selected) */}
             {withdrawalOption === WithdrawalTypeOptions.Variable && (
-              <div className="space-y-2">
-                <Label htmlFor="maxWithdrawal" className="text-[#3c2a14] text-base">
-                  Maximum Withdrawal
-                </Label>
-                <Input
-                  id="maxWithdrawal"
-                  type="text"
-                  placeholder={getAmountPlaceholder}
-                  className="bg-white border-gray-300 placeholder:text-[#3c2a14] text-[#3c2a14]"
-                  value={maxWithdrawal}
-                  onChange={(e) => setMaxWithdrawal(e.target.value)}
-                />
-                <p className="text-sm text-[#8b7355]">{getMaxWithdrawalDescription}</p>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="maxWithdrawal" className="text-[#3c2a14]">
+                    Maximum Withdrawal Amount {isERC20 && `(${tokenSymbol})`}
+                  </Label>
+                  <Input
+                    id="maxWithdrawal"
+                    type="number"
+                    value={maxWithdrawal}
+                    onChange={(e) => setMaxWithdrawal(e.target.value)}
+                    placeholder="0"
+                    min="0"
+                    step="any"
+                    className="border-[#e2c7a9] focus-visible:ring-[#ff5e14] text-[#3c2a14]"
+                  />
+                  
+                </div>
               </div>
             )}
 
@@ -568,9 +598,9 @@ export default function CreateCookieJarForm() {
               />
               <div className="grid gap-1.5">
                 <Label htmlFor="strictPurpose" className="text-[#3c2a14] text-base">
-                  Strict Purpose
+                  Withdrawal Reason
                 </Label>
-                <p className="text-sm text-[#8b7355]">Enforce strict purpose for withdrawals</p>
+                <p className="text-sm text-[#8b7355]">Require users to enter the reason for their withdrawal</p>
               </div>
             </div>
 
@@ -615,7 +645,7 @@ export default function CreateCookieJarForm() {
                   {jarOwnerAddress === address ? "Your wallet" : jarOwnerAddress}
                 </li>
                 <li className="text-[#3c2a14]">
-                  <span className="font-medium">Currency:</span> {isEthCurrency ? "ETH (Native)" : supportedCurrency}
+                  <span className="font-medium">Currency:</span> {isEthCurrency ? "ETH (Native)" : tokenSymbol}
                 </li>
                 <li className="text-[#3c2a14]">
                   <span className="font-medium">Access Type:</span>{" "}
@@ -627,7 +657,7 @@ export default function CreateCookieJarForm() {
                 </li>
                 <li className="text-[#3c2a14]">
                   <span className="font-medium">Amount:</span>{" "}
-                  {withdrawalOption === WithdrawalTypeOptions.Fixed ? fixedAmount : `Up to ${maxWithdrawal}`}
+                  {withdrawalOption === WithdrawalTypeOptions.Fixed ? `${fixedAmount} ${isERC20 ? tokenSymbol : "ETH"}`: `Up to ${maxWithdrawal} ${isERC20 ? tokenSymbol : "ETH"}`}
                 </li>
                 <li className="text-[#3c2a14]">
                   <span className="font-medium">Interval:</span> {(Number(withdrawalInterval) / 86400).toString()} days
@@ -773,7 +803,7 @@ export default function CreateCookieJarForm() {
                     {jarOwnerAddress === address ? "Your wallet" : jarOwnerAddress}
                   </li>
                   <li className="text-[#3c2a14]">
-                    <span className="font-medium">Currency:</span> {isEthCurrency ? "ETH (Native)" : supportedCurrency}
+                    <span className="font-medium">Currency:</span> {isEthCurrency ? "ETH (Native)" : `${tokenSymbol}`}
                   </li>
                   <li className="text-[#3c2a14]">
                     <span className="font-medium">Access Type:</span>{" "}
@@ -785,7 +815,9 @@ export default function CreateCookieJarForm() {
                   </li>
                   <li className="text-[#3c2a14]">
                     <span className="font-medium">Amount:</span>{" "}
-                    {withdrawalOption === WithdrawalTypeOptions.Fixed ? fixedAmount : `Up to ${maxWithdrawal}`}
+                    {withdrawalOption === WithdrawalTypeOptions.Fixed 
+                      ? `${fixedAmount} ${isERC20 ? tokenSymbol : "ETH"}` 
+                      : `Up to ${maxWithdrawal} ${isERC20 ? tokenSymbol : "ETH"}`}
                   </li>
                   <li className="text-[#3c2a14]">
                     <span className="font-medium">Interval:</span> {(Number(withdrawalInterval) / 86400).toString()}{" "}
