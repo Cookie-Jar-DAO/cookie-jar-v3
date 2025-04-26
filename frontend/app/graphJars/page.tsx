@@ -4,12 +4,11 @@ import { useQuery } from '@tanstack/react-query'
 import { gql, request } from 'graphql-request'
 import { useState } from 'react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar, Users, ChevronDown, ChevronUp } from 'lucide-react'
 import { useAccount } from 'wagmi'
 
 // Define types for the GraphQL response
@@ -20,23 +19,38 @@ interface CookieJar {
   metadata: string
   // Adding a timestamp field for sorting
   timestamp?: string
+  blockTimestamp?: string
 }
 
 interface CookieJarData {
   cookieJarCreateds: CookieJar[]
 }
 
-// Updated query to include blockTimestamp for sorting
+interface WhitelistData {
+  whitelistUpdateds: {
+    users: string[]
+  }[]
+}
 
 const url = 'https://api.studio.thegraph.com/query/84825/cookie-jar/version/latest'
 const headers = { Authorization: 'Bearer {api-key}' }
 
+const whitelistQuery = gql`
+  query GetWhitelist($contractAddress: String!) {
+    whitelistUpdateds(where: {contractAddress: $contractAddress}) {
+      users
+    }
+  }
+`
+
 export default function CookieJarData() {
   const [currentPage, setCurrentPage] = useState(1)
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest')
+  const [expandedJar, setExpandedJar] = useState<string | null>(null)
   const jarsPerPage = 4
   const { isConnected, address: userAddress } = useAccount()
-  const query = gql`{
+  
+  const cookieJarQuery = gql`{
     cookieJarCreateds(first: 10, where: {creator: "${userAddress}"}) {
       id
       creator
@@ -44,16 +58,14 @@ export default function CookieJarData() {
       metadata
       blockTimestamp
     }
-  }` 
-  
+  }`
 
   const { data, isLoading, isError } = useQuery<CookieJarData>({
-    queryKey: ['cookieJarData'],
+    queryKey: ['cookieJarData', userAddress],
     queryFn: async () => {
-      const response = await request(url, query, {}, headers);
+      const response = await request(url, cookieJarQuery, {}, headers);
       
       // Add fake timestamps if blockTimestamp is not available in the actual data
-      // You can remove this if your API actually returns timestamps
       const jarsWithTimestamps = response.cookieJarCreateds.map((jar, index) => ({
         ...jar,
         timestamp: jar.blockTimestamp || new Date(Date.now() - index * 86400000).toISOString()
@@ -62,7 +74,22 @@ export default function CookieJarData() {
       return {
         cookieJarCreateds: jarsWithTimestamps
       };
-    }
+    },
+    enabled: !!userAddress
+  })
+
+  const { data: whitelistData, isLoading: isWhitelistLoading } = useQuery<WhitelistData>({
+    queryKey: ['whitelistData', expandedJar],
+    queryFn: async () => {
+      if (!expandedJar) return { whitelistUpdateds: [] }
+      return await request(
+        url, 
+        whitelistQuery, 
+        { contractAddress: expandedJar },
+        headers
+      )
+    },
+    enabled: !!expandedJar
   })
 
   // Sort data by date
@@ -82,7 +109,10 @@ export default function CookieJarData() {
     if (!dateString) return 'Unknown date';
     return new Date(Number(dateString) * 1000).toLocaleDateString();
   };
-  
+
+  const toggleWhitelist = (address: string) => {
+    setExpandedJar(expandedJar === address ? null : address);
+  };
 
   if (isLoading) {
     return (
@@ -162,16 +192,60 @@ export default function CookieJarData() {
                     {jar.metadata || 'No metadata'}
                   </p>
                 </div>
+                
+                {/* Whitelist dropdown button */}
+                <Button 
+                  variant="outline" 
+                  onClick={() => toggleWhitelist(jar.cookieJarAddress)}
+                  className="w-full mt-2 bg-[#fff7ec] text-[#8b7355] hover:text-[#ff5e14] border-[#f0e6d8] flex justify-between"
+                >
+                  <div className="flex items-center">
+                    <Users className="h-4 w-4 mr-2" />
+                    View Whitelist
+                  </div>
+                  {expandedJar === jar.cookieJarAddress ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+                
+                {/* Whitelist content - shown only when expanded */}
+                {expandedJar === jar.cookieJarAddress && (
+                  <div className="mt-2 border border-[#f0e6d8] rounded-md p-3 bg-[#fffbf6]">
+                    <p className="text-sm font-medium mb-2 text-[#8b7355]">Whitelisted Users</p>
+                    
+                    {isWhitelistLoading ? (
+                      <div className="space-y-2">
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                      </div>
+                    ) : whitelistData?.whitelistUpdateds?.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No whitelist data found.</p>
+                    ) : whitelistData?.whitelistUpdateds?.[0]?.users?.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No users in whitelist.</p>
+                    ) : (
+                      <div className="max-h-32 overflow-y-auto space-y-1">
+                        {whitelistData?.whitelistUpdateds?.[0]?.users?.map((user, i) => (
+                          <div key={i} className="bg-white p-1.5 rounded border border-[#f0e6d8]">
+                            <p className="font-mono text-xs break-all truncate text-black" title={user}>
+                              {user}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
+            
             <CardFooter className="pt-2 border-t border-[#f0e6d8]">
-  <div className="flex items-center text-sm text-muted-foreground">
-    <Calendar className="h-4 w-4 mr-1" />
-{
-  formatDate(jar.timestamp)
-}  </div>
-</CardFooter>
-
+              <div className="flex items-center text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4 mr-1" />
+                {formatDate(jar.timestamp)}
+              </div>
+            </CardFooter>
           </Card>
         ))}
       </div>

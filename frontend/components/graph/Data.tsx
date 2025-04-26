@@ -8,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 // Define types for the GraphQL response
 interface CookieJar {
@@ -21,27 +22,60 @@ interface CookieJarData {
   cookieJarCreateds: CookieJar[]
 }
 
-const query = gql`{
+interface WhitelistData {
+  whitelistUpdateds: {
+    users: string[]
+  }[]
+}
+
+const cookieJarQuery = gql`{
   cookieJarCreateds(first: 5) {
     id
     creator
     cookieJarAddress
     metadata
   }
-}` 
+}`
+
+const whitelistQuery = gql`
+  query GetWhitelist($contractAddress: String!) {
+    whitelistUpdateds(where: {contractAddress: $contractAddress}) {
+      users
+    }
+  }
+`
 
 const url = 'https://api.studio.thegraph.com/query/84825/cookie-jar/version/latest'
 const headers = { Authorization: 'Bearer {api-key}' }
 
 export default function CookieJarData() {
-  const { data, isLoading, isError } = useQuery<CookieJarData>({
+  const [selectedJar, setSelectedJar] = useState<string | null>(null)
+
+  const { data: jarsData, isLoading: isJarsLoading, isError: isJarsError } = useQuery<CookieJarData>({
     queryKey: ['cookieJarData'],
     queryFn: async () => {
-      return await request(url, query, {}, headers)
+      return await request(url, cookieJarQuery, {}, headers)
     }
   })
 
-  if (isLoading) {
+  const { data: whitelistData, isLoading: isWhitelistLoading } = useQuery<WhitelistData>({
+    queryKey: ['whitelistData', selectedJar],
+    queryFn: async () => {
+      console.log("hitt");
+
+      if (!selectedJar) return { whitelistUpdateds: [] }
+      console.log("hitt");
+      return await request(
+        url, 
+        whitelistQuery, 
+        { contractAddress: selectedJar },
+        headers
+      )
+    },
+    enabled: !!selectedJar
+  })
+ 
+  if (isJarsLoading) {
     return (
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
@@ -58,7 +92,7 @@ export default function CookieJarData() {
     )
   }
 
-  if (isError) {
+  if (isJarsError) {
     return (
       <Alert variant="destructive" className="max-w-4xl mx-auto">
         <AlertDescription>
@@ -68,7 +102,7 @@ export default function CookieJarData() {
     )
   }
 
-  if (!data || !data.cookieJarCreateds?.length) {
+  if (!jarsData || !jarsData.cookieJarCreateds?.length) {
     return (
       <Alert className="max-w-4xl mx-auto">
         <AlertDescription>
@@ -84,8 +118,57 @@ export default function CookieJarData() {
         <CardTitle>Cookie Jar Data</CardTitle>
       </CardHeader>
       <CardContent>
-        <Accordion type="single" collapsible className="w-full">
-          {data.cookieJarCreateds.map((jar) => (
+        <div className="mb-6">
+          <p className="mb-2 text-sm font-medium">Select Cookie Jar to View Whitelist</p>
+          <Select onValueChange={(value) => setSelectedJar(value)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a Cookie Jar" />
+            </SelectTrigger>
+            <SelectContent>
+              {jarsData.cookieJarCreateds.map((jar) => (
+                <SelectItem key={jar.cookieJarAddress} value={jar.cookieJarAddress}>
+                  {jar.id.substring(0, 8)}... ({jar.cookieJarAddress.substring(0, 6)}...)
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {selectedJar && (
+          <div className="mt-4 border rounded-md p-4">
+            <h3 className="text-lg font-medium mb-2">Whitelist</h3>
+            {isWhitelistLoading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+              </div>
+            ) : whitelistData?.whitelistUpdateds?.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No whitelist data found for this Cookie Jar.</p>
+            ) : (
+              <div className="space-y-2">
+                {whitelistData?.whitelistUpdateds?.map((whitelist, index) => (
+                  <div key={index} className="border rounded-md p-2">
+                    <p className="text-sm font-medium mb-2">Whitelisted Users:</p>
+                    <div className="grid gap-2">
+                      {whitelist.users?.length > 0 ? (
+                        whitelist.users.map((user, i) => (
+                          <div key={i} className="bg-gray-50 dark:bg-gray-800 p-2 rounded-md">
+                            <p className="font-mono text-sm break-all">{user}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No users in this whitelist.</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        <Accordion type="single" collapsible className="w-full mt-6">
+          {jarsData.cookieJarCreateds.map((jar) => (
             <AccordionItem key={jar.id} value={jar.id}>
               <AccordionTrigger>
                 <div className="flex items-center space-x-2">

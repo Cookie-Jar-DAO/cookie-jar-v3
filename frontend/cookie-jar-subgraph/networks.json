@@ -1,8 +1,0 @@
-{
-  "base-sepolia": {
-    "CookieJarFactory": {
-      "address": "0x010CE87d0E7F8E818805a27C95E09cb4961C8c6f",
-      "startBlock": 24426487
-    }
-  }
-}
