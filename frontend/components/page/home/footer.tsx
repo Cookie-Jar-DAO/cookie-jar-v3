@@ -174,20 +174,6 @@ export function Footer() {
               <div className="pt-2">
                 <SocialMediaButtons />
               </div>
-
-              <div className="pt-4">
-                <div className="relative">
-                  <input
-                    type="email"
-                    placeholder="Your email address"
-                    className="w-full bg-[#393939] border border-white/10 text-white/80 py-3 px-4 rounded-lg focus:outline-none focus:border-[#C3FF00] text-sm"
-                  />
-                  <button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#C3FF00] text-[#1F1F1F] px-3 py-1 rounded text-xs font-medium hover:bg-white transition-colors">
-                    Subscribe
-                  </button>
-                </div>
-                <p className="text-xs text-white/50 mt-2">Subscribe to our newsletter for updates</p>
-              </div>
             </div>
           </div>
         </div>

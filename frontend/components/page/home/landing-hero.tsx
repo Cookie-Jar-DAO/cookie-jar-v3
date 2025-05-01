@@ -47,7 +47,7 @@ export function LandingHero() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-6 mt-12">
-            <button className="cssbuttons-io-button" onClick={handleExploreClick}>
+            <button className="cssbuttons-io-button text-[#333333]" onClick={handleExploreClick}>
               EXPLORE JARS
               <div className="icon">
                 <svg height="24" width="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

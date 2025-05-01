@@ -124,7 +124,10 @@ export function Navbar() {
           <div className="w-full px-2 md:px-4 flex items-center justify-between h-[80px]">
             {/* Left side - Logo and project name */}
             <div className="flex items-center">
-              <div className="flex items-center gap-3 bg-[#393939] rounded-full py-2 px-4 border border-[#555555]">
+              <Link
+                href="/"
+                className="flex items-center gap-3 bg-[#393939] rounded-full py-2 px-4 border border-[#555555] hover:bg-[#4a4a4a] transition-colors"
+              >
                 <div className="w-8 h-8 rounded-full bg-[#393939] flex items-center justify-center overflow-hidden border border-primary">
                   <Image
                     src="/logo.png"
@@ -135,11 +138,11 @@ export function Navbar() {
                   />
                 </div>
                 <span className="text-lg font-medium text-white">Cookie Jar V3</span>
-              </div>
+              </Link>
             </div>
 
             {/* Center - Navigation */}
-            <nav className="hidden md:flex items-center gap-6 bg-[#393939]/80 backdrop-blur-sm rounded-full py-3 px-6 border border-[#555555]">
+            <nav className="hidden md:flex items-center gap-12 bg-[#393939]/80 backdrop-blur-sm rounded-full py-3 px-12 border border-[#555555]">
               <Link href="/jars" className="text-sm font-medium text-white hover:text-primary transition-colors">
                 EXPLORE
               </Link>
@@ -189,7 +192,7 @@ export function Navbar() {
 
                     {/* Menu items */}
                     <DropdownMenuItem
-                      className="flex items-center gap-2 py-3 hover:bg-[#393939] cursor-pointer"
+                      className="flex items-center gap-2 py-3 hover:border-primary hover:border cursor-pointer transition-all"
                       onClick={() => router.push("/profile")}
                     >
                       <User className="h-4 w-4 text-[#AAAAAA]" />
@@ -233,7 +236,7 @@ export function Navbar() {
                     <DropdownMenuSeparator className="bg-[#444444]" />
 
                     <DropdownMenuItem
-                      className="flex items-center gap-2 py-3 hover:bg-[#393939] cursor-pointer text-red-400"
+                      className="flex items-center gap-2 py-3 hover:border-primary hover:border cursor-pointer text-red-400 transition-all"
                       onClick={() => disconnect()}
                     >
                       <LogOut className="h-4 w-4" />
