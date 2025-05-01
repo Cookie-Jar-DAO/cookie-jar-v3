@@ -99,11 +99,11 @@ export function DocsSidebar({ className, activeItem, setActiveItem, ...props }: 
   ]
 
   return (
-    <div className={cn("docs-sidebar w-full py-4 pr-4 h-full overflow-y-auto", className)} {...props}>
+    <div className={cn("docs-sidebar w-full py-4 pr-4 h-full overflow-y-auto bg-[#1D1D1D]", className)} {...props}>
       <div className="space-y-6">
         {items.map((item) => (
           <div key={item.title} className="space-y-2">
-            <h4 className="font-medium text-sm text-white">{item.title}</h4>
+            <h4 className="font-medium text-sm text-gray-300">{item.title}</h4>
             {item.items.map((subItem) => (
               <Button
                 key={subItem.id}
@@ -112,8 +112,8 @@ export function DocsSidebar({ className, activeItem, setActiveItem, ...props }: 
                 className={cn(
                   "w-full justify-start font-normal",
                   activeItem === subItem.id
-                    ? "bg-[#ff5e14] bg-opacity-20 text-[#ff5e14] font-medium"
-                    : "text-white hover:bg-white hover:bg-opacity-10 hover:text-[#ff5e14]",
+                    ? "bg-[#333333] text-white font-medium"
+                    : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white",
                 )}
                 onClick={() => setActiveItem(subItem.id)}
               >

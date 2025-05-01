@@ -28,7 +28,7 @@ export function BackButton({ className = "", showWalletInfo = false, children }:
 
     switch (chainId) {
       case 84532: // Base Sepolia
-        return { name: "Base Sepolia", color: "bg-[#ff5e14]" }
+        return { name: "Base Sepolia", color: "bg-[#C3FF00]" }
       case 8453: // Base Mainnet
         return { name: "Base", color: "bg-blue-500" }
       case 10: // Optimism
@@ -45,20 +45,21 @@ export function BackButton({ className = "", showWalletInfo = false, children }:
   const networkInfo = getNetworkInfo()
 
   return (
-    <div className={cn("flex items-center justify-between w-full bg-white rounded-xl py-2 px-4 shadow-sm", className)}>
-      <button
-        type="button"
-        onClick={() => router.back()}
-        className="flex items-center gap-2 text-[#3c2a14] font-medium"
-      >
-        <div className="bg-[#ff5e14] rounded-full h-8 w-8 flex items-center justify-center">
-          <ArrowLeft className="w-5 h-5 text-white" />
+    <div
+      className={cn(
+        "flex items-center justify-between bg-transparent rounded-xl py-1 px-4 shadow-sm border border-gray-700",
+        className,
+      )}
+    >
+      <button type="button" onClick={() => router.back()} className="flex items-center gap-2 text-white font-medium">
+        <div className="bg-[#C3FF00] rounded-full h-8 w-8 flex items-center justify-center">
+          <ArrowLeft className="w-5 h-5 text-gray-800" />
         </div>
         <span>Go Back</span>
       </button>
 
       {children || (
-        <Badge className={`ml-auto ${networkInfo.color} text-white border-none px-4 py-1 rounded-full`}>
+        <Badge className={`ml-auto ${networkInfo.color} text-gray-800 border-none px-4 py-1 rounded-full`}>
           {networkInfo.name}
         </Badge>
       )}

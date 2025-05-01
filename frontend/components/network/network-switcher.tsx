@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useChainId, useSwitchChain, useConfig } from "wagmi"
+import { useChainId, useSwitchChain, useConfig, useAccount } from "wagmi"
 import { Button } from "@/components/ui/button"
 
 export function NetworkSwitcher() {
@@ -9,6 +9,7 @@ export function NetworkSwitcher() {
   const { switchChain, isPending } = useSwitchChain()
   const [mounted, setMounted] = useState(false)
   const config = useConfig()
+  const { isConnected } = useAccount() // Add this to check if wallet is connected
 
   // Base Sepolia chain ID
   const BASE_SEPOLIA_CHAIN_ID = 84532
@@ -36,8 +37,8 @@ export function NetworkSwitcher() {
 
   if (!mounted) return null
 
-  // If user is on Base Sepolia, don't show anything
-  if (chainId === BASE_SEPOLIA_CHAIN_ID) {
+  // Only show network switcher if wallet is connected AND user is not on Base Sepolia
+  if (!isConnected || chainId === BASE_SEPOLIA_CHAIN_ID) {
     return null
   }
 

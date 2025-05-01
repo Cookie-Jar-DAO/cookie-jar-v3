@@ -3,12 +3,12 @@ import { ThemeProvider } from "@/components/design/theme-provider"
 import { RainbowKitProviderWrapper } from "@/components/wallet/rainbow-kit-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { PageTransition } from "@/components/design/page-transition"
-import { CollapsibleSidebar } from "@/components/design/collapsible-sidebar"
 import { NetworkSwitcher } from "@/components/network/network-switcher"
 import localFont from "next/font/local"
 import "./countdown-animation.css"
 import "./loading-animation.css"
 import "./globals.css"
+import Providers from "../lib/Providers"
 
 const clashDisplay = localFont({
   src: "../ClashDisplay.ttf",
@@ -33,9 +33,10 @@ export default function RootLayout({
       <body className={`${clashDisplay.variable} font-clash custom-scrollbar`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <RainbowKitProviderWrapper key="rainbow-kit-provider">
-            <CollapsibleSidebar />
-            <div className="ml-[80px]">
-              <PageTransition>{children}</PageTransition>
+            <div>
+              <Providers>
+                <PageTransition noTopMargin>{children}</PageTransition>
+              </Providers>
             </div>
             <NetworkSwitcher />
             <Toaster />

@@ -6,9 +6,10 @@ import { usePathname } from "next/navigation"
 
 interface PageTransitionProps {
   children: ReactNode
+  noTopMargin?: boolean
 }
 
-export function PageTransition({ children }: PageTransitionProps) {
+export function PageTransition({ children, noTopMargin = false }: PageTransitionProps) {
   const pathname = usePathname()
 
   return (
@@ -23,7 +24,7 @@ export function PageTransition({ children }: PageTransitionProps) {
         damping: 30,
         duration: 0.5,
       }}
-      className="min-h-screen"
+      className={`min-h-screen ${noTopMargin ? "mt-0 pt-0" : ""}`}
     >
       {children}
     </motion.div>

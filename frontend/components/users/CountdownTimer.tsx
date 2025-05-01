@@ -49,15 +49,15 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ lastWithdrawalTi
 
   return (
     <div className="w-full flex flex-col items-center justify-center py-8">
-      <h2 className="text-3xl font-bold text-[#3c2a14] mb-6">Time Until Next Withdrawal</h2>
+      <h2 className="text-3xl font-bold text-[#3c2a14] mb-6 text-center">Time Until Next Withdrawal</h2>
 
-      <div className="bg-white rounded-xl p-6 shadow-md border border-[#f0e6d8] w-64 text-center mb-6">
-        <span className="text-4xl font-mono font-bold text-[#ff5e14]">
+      <div className="bg-white rounded-xl p-6 shadow-md border border-[#f0e6d8] w-full max-w-md mx-auto text-center mb-6">
+        <span className="text-5xl font-mono font-bold text-[#ff5e14]">
           {isComplete ? "00:00:00" : formatTimeLeft(timeLeft)}
         </span>
       </div>
 
-      <p className="text-lg font-medium text-[#8b7355]">
+      <p className="text-lg font-medium text-[#8b7355] text-center">
         {isComplete ? "You can withdraw now" : "Cooldown period active"}
       </p>
     </div>

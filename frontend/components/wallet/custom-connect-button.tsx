@@ -130,18 +130,41 @@ Nonce: ${nonce}`
               {(() => {
                 if (!connected) {
                   return (
-                    <Button
+                    <button
+                      className="flex items-center gap-2 text-white hover:text-[#C3FF00] transition-colors"
                       onClick={openConnectModal}
-                      className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
                     >
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="text-[#C3FF00]"
+                      >
+                        <path
+                          d="M2 6C2 4.89543 2.89543 4 4 4H20C21.1046 4 22 4.89543 22 6V18C22 19.1046 21.1046 20 20 20H4C2.89543 20 2 19.1046 2 18V6Z"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M16 12C16 10.8954 16.8954 10 18 10C19.1046 10 20 10.8954 20 12C20 13.1046 19.1046 14 18 14C16.8954 14 16 13.1046 16 12Z"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                       Connect Wallet
-                    </Button>
+                    </button>
                   )
                 }
 
                 if (chain.unsupported) {
                   return (
-                    <Button onClick={openChainModal} variant="destructive">
+                    <Button onClick={openChainModal} variant="destructive" size="sm">
                       Wrong network
                     </Button>
                   )
@@ -149,7 +172,12 @@ Nonce: ${nonce}`
 
                 return (
                   <div className="flex items-center gap-2">
-                    <Button onClick={openChainModal} variant="outline" size="sm" className="flex items-center gap-1">
+                    <Button
+                      onClick={openChainModal}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1 bg-transparent border-[#555555] text-white hover:text-[#C3FF00] hover:bg-transparent"
+                    >
                       {chain.hasIcon && (
                         <div className="w-4 h-4">
                           {chain.iconUrl && (
@@ -164,12 +192,16 @@ Nonce: ${nonce}`
                       {chain.name}
                     </Button>
 
-                    <Button onClick={openAccountModal} variant="outline" size="sm" className="flex items-center gap-1">
+                    <Button
+                      onClick={openAccountModal}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1 bg-transparent border-[#555555] text-white hover:text-[#C3FF00] hover:bg-transparent"
+                    >
                       {/* Replace ENS display with truncated address */}
                       {account.address
                         ? `${account.address.substring(0, 6)}...${account.address.substring(account.address.length - 4)}`
                         : "Unknown"}
-                      {account.displayBalance ? ` (${account.displayBalance})` : ""}
                     </Button>
                   </div>
                 )
@@ -181,19 +213,29 @@ Nonce: ${nonce}`
 
       {/* Terms and Conditions Dialog */}
       <Dialog open={showTerms} onOpenChange={setShowTerms}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-[#393939] text-white border-[#555555]">
           <DialogHeader>
             <DialogTitle>Terms and Conditions</DialogTitle>
-            <DialogDescription>Please read and accept our terms and conditions to continue.</DialogDescription>
+            <DialogDescription className="text-gray-300">
+              Please read and accept our terms and conditions to continue.
+            </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[60vh] overflow-auto p-4 border rounded-md my-4">
-            <pre className="whitespace-pre-wrap font-sans text-sm">{TERMS_MESSAGE}</pre>
+          <div className="max-h-[60vh] overflow-auto p-4 border rounded-md my-4 border-[#555555] bg-[#2A2A2A]">
+            <pre className="whitespace-pre-wrap font-sans text-sm text-white">{TERMS_MESSAGE}</pre>
           </div>
           <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-2">
-            <Button variant="outline" onClick={handleRejectTerms}>
+            <Button
+              variant="outline"
+              onClick={handleRejectTerms}
+              className="border-[#555555] text-white hover:text-[#C3FF00] hover:bg-transparent"
+            >
               Decline
             </Button>
-            <Button variant="cookie" onClick={handleAcceptTerms} disabled={isSigningTerms}>
+            <Button
+              onClick={handleAcceptTerms}
+              disabled={isSigningTerms}
+              className="bg-[#C3FF00] text-black hover:bg-[#A3DF00]"
+            >
               {isSigningTerms ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -1,42 +1,61 @@
 "use client"
-import { useParams, useRouter } from "next/navigation"
-import { useMemo } from "react"
 
+import { useParams, useRouter } from "next/navigation"
+import { useMemo, useState, useEffect, useRef, useCallback } from "react"
 import { useCookieJarConfig } from "@/hooks/use-cookie-jar"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ShieldAlert, Users, Coins, Copy, ExternalLink } from "lucide-react"
-import { useSendTransaction, useAccount, useChainId, useContractReads } from "wagmi"
-import { parseEther, formatUnits, parseUnits } from "viem"
+import {
+  ShieldAlert,
+  Users,
+  Coins,
+  Copy,
+  ExternalLink,
+  Clock,
+  ArrowDownToLine,
+  Info,
+  CheckCircle,
+  XCircle,
+  History,
+  Wallet,
+  RefreshCw,
+} from "lucide-react"
+import { useAccount, useChainId, useWaitForTransactionReceipt, useBalance } from "wagmi"
 import type { ReadContractErrorType } from "viem"
-import { useState, useEffect, useRef } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useWriteCookieJarDepositEth, useWriteCookieJarDepositCurrency, useWriteErc20Approve } from "@/generated"
 import { AdminFunctions } from "@/components/admin/AdminFunctions"
 import { formatAddress } from "@/lib/utils/format"
 import DefaultFeeCollector from "@/components/FeeCollector/DefaultFeeCollector"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/design/use-toast"
-import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { WhitelistWithdrawalSection } from "@/components/users/WhitelistWithdrawalSection"
 import { NFTGatedWithdrawalSection } from "@/components/users/NFTGatedWithdrawalSection"
-import { Clock, ArrowUpToLine } from "lucide-react"
-// Import the BackButton component
 import { BackButton } from "@/components/design/back-button"
 import { useWriteCookieJarWithdrawWhitelistMode, useWriteCookieJarWithdrawNftMode } from "@/generated"
 import { CountdownTimer } from "@/components/users/CountdownTimer"
 import { WithdrawalHistorySection, type Withdrawal } from "@/components/users/WithdrawlHistorySection"
+import { useNFTOwnership } from "@/hooks/use-nft-ownership"
+import { LoadingOverlay } from "@/components/design/loading-overlay"
+import { FundingSection } from "@/components/users/FundingSection"
+import { ErrorDialog } from "@/components/ui/error-dialog"
+import { WhitelistWithdrawalSection } from "@/components/users/WhitelistWithdrawalSection"
 
 // Import token utilities
 import { ETH_ADDRESS, useTokenInfo, parseTokenAmount, formatTokenAmount } from "@/lib/utils/token-utils"
+
+// Add these imports at the top of the file
+import { z } from "zod"
+import { isAddress } from "viem"
+
+// Add this schema near the top of the component
+const ethereumAddressSchema = z
+  .string()
+  .refine((address) => isAddress(address), { message: "Invalid Ethereum address format" })
 
 export default function CookieJarConfigDetails() {
   const params = useParams()
   const router = useRouter()
   const [amount, setAmount] = useState("")
   const address = params.address as string
-  const { data: hash, sendTransaction } = useSendTransaction()
   const { address: userAddress } = useAccount()
   const [tokenAddress, setTokenAddress] = useState("")
   const { toast } = useToast()
@@ -46,32 +65,98 @@ export default function CookieJarConfigDetails() {
   const [gateAddress, setGateAddress] = useState<string>("")
   const [tokenId, setTokenId] = useState<string>("")
   const chainId = useChainId()
+  const [activeTab, setActiveTab] = useState("overview")
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  // Fix: Initialize with undefined instead of null
+  const [pendingTx, setPendingTx] = useState<`0x${string}` | undefined>(undefined)
+
+  const [isDepositLoading, setIsDepositLoading] = useState(false)
+  const [isWithdrawLoading, setIsWithdrawLoading] = useState(false)
+  const [isAdminActionLoading, setIsAdminActionLoading] = useState(false)
+  const [showErrorDialog, setShowErrorDialog] = useState(false)
+  const [loadingMessage, setLoadingMessage] = useState("Processing...")
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const addressString = address as `0x${string}`
   const isValidAddress = typeof address === "string" && address.startsWith("0x")
 
-  const { config, isLoading, hasError, errors } = useCookieJarConfig(
-    isValidAddress ? (address as `0x${string}`) : "0x0000000000000000000000000000000000000000",
-  )
+  // Get user's wallet balance
+  const { data: walletBalance } = useBalance({
+    address: userAddress,
+  })
 
+  // Destructure the refetch function from the hook
+  const {
+    config,
+    isLoading,
+    hasError,
+    errors,
+    refetch: refetchConfig,
+  } = useCookieJarConfig(isValidAddress ? (address as `0x${string}`) : "0x0000000000000000000000000000000000000000")
+
+  // Update how token information is used in the page
+
+  // Use token utilities hook to get token information
+  const isERC20 = config?.currency && config.currency !== ETH_ADDRESS
+  const {
+    symbol: tokenSymbol,
+    decimals: tokenDecimals,
+    isLoading: isLoadingToken,
+  } = useTokenInfo(isERC20 && config?.currency ? config.currency : ETH_ADDRESS)
+
+  // Format balance for display using the token decimals
+  const formattedBalance = () => {
+    if (!config.balance) return "0"
+
+    // If token info is still loading, show loading indicator
+    if (isLoadingToken) return "Loading..."
+
+    return formatTokenAmount(config.balance, tokenDecimals || 18, tokenSymbol || "ETH")
+  }
+
+  // Get NFT ownership status
+  const { hasRequiredNFT, isLoading: isLoadingNFT } = useNFTOwnership(address as string)
+
+  // User roles
   const isAdmin = userAddress && config?.admin && userAddress.toLowerCase() === config.admin.toLowerCase()
-  const showUserFunctions = config?.whitelist === true && config?.accessType === "Whitelist"
-  const showNFTGatedFunctions = config?.accessType === "NFTGated"
   const isFeeCollector =
     userAddress && config?.feeCollector && userAddress.toLowerCase() === config.feeCollector.toLowerCase()
+  const showUserFunctions = config?.whitelist === true && config?.accessType === "Whitelist"
+  const showNFTGatedFunctions = config?.accessType === "NFTGated" && hasRequiredNFT
 
-  const { writeContract: DepositEth } = useWriteCookieJarDepositEth()
-  const { writeContract: DepositCurrency } = useWriteCookieJarDepositCurrency()
+  // Contract interactions for deposits
   const {
-    writeContract: Approve,
+    writeContract: depositEth,
+    data: depositEthData,
+    isSuccess: isDepositEthSuccess,
+    isPending: isDepositEthPending,
+  } = useWriteCookieJarDepositEth()
+
+  const {
+    writeContract: depositCurrency,
+    data: depositCurrencyData,
+    isSuccess: isDepositCurrencySuccess,
+    isPending: isDepositCurrencyPending,
+  } = useWriteCookieJarDepositCurrency()
+
+  const {
+    writeContract: approve,
     isPending: isApprovalPending,
     isSuccess: isApprovalSuccess,
     isError: isApprovalError,
+    data: approvalData,
   } = useWriteErc20Approve()
 
-  const [approvalCompleted, setApprovalCompleted] = useState(false)
-  const [pendingDepositAmount, setPendingDepositAmount] = useState<bigint>(BigInt(0))
+  // Wait for transaction receipt
+  const {
+    data: txReceipt,
+    isSuccess: isTxSuccess,
+    isLoading: isTxLoading,
+  } = useWaitForTransactionReceipt({
+    hash: pendingTx,
+  })
 
+  // Contract interactions for withdrawals
   const {
     writeContract: withdrawWhitelistMode,
     data: withdrawWhitelistModeData,
@@ -88,16 +173,72 @@ export default function CookieJarConfigDetails() {
     isPending: isWithdrawNFTPending,
   } = useWriteCookieJarWithdrawNftMode()
 
+  // Add this function to refetch jar data
+  const refetchJarData = useCallback(async () => {
+    try {
+      setIsRefreshing(true)
+      // Force a refetch of the jar configuration
+      const result = await refetchConfig()
+      toast({
+        title: "Data Updated",
+        description: "The jar data has been refreshed.",
+      })
+      return result
+    } catch (error) {
+      console.error("Error refetching jar data:", error)
+      toast({
+        title: "Error Updating Data",
+        description: "Could not refresh the latest jar data. Please try refreshing the page.",
+        variant: "destructive",
+      })
+      return null
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [refetchConfig, toast])
+
+  // Manual refresh button handler
+  const handleManualRefresh = () => {
+    refetchJarData()
+  }
+
   // Check if user is in cooldown period
   const isInCooldown = useMemo(() => {
-    if (!config.lastWithdrawalWhitelist || !config.withdrawalInterval) return false
+    if (!config.withdrawalInterval) return false
 
-    const now = Math.floor(Date.now() / 1000)
-    const nextWithdrawalTime = Number(config.lastWithdrawalWhitelist) + Number(config.withdrawalInterval)
-    return nextWithdrawalTime > now
-  }, [config.lastWithdrawalWhitelist, config.withdrawalInterval])
+    // Check based on access type
+    if (config.accessType === "Whitelist" && config.lastWithdrawalWhitelist) {
+      const now = Math.floor(Date.now() / 1000)
+      const nextWithdrawalTime = Number(config.lastWithdrawalWhitelist) + Number(config.withdrawalInterval)
+      return nextWithdrawalTime > now
+    } else if (config.accessType === "NFTGated" && config.lastWithdrawalNft) {
+      const now = Math.floor(Date.now() / 1000)
+      const nextWithdrawalTime = Number(config.lastWithdrawalNft) + Number(config.withdrawalInterval)
+      return nextWithdrawalTime > now
+    }
 
-  // Update the network name in the jar address page as well
+    return false
+  }, [config.lastWithdrawalWhitelist, config.lastWithdrawalNft, config.withdrawalInterval, config.accessType])
+
+  // Check for one-time withdrawals
+  const hasAlreadyWithdrawn = useMemo(() => {
+    if (!config.oneTimeWithdrawal) return false
+
+    // Check if user has already withdrawn based on access type
+    if (
+      config.accessType === "Whitelist" &&
+      config.lastWithdrawalWhitelist &&
+      Number(config.lastWithdrawalWhitelist) > 0
+    ) {
+      return true
+    } else if (config.accessType === "NFTGated" && config.lastWithdrawalNft && Number(config.lastWithdrawalNft) > 0) {
+      return true
+    }
+
+    return false
+  }, [config.oneTimeWithdrawal, config.lastWithdrawalWhitelist, config.lastWithdrawalNft, config.accessType])
+
+  // Get network info
   const getNetworkInfo = () => {
     if (!chainId) return { name: "Disconnected", color: "bg-gray-500" }
 
@@ -117,70 +258,61 @@ export default function CookieJarConfigDetails() {
     }
   }
 
-  // Prevent unnecessary re-renders when switching tabs
-  useEffect(() => {
-    // This flag helps us track if we're switching tabs
-    let isTabActive = true
-
-    const handleVisibilityChange = () => {
-      // When the tab becomes visible again, we don't want to trigger a refresh
-      if (document.visibilityState === "visible" && !isTabActive) {
-        isTabActive = true
-        // Prevent any refresh actions here
-      } else if (document.visibilityState === "hidden") {
-        isTabActive = false
-      }
-    }
-
-    // Add the event listener
-    document.addEventListener("visibilitychange", handleVisibilityChange)
-
-    // Clean up
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange)
-    }
-  }, [])
-
-  // Use token utilities hook to get token information
-  const isERC20 = config?.currency && config.currency !== ETH_ADDRESS
-  const { symbol: tokenSymbol, decimals: tokenDecimals } = useTokenInfo(
-    isERC20 && config?.currency ? (config.currency) : ETH_ADDRESS
-  )
-
-  useEffect(() => {
-    if (isApprovalSuccess && approvalCompleted) {
-      DepositCurrency({
-        address: addressString as `0x${string}`,
-        args: [pendingDepositAmount],
-      })
-      setApprovalCompleted(false)
-      setPendingDepositAmount(BigInt(0))
-    }
-  }, [isApprovalSuccess, approvalCompleted, DepositCurrency, addressString, pendingDepositAmount])
-
+  // Handle deposit/donate
   const onSubmit = (value: string) => {
-    // Parse amount considering the token decimals
-    const amountBigInt = parseTokenAmount(value || "0", tokenDecimals)
-
-    if (config.currency === ETH_ADDRESS) {
-      DepositEth({
-        address: addressString as `0x${string}`,
-        value: amountBigInt,
+    if (!value || Number(value) <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid amount greater than 0.",
+        variant: "destructive",
       })
-    } else {
-      setApprovalCompleted(true)
-      setPendingDepositAmount(amountBigInt)
-      try {
-        Approve({
-          address: config.currency as `0x${string}`,
-          args: [addressString as `0x${string}`, amountBigInt],
+      return
+    }
+
+    try {
+      // Parse amount considering the token decimals
+      const amountBigInt = parseTokenAmount(value || "0", tokenDecimals || 18)
+
+      // Show loading overlay
+      setIsDepositLoading(true)
+      setLoadingMessage(config.currency === ETH_ADDRESS ? "Processing ETH deposit..." : "Processing token deposit...")
+
+      if (config.currency === ETH_ADDRESS) {
+        depositEth({
+          address: addressString as `0x${string}`,
+          value: amountBigInt,
         })
-      } catch (error) {
-        console.error("Approve error:", error)
+      } else {
+        // For ERC20 tokens, first validate the currency address
+        try {
+          ethereumAddressSchema.parse(config.currency)
+
+          // Then approve and deposit
+          setLoadingMessage("Approving token transfer...")
+          approve({
+            address: config.currency as `0x${string}`,
+            args: [addressString as `0x${string}`, amountBigInt],
+          })
+        } catch (error) {
+          console.error("Invalid token address:", error)
+          setIsDepositLoading(false)
+          setErrorMessage("Invalid token address format")
+          setShowErrorDialog(true)
+        }
       }
+    } catch (error: any) {
+      console.error("Error submitting transaction:", error)
+      setIsDepositLoading(false)
+      setErrorMessage(
+        error.message.includes("user rejected transaction")
+          ? "Transaction cancelled by user"
+          : "Failed to submit transaction. Please try again.",
+      )
+      setShowErrorDialog(true)
     }
   }
 
+  // Copy to clipboard
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
     toast({
@@ -189,100 +321,307 @@ export default function CookieJarConfigDetails() {
     })
   }
 
-  const handleWithdrawWhitelist = () => {
+  // Withdrawal handlers
+  const handleWithdrawWhitelist = async () => {
     if (!config.contractAddress || !config.fixedAmount) return
 
-    withdrawWhitelistMode({
-      address: config.contractAddress,
-      args: [config.fixedAmount, withdrawPurpose],
-    })
+    setIsWithdrawLoading(true)
+    setLoadingMessage("Processing withdrawal...")
+
+    try {
+      // Validate the contract address
+      ethereumAddressSchema.parse(config.contractAddress)
+
+      await withdrawWhitelistMode({
+        address: config.contractAddress,
+        args: [config.fixedAmount, withdrawPurpose],
+      })
+    } catch (error: any) {
+      console.error("Withdrawal error:", error)
+      setIsWithdrawLoading(false)
+      if (error.message.includes("user rejected transaction")) {
+        setErrorMessage("Transaction cancelled by user")
+      } else {
+        setErrorMessage("An error occurred during withdrawal")
+      }
+      setShowErrorDialog(true)
+    }
   }
 
-  const handleWithdrawWhitelistVariable = () => {
+  const handleWithdrawWhitelistVariable = async () => {
     if (!config.contractAddress || !withdrawAmount) return
 
-    // Parse amount considering the token decimals
-    const parsedAmount = config.currency === ETH_ADDRESS
-      ? parseEther(withdrawAmount)
-      : parseTokenAmount(withdrawAmount, tokenDecimals)
+    setIsWithdrawLoading(true)
+    setLoadingMessage("Processing withdrawal...")
 
-    withdrawWhitelistMode({
-      address: config.contractAddress,
-      args: [parsedAmount, withdrawPurpose],
-    })
+    try {
+      // Validate the contract address
+      ethereumAddressSchema.parse(config.contractAddress)
+
+      // Validate the withdrawal amount
+      if (isNaN(Number(withdrawAmount)) || Number(withdrawAmount) <= 0) {
+        throw new Error("Invalid withdrawal amount")
+      }
+
+      // Parse amount considering the token decimals
+      const parsedAmount = parseTokenAmount(withdrawAmount, tokenDecimals || 18)
+
+      await withdrawWhitelistMode({
+        address: config.contractAddress,
+        args: [parsedAmount, withdrawPurpose],
+      })
+    } catch (error: any) {
+      console.error("Withdrawal error:", error)
+      setIsWithdrawLoading(false)
+      if (error.message.includes("user rejected transaction")) {
+        setErrorMessage("Transaction cancelled by user")
+      } else {
+        setErrorMessage("An error occurred during withdrawal")
+      }
+      setShowErrorDialog(true)
+    }
   }
 
-  const handleWithdrawNFT = () => {
+  const handleWithdrawNFT = async () => {
     if (!config.contractAddress || !config.fixedAmount || !gateAddress) return
 
-    withdrawNFTMode({
-      address: config.contractAddress,
-      args: [config.fixedAmount, withdrawPurpose, gateAddress as `0x${string}`, BigInt(tokenId || "0")],
-    })
+    setIsWithdrawLoading(true)
+    setLoadingMessage("Processing NFT-gated withdrawal...")
+
+    try {
+      // Validate the contract address and gate address
+      ethereumAddressSchema.parse(config.contractAddress)
+      ethereumAddressSchema.parse(gateAddress)
+
+      await withdrawNFTMode({
+        address: config.contractAddress,
+        args: [config.fixedAmount, withdrawPurpose, gateAddress as `0x${string}`, BigInt(tokenId || "0")],
+      })
+    } catch (error: any) {
+      console.error("NFT withdrawal error:", error)
+      setIsWithdrawLoading(false)
+      if (error.message.includes("user rejected transaction")) {
+        setErrorMessage("Transaction cancelled by user")
+      } else {
+        setErrorMessage("An error occurred during withdrawal")
+      }
+      setShowErrorDialog(true)
+    }
   }
 
-  const handleWithdrawNFTVariable = () => {
+  const handleWithdrawNFTVariable = async () => {
     if (!config.contractAddress || !withdrawAmount || !gateAddress) return
 
-    // Parse amount considering the token decimals
-    const parsedAmount = config.currency === ETH_ADDRESS
-      ? parseEther(withdrawAmount)
-      : parseTokenAmount(withdrawAmount, tokenDecimals)
+    setIsWithdrawLoading(true)
+    setLoadingMessage("Processing NFT-gated withdrawal...")
 
-    withdrawNFTMode({
-      address: config.contractAddress,
-      args: [parsedAmount, withdrawPurpose, gateAddress as `0x${string}`, BigInt(tokenId || "0")],
-    })
+    try {
+      // Validate the contract address and gate address
+      ethereumAddressSchema.parse(config.contractAddress)
+      ethereumAddressSchema.parse(gateAddress)
+
+      // Validate the withdrawal amount
+      if (isNaN(Number(withdrawAmount)) || Number(withdrawAmount) <= 0) {
+        throw new Error("Invalid withdrawal amount")
+      }
+
+      // Parse amount considering the token decimals
+      const parsedAmount = parseTokenAmount(withdrawAmount, tokenDecimals || 18)
+
+      await withdrawNFTMode({
+        address: config.contractAddress,
+        args: [parsedAmount, withdrawPurpose, gateAddress as `0x${string}`, BigInt(tokenId || "0")],
+      })
+    } catch (error: any) {
+      console.error("NFT withdrawal error:", error)
+      setIsWithdrawLoading(false)
+      if (error.message.includes("user rejected transaction")) {
+        setErrorMessage("Transaction cancelled by user")
+      } else {
+        setErrorMessage("An error occurred during withdrawal")
+      }
+      setShowErrorDialog(true)
+    }
   }
 
-  // Add success and error handling effects
+  // Track deposit ETH transaction
   useEffect(() => {
-    if (isWithdrawWhitelistSuccess || isWithdrawNFTSuccess) {
+    if (isDepositEthSuccess && depositEthData) {
+      setPendingTx(depositEthData)
       toast({
-        title: "Withdrawal Successful",
-        description: "Your withdrawal has been processed successfully.",
+        title: "ETH Deposit Submitted",
+        description: "Your deposit transaction has been submitted. Waiting for confirmation...",
       })
+    }
+  }, [isDepositEthSuccess, depositEthData, toast])
+
+  // Track deposit currency (ERC20) transaction
+  useEffect(() => {
+    if (isDepositCurrencySuccess && depositCurrencyData) {
+      setPendingTx(depositCurrencyData)
+      toast({
+        title: "Token Deposit Submitted",
+        description: "Your deposit transaction has been submitted. Waiting for confirmation...",
+      })
+    }
+  }, [isDepositCurrencySuccess, depositCurrencyData, toast])
+
+  // Handle approval success
+  useEffect(() => {
+    if (isApprovalSuccess && approvalData) {
+      toast({
+        title: "Approval Successful",
+        description: "Token approval successful. Proceeding with deposit...",
+      })
+
+      setLoadingMessage("Depositing tokens...")
+
+      // After approval, proceed with deposit
+      setTimeout(() => {
+        try {
+          const amountBigInt = parseTokenAmount(amount || "0", tokenDecimals || 18)
+          depositCurrency({
+            address: addressString as `0x${string}`,
+            args: [amountBigInt],
+          })
+        } catch (error) {
+          console.error("Error depositing after approval:", error)
+          setIsDepositLoading(false)
+          setErrorMessage("Failed to deposit tokens after approval.")
+          setShowErrorDialog(true)
+        }
+      }, 1000)
+    }
+
+    if (isApprovalError) {
+      setIsDepositLoading(false)
+      setErrorMessage("Token approval rejected")
+      setShowErrorDialog(true)
+    }
+  }, [isApprovalSuccess, isApprovalError, approvalData, amount, depositCurrency, addressString, toast, tokenDecimals])
+
+  // Handle withdrawal success
+  useEffect(() => {
+    if (isWithdrawWhitelistSuccess && withdrawWhitelistModeData) {
+      setPendingTx(withdrawWhitelistModeData)
+      toast({
+        title: "Withdrawal Submitted",
+        description: "Your withdrawal transaction has been submitted. Waiting for confirmation...",
+      })
+
+      // Reset form fields
+      setWithdrawAmount("")
+      setWithdrawPurpose("")
+    }
+  }, [isWithdrawWhitelistSuccess, withdrawWhitelistModeData, toast])
+
+  // Handle NFT withdrawal success
+  useEffect(() => {
+    if (isWithdrawNFTSuccess && withdrawNFTModeData) {
+      setPendingTx(withdrawNFTModeData)
+      toast({
+        title: "NFT Withdrawal Submitted",
+        description: "Your NFT withdrawal transaction has been submitted. Waiting for confirmation...",
+      })
+
       // Reset form fields
       setWithdrawAmount("")
       setWithdrawPurpose("")
       setGateAddress("")
       setTokenId("")
     }
-  }, [isWithdrawWhitelistSuccess, isWithdrawNFTSuccess, toast])
+  }, [isWithdrawNFTSuccess, withdrawNFTModeData, toast])
 
+  // Handle transaction confirmation
+  useEffect(() => {
+    if (isTxSuccess && txReceipt && pendingTx) {
+      toast({
+        title: "Transaction Confirmed",
+        description: "Your transaction has been confirmed. Refreshing data...",
+      })
+
+      // Clear the pending transaction
+      setPendingTx(undefined)
+
+      // Clear loading states
+      setIsDepositLoading(false)
+      setIsWithdrawLoading(false)
+      setIsAdminActionLoading(false)
+
+      // Clear any error states
+      setErrorMessage(null)
+      setShowErrorDialog(false)
+
+      // Reset amount field after successful deposit
+      setAmount("")
+
+      // Refresh data after transaction confirmation
+      // Add a delay to allow blockchain state to update
+      setTimeout(() => {
+        refetchJarData()
+      }, 2000)
+    }
+  }, [isTxSuccess, txReceipt, pendingTx, toast, refetchJarData])
+
+  // Handle withdrawal errors
   useEffect(() => {
     if (withdrawWhitelistModeError || withdrawNFTModeError) {
-      toast({
-        title: "Withdrawal Failed",
-        description:
-          (withdrawWhitelistModeError || withdrawNFTModeError)?.message || "An error occurred during withdrawal",
-        variant: "destructive",
-      })
+      setIsWithdrawLoading(false)
+
+      const errorMsg =
+        (withdrawWhitelistModeError || withdrawNFTModeError)?.message || "An error occurred during withdrawal"
+
+      if (errorMsg.includes("rejected")) {
+        setErrorMessage("Transaction cancelled by user")
+      } else {
+        setErrorMessage(errorMsg)
+      }
+      setShowErrorDialog(true)
     }
   }, [withdrawWhitelistModeError, withdrawNFTModeError, toast])
 
+  // Add a new useEffect to handle deposit errors
+  useEffect(() => {
+    // Only show error dialog if there was an actual user rejection
+    // and we're not just in a pending state during initial load
+    if (
+      isDepositEthPending === false &&
+      isDepositCurrencyPending === false &&
+      pendingTx === undefined &&
+      isDepositLoading === true
+    ) {
+      setIsDepositLoading(false)
+      setErrorMessage("Transaction cancelled by user")
+      setShowErrorDialog(true)
+    }
+  }, [isDepositEthPending, isDepositCurrencyPending, pendingTx, isDepositLoading])
+
+  // Format balance for display using the token decimals
+
+  // Update the Fixed Amount display in the overview tab
+  // Error states
   if (!isValidAddress) {
     return (
-      <div className="container max-w-3xl mx-auto mt-8 p-6 bg-red-50 border border-red-200 rounded-lg">
-        <h2 className="text-xl font-bold text-red-700 mb-4">Invalid Address</h2>
-        <p className="text-red-600">No valid address was provided. Please check the URL and try again.</p>
+      <div className="container max-w-3xl mx-auto mt-8 p-6 bg-background-paper border border-border rounded-lg">
+        <h2 className="text-xl font-bold text-red-500 mb-4">Invalid Address</h2>
+        <p className="text-red-400">No valid address was provided. Please check the URL and try again.</p>
       </div>
     )
   }
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#ff5e14]"></div>
+      <div className="min-h-screen bg-background-main">
+        <LoadingOverlay isOpen={true} message="Loading jar details..." />
       </div>
     )
   }
 
   if (hasError) {
     return (
-      <div className="container max-w-3xl mx-auto mt-8 p-6 bg-red-50 border border-red-200 rounded-lg">
-        <h2 className="text-xl font-bold text-red-700 mb-4">Error Loading Configuration</h2>
-        <ul className="list-disc pl-5 text-red-600">
+      <div className="container max-w-3xl mx-auto mt-8 p-6 bg-background-paper border border-border rounded-lg">
+        <h2 className="text-xl font-bold text-red-500 mb-4">Error Loading Configuration</h2>
+        <ul className="list-disc pl-5 text-red-400">
           {errors
             .filter((error): error is ReadContractErrorType => error !== null)
             .map((error, index) => (
@@ -293,86 +632,239 @@ export default function CookieJarConfigDetails() {
     )
   }
 
-  // Format balance for display using the token decimals
-  const formattedBalance = () => {
-    if (!config.balance) return "0"
-    
-    return formatTokenAmount(config.balance, tokenDecimals, tokenSymbol || "ETH")
-  }
-
+  // Main render
   return (
-    <div className="container max-w-full px-4 md:px-8 py-8 bg-[#2b1d0e]" ref={pageRef}>
-      {/* Back button navigation */}
-      <div className="mb-6 relative">
-        <BackButton />
+    <div className="min-h-screen bg-background-main" ref={pageRef}>
+      {/* Hero section with jar info */}
+      <div className="relative bg-gradient-to-b from-background-dark to-background-main pt-6 pb-12">
+        <div className="container mx-auto px-4">
+          <div className="mb-6">
+            <BackButton />
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mt-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{config.metadata ?? "Cookie Jar"}</h1>
+              <div className="flex items-center gap-2 text-text-disabled">
+                <span>{formatAddress(addressString)}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => copyToClipboard(addressString)}
+                  className="h-7 w-7 text-text-disabled hover:text-white hover:bg-[#ffffff20]"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-text-disabled hover:text-white hover:bg-[#ffffff20]"
+                  asChild
+                >
+                  <a
+                    href={`https://sepolia-explorer.base.org/address/${addressString}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* User status badges */}
+              <div className="flex flex-wrap gap-2">
+                {config.blacklist ? (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-1 bg-background-paper text-primary border-primary px-3 py-1"
+                  >
+                    <ShieldAlert className="h-3 w-3 mr-1" />
+                    Blacklisted
+                  </Badge>
+                ) : (
+                  showUserFunctions && (
+                    <Badge
+                      variant="outline"
+                      className="flex items-center gap-1 bg-background-paper text-primary border-primary px-3 py-1"
+                    >
+                      <Users className="h-3 w-3 mr-1" />
+                      Whitelisted
+                    </Badge>
+                  )
+                )}
+                {showNFTGatedFunctions && (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-1 bg-background-paper text-primary border-primary px-3 py-1"
+                  >
+                    <Users className="h-3 w-3 mr-1" />
+                    NFT Verified
+                  </Badge>
+                )}
+                {isFeeCollector && (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-1 bg-background-paper text-primary border-primary px-3 py-1"
+                  >
+                    <Coins className="h-3 w-3 mr-1" />
+                    Fee Collector
+                  </Badge>
+                )}
+                {isAdmin && (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-1 bg-background-paper text-primary border-primary px-3 py-1"
+                  >
+                    <ShieldAlert className="h-3 w-3 mr-1" />
+                    Admin
+                  </Badge>
+                )}
+              </div>
+
+              {/* Balance display */}
+              <div className="flex items-center bg-background-light rounded-full px-4 py-2">
+                <Coins className="h-5 w-5 text-primary mr-2" />
+                <span className="text-text-primary font-medium">{formattedBalance()}</span>
+              </div>
+
+              {/* Deposit/Donate button */}
+              <Button
+                onClick={() => setActiveTab("deposit")}
+                className="bg-primary hover:bg-primary-dark text-black"
+                disabled={isDepositEthPending || isDepositCurrencyPending || isApprovalPending}
+              >
+                {isDepositEthPending || isDepositCurrencyPending || isApprovalPending ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Wallet className="h-4 w-4 mr-2" />
+                    {isAdmin ? "Deposit" : "Donate"}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-20 gap-6">
-        {/* Left sidebar with jar details */}
-        <div className="lg:col-span-11">
-          <div>
-            <Card className="shadow-lg bg-white border-none overflow-hidden">
-              <CardContent className="p-4">
-                <div className="space-y-4">
-                  {/* Jar Title and Description */}
-                  <div>
-                    <h1 className="text-3xl font-bold text-[#1a1a1a]">{config.metadata ?? "Cookie Jar"}</h1>
-                    <p className="text-[#4a3520] mt-1">{"Shared Token Pool"}</p>
-                  </div>
+      {/* Main content */}
+      <div className="container mx-auto px-4 -mt-6">
+        <div className="bg-background-paper backdrop-blur-sm rounded-xl border border-border shadow-3d-card overflow-hidden">
+          {/* Navigation tabs */}
+          <div className="p-4 border-b border-gray-200">
+            <div className="flex overflow-x-auto hide-scrollbar space-x-2">
+              <Button
+                variant={activeTab === "overview" ? "default" : "ghost"}
+                onClick={() => setActiveTab("overview")}
+                className={
+                  activeTab === "overview"
+                    ? "bg-primary text-black"
+                    : "text-text-primary hover:bg-primary hover:text-black"
+                }
+              >
+                <Info className="h-4 w-4 mr-2" />
+                Overview
+              </Button>
 
-                  <Separator className="my-2" />
+              <Button
+                variant={activeTab === "withdraw" ? "default" : "ghost"}
+                onClick={() => setActiveTab("withdraw")}
+                className={
+                  activeTab === "withdraw"
+                    ? "bg-primary text-black"
+                    : "text-text-primary hover:bg-primary hover:text-black"
+                }
+                disabled={config.blacklist || (!showUserFunctions && !showNFTGatedFunctions)}
+              >
+                <ArrowDownToLine className="h-4 w-4 mr-2" />
+                Get Cookie
+              </Button>
 
-                  {/* Jar Details - Key Value Pairs */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-[#4a3520] font-medium">Contract Address</span>
+              <Button
+                variant={activeTab === "deposit" ? "default" : "ghost"}
+                onClick={() => setActiveTab("deposit")}
+                className={
+                  activeTab === "deposit"
+                    ? "bg-primary text-black"
+                    : "text-text-primary hover:bg-primary hover:text-black"
+                }
+              >
+                <Wallet className="h-4 w-4 mr-2" />
+                {isAdmin ? "Deposit" : "Donate"}
+              </Button>
+
+              <Button
+                variant={activeTab === "history" ? "default" : "ghost"}
+                onClick={() => setActiveTab("history")}
+                className={
+                  activeTab === "history"
+                    ? "bg-primary text-black"
+                    : "text-text-primary hover:bg-primary hover:text-black"
+                }
+              >
+                <History className="h-4 w-4 mr-2" />
+                History
+              </Button>
+
+              <Button
+                variant={activeTab === "admin" ? "default" : "ghost"}
+                onClick={() => setActiveTab("admin")}
+                className={
+                  activeTab === "admin" ? "bg-[#c0ff00] text-black" : "text-white hover:bg-[#c0ff00] hover:text-black"
+                }
+              >
+                <ShieldAlert className="h-4 w-4 mr-2" />
+                Admin
+              </Button>
+
+              {isFeeCollector && (
+                <Button
+                  variant={activeTab === "feeCollector" ? "default" : "ghost"}
+                  onClick={() => setActiveTab("feeCollector")}
+                  className={
+                    activeTab === "feeCollector"
+                      ? "bg-primary text-black"
+                      : "text-text-primary hover:bg-primary hover:text-black"
+                  }
+                >
+                  <Coins className="h-4 w-4 mr-2" />
+                  Fee Collector
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Tab content - update background colors to white */}
+          <div className="p-6">
+            {/* Overview Tab */}
+            {activeTab === "overview" && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                  <h2 className="text-2xl font-bold text-text-primary mb-4">Jar Details</h2>
+
+                  <div className="bg-background-paper rounded-xl p-6 space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-text-secondary">Access Type</span>
                       <div className="flex items-center">
-                        <span className="text-[#1a1a1a] font-medium mr-2">{formatAddress(addressString)}</span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => copyToClipboard(addressString)}
-                          className="h-7 w-7 text-[#ff5e14] hover:text-[#ff5e14] hover:bg-[#fff0e0]"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-[#ff5e14] hover:text-[#ff5e14] hover:bg-[#fff0e0]"
-                          asChild
-                        >
-                          <a
-                            href={`https://sepolia-explorer.base.org/address/${addressString}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
-                        </Button>
+                        <Users className="h-4 w-4 text-primary mr-2" />
+                        <span className="text-text-primary font-medium">{config.accessType}</span>
                       </div>
                     </div>
 
-                    <Separator />
+                    <Separator className="bg-[#f0e6d8]" />
 
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-[#4a3520] font-medium">Access Type</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-text-secondary">Cooldown Period</span>
                       <div className="flex items-center">
-                        <Users className="h-4 w-4 text-[#ff5e14] mr-2" />
-                        <span className="text-[#1a1a1a] font-medium">{config.accessType}</span>
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-[#4a3520] font-medium">Cooldown Period</span>
-                      <div className="flex items-center">
-                        <Clock className="h-4 w-4 text-[#ff5e14] mr-2" />
-                        <span className="text-[#1a1a1a] font-medium">
+                        <Clock className="h-4 w-4 text-primary mr-2" />
+                        <span className="text-text-primary font-medium">
                           {config.withdrawalInterval
                             ? (() => {
-                                // Import these at the top of the file (around line 15-20)
                                 const { formatTimeComponents, formatTimeString } = require("@/lib/utils/time-utils")
                                 const seconds = Number(config.withdrawalInterval)
                                 const { days, hours, minutes, seconds: secs } = formatTimeComponents(seconds)
@@ -383,245 +875,251 @@ export default function CookieJarConfigDetails() {
                       </div>
                     </div>
 
-                    <Separator />
+                    <Separator className="bg-[#f0e6d8]" />
 
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-[#4a3520] font-medium">Max Withdrawal</span>
-                      <div className="flex items-center">
-                        <ArrowUpToLine className="h-4 w-4 text-[#ff5e14] mr-2" />
-                        <span className="text-[#1a1a1a] font-medium">
-                          {config.maxWithdrawal
-                            ? config.currency === "0x0000000000000000000000000000000000000003"
-                              ? Number(formatUnits(config.maxWithdrawal, 18)).toFixed(4) + " ETH"
-                              : Number(formatUnits(config.maxWithdrawal, tokenDecimals)).toFixed(4) + " " + tokenSymbol
-                            : "N/A"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-[#4a3520] font-medium">Current Balance</span>
-                      <span className="text-[#ff5e14] font-bold text-xl">{formattedBalance()}</span>
-                    </div>
-
-                    <Separator />
-
-                    {/* Add Whitelist Status indicator */}
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-[#4a3520] font-medium">Your Status</span>
-                      <div className="flex items-center">
-                        {config.blacklist ? (
-                          <span className="font-medium px-3 py-1 rounded-full text-white bg-red-500">Blacklisted</span>
-                        ) : (
-                          <span
-                            className={`font-medium px-3 py-1 rounded-full text-white ${config.whitelist ? "bg-green-500" : "bg-red-500"}`}
-                          >
-                            {config.whitelist ? "Whitelisted" : "Not Whitelisted"}
+                    {config.withdrawalOption === "Fixed" ? (
+                      <div className="flex justify-between items-center">
+                        <span className="text-text-secondary">Fixed Amount</span>
+                        <div className="flex items-center">
+                          <span className="text-text-primary font-medium">
+                            {config.fixedAmount
+                              ? isLoadingToken
+                                ? "Loading..."
+                                : formatTokenAmount(config.fixedAmount, tokenDecimals || 18, tokenSymbol || "ETH")
+                              : "N/A"}
                           </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-center">
+                        <span className="text-text-secondary">Max Withdrawal</span>
+                        <div className="flex items-center">
+                          <span className="text-text-primary font-medium">
+                            {config.maxWithdrawal
+                              ? formatTokenAmount(config.maxWithdrawal, tokenDecimals || 18, tokenSymbol || "ETH")
+                              : "N/A"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    <Separator className="bg-[#f0e6d8]" />
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-text-secondary">One-Time Withdrawal</span>
+                      <div className="flex items-center">
+                        {config.oneTimeWithdrawal ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-500" />
                         )}
                       </div>
                     </div>
 
-                    <Separator />
+                    <Separator className="bg-[#f0e6d8]" />
 
-                    {/* Feature boxes */}
-                    <div className="grid grid-cols-3 gap-2 mt-3">
-                      <div className="bg-[#f8f8f8] p-2 rounded-lg text-center">
-                        <p className="text-[#4a3520] text-sm mb-1">Purpose Required</p>
-                        <p className="font-semibold text-[#1a1a1a]">{config.strictPurpose ? "Yes" : "No"}</p>
-                      </div>
-
-                      <div className="bg-[#f8f8f8] p-2 rounded-lg text-center">
-                        <p className="text-[#4a3520] text-sm mb-1">Fixed Amount</p>
-                        <p className="font-semibold text-[#1a1a1a]">
-                          {config.withdrawalOption === "Fixed" ? "Yes" : "No"}
-                          {config.withdrawalOption === "Fixed" && config.fixedAmount && (
-                            <span className="block text-xs text-[#ff5e14]">
-                              {config.currency === "0x0000000000000000000000000000000000000003"
-                                ? Number(formatUnits(config.fixedAmount || BigInt(0), 18)).toFixed(4) + " ETH"
-                                : Number(formatUnits(config.fixedAmount || BigInt(0), tokenDecimals)).toFixed(4) + " " + tokenSymbol}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-
-                      <div className="bg-[#f8f8f8] p-2 rounded-lg text-center">
-                        <p className="text-[#4a3520] text-sm mb-1">Emergency Withdrawal</p>
-                        <p className="font-semibold text-[#1a1a1a]">
-                          {config.emergencyWithdrawalEnabled ? "Enabled" : "Disabled"}
-                        </p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-text-secondary">Purpose Required</span>
+                      <div className="flex items-center">
+                        {config.strictPurpose ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        )}
                       </div>
                     </div>
 
-                    {/* User Status */}
-                    {(showUserFunctions || isAdmin || isFeeCollector) && (
-                      <div className="mt-6">
-                        <h3 className="text-base font-semibold text-[#3c2a14] mb-2">Your Status</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {config.blacklist ? (
-                            <Badge
-                              variant="outline"
-                              className="flex items-center gap-1 bg-[#ffebee] text-[#c62828] border-[#c62828] px-3 py-1"
-                            >
-                              <ShieldAlert className="h-3 w-3 mr-1" />
-                              Blacklisted
-                            </Badge>
+                    <Separator className="bg-[#f0e6d8]" />
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-text-secondary">Emergency Withdrawal</span>
+                      <div className="flex items-center">
+                        {config.emergencyWithdrawalEnabled ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h2 className="text-2xl font-bold text-text-primary mb-4">Your Status</h2>
+
+                  <div className="bg-background-paper rounded-xl p-6 space-y-6">
+                    {/* Access status */}
+                    <div className="flex flex-col gap-2">
+                      <span className="text-text-secondary">Access Status</span>
+                      <div className="flex items-center gap-2">
+                        {config.blacklist ? (
+                          <div className="flex items-center gap-2 bg-[#ffebee] text-[#c62828] px-3 py-2 rounded-lg">
+                            <ShieldAlert className="h-5 w-5" />
+                            <span className="font-medium">You are blacklisted from this jar</span>
+                          </div>
+                        ) : config.accessType === "Whitelist" ? (
+                          config.whitelist ? (
+                            <div className="flex items-center gap-2 bg-[#e6f7e6] text-[#2e7d32] px-3 py-2 rounded-lg">
+                              <CheckCircle className="h-5 w-5" />
+                              <span className="font-medium">You are whitelisted for this jar</span>
+                            </div>
                           ) : (
-                            showUserFunctions && (
-                              <Badge
-                                variant="outline"
-                                className="flex items-center gap-1 bg-[#e6f7e6] text-[#2e7d32] border-[#2e7d32] px-3 py-1"
-                              >
-                                <Users className="h-3 w-3 mr-1" />
-                                Whitelisted
-                              </Badge>
-                            )
-                          )}
-                          {isFeeCollector && (
-                            <Badge
-                              variant="outline"
-                              className="flex items-center gap-1 bg-[#e3f2fd] text-[#1976d2] border-[#1976d2] px-3 py-1"
-                            >
-                              <Coins className="h-3 w-3 mr-1" />
-                              Fee Collector
-                            </Badge>
-                          )}
-                          {isAdmin && (
-                            <Badge
-                              variant="outline"
-                              className="flex items-center gap-1 bg-[#fce4ec] text-[#c2185b] border-[#c2185b] px-3 py-1"
-                            >
-                              <ShieldAlert className="h-3 w-3 mr-1" />
-                              Admin
-                            </Badge>
+                            <div className="flex items-center gap-2 bg-[#ffebee] text-[#c62828] px-3 py-2 rounded-lg">
+                              <XCircle className="h-5 w-5" />
+                              <span className="font-medium">You are not whitelisted for this jar</span>
+                            </div>
+                          )
+                        ) : hasRequiredNFT ? (
+                          <div className="flex items-center gap-2 bg-[#e6f7e6] text-[#2e7d32] px-3 py-2 rounded-lg">
+                            <CheckCircle className="h-5 w-5" />
+                            <span className="font-medium">You have the required NFT for this jar</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 bg-[#ffebee] text-[#c62828] px-3 py-2 rounded-lg">
+                            <XCircle className="h-5 w-5" />
+                            <span className="font-medium">You don't have the required NFT for this jar</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Cooldown status */}
+                    {(showUserFunctions || showNFTGatedFunctions) && (
+                      <div className="flex flex-col gap-2">
+                        <span className="text-text-secondary">Cooldown Status</span>
+                        <div className="flex items-center gap-2">
+                          {isInCooldown ? (
+                            <div className="flex items-center gap-2 bg-background-light text-primary px-3 py-2 rounded-lg">
+                              <Clock className="h-5 w-5" />
+                              <span className="font-medium">Cooldown period active</span>
+                            </div>
+                          ) : hasAlreadyWithdrawn ? (
+                            <div className="flex items-center gap-2 bg-[#ffebee] text-[#c62828] px-3 py-2 rounded-lg">
+                              <XCircle className="h-5 w-5" />
+                              <span className="font-medium">You have already claimed from this jar</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 bg-[#e6f7e6] text-[#2e7d32] px-3 py-2 rounded-lg">
+                              <CheckCircle className="h-5 w-5" />
+                              <span className="font-medium">You can withdraw now</span>
+                            </div>
                           )}
                         </div>
                       </div>
                     )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
 
-        {/* Right side - Jar Actions */}
-        <div className="lg:col-span-9">
-          <Tabs defaultValue="withdraw" className="w-full">
-            <TabsList className="mb-6 bg-[#fff8f0] p-1 w-full">
-              <TabsTrigger
-                value="withdraw"
-                className="data-[state=active]:bg-white data-[state=active]:text-[#ff5e14] data-[state=active]:shadow-sm text-[#4a3520] flex-1"
-              >
-                Get Cookie
-              </TabsTrigger>
-              <TabsTrigger
-                value="deposit"
-                className="data-[state=active]:bg-white data-[state=active]:text-[#ff5e14] data-[state=active]:shadow-sm text-[#4a3520] flex-1"
-              >
-                Jar Donate
-              </TabsTrigger>
-              {isAdmin && (
-                <TabsTrigger
-                  value="admin"
-                  className="data-[state=active]:bg-white data-[state=active]:text-[#ff5e14] data-[state=active]:shadow-sm text-[#4a3520] flex-1"
-                >
-                  Admin Controls
-                </TabsTrigger>
-              )}
-              {isFeeCollector && (
-                <TabsTrigger
-                  value="feeCollector"
-                  className="data-[state=active]:bg-white data-[state=active]:text-[#ff5e14] data-[state=active]:shadow-sm text-[#4a3520] flex-1"
-                >
-                  Fee Collector
-                </TabsTrigger>
-              )}
-            </TabsList>
+                    {/* Roles */}
+                    <div className="flex flex-col gap-2">
+                      <span className="text-text-secondary">Your Roles</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {isAdmin && (
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#fce4ec] text-[#c2185b]">
+                            <ShieldAlert className="h-5 w-5" />
+                            <span className="font-medium">Admin</span>
+                          </div>
+                        )}
 
-            {/* Deposit Tab */}
-            <TabsContent value="deposit" className="mt-0">
-              <Card className="border-none shadow-md">
-                <CardHeader className="bg-[#fff8f0] rounded-t-lg">
-                  <CardTitle className="text-xl text-[#3c2a14]">Jar Donate</CardTitle>
-                  <CardDescription className="text-[#8b7355]">
-                    Support this cookie jar with your donation
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="md:col-span-2">
-                        <label htmlFor="fundAmount" className="block text-[#ff5e14] font-medium mb-2">
-                          Amount to Deposit
-                        </label>
-                        <Input
-                          id="fundAmount"
-                          type="text"
-                          placeholder={
-                            config.currency === "0x0000000000000000000000000000000000000003" 
-                              ? "0.1 ETH" 
-                              : `1${"." + "0".repeat(tokenDecimals > 0 ? 0 : tokenDecimals)} ${tokenSymbol || "Tokens"}`
-                          }
-                          value={amount}
-                          onChange={(e) => setAmount(e.target.value)}
-                          className="border-[#f0e6d8] bg-white text-[#3c2a14]"
-                        />
-                      </div>
-                      <div className="flex items-end">
-                        <Button
-                          onClick={() => onSubmit(amount)}
-                          className="w-full bg-[#ff5e14] hover:bg-[#e54d00] text-white h-10"
-                          disabled={!amount || Number(amount) <= 0}
-                        >
-                          Donate Now
-                        </Button>
+                        {isFeeCollector && (
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#e3f2fd] text-[#1976d2]">
+                            <Coins className="h-5 w-5" />
+                            <span className="font-medium">Fee Collector</span>
+                          </div>
+                        )}
+
+                        {config.accessType === "Whitelist" && config.whitelist && (
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#e6f7e6] text-[#2e7d32]">
+                            <CheckCircle className="h-5 w-5" />
+                            <span className="font-medium">Whitelisted</span>
+                          </div>
+                        )}
+
+                        {config.accessType === "Whitelist" && !config.whitelist && (
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#ffebee] text-[#c62828]">
+                            <XCircle className="h-5 w-5" />
+                            <span className="font-medium">Not Whitelisted</span>
+                          </div>
+                        )}
+
+                        {config.accessType === "NFTGated" && hasRequiredNFT && (
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#e6f7e6] text-[#2e7d32]">
+                            <CheckCircle className="h-5 w-5" />
+                            <span className="font-medium">NFT Access</span>
+                          </div>
+                        )}
+
+                        {config.accessType === "NFTGated" && !hasRequiredNFT && (
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#ffebee] text-[#c62828]">
+                            <XCircle className="h-5 w-5" />
+                            <span className="font-medium">No NFT Access</span>
+                          </div>
+                        )}
+
+                        {!isAdmin &&
+                          !isFeeCollector &&
+                          !(
+                            (config.accessType === "Whitelist" && config.whitelist) ||
+                            (config.accessType === "NFTGated" && hasRequiredNFT)
+                          ) && (
+                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#f5f5f5] text-[#757575]">
+                              <span className="font-medium">No special roles</span>
+                            </div>
+                          )}
                       </div>
                     </div>
 
-                    {config.currency !== "0x0000000000000000000000000000000000000003" && (
-                      <div className="pt-2">
-                        <p className="text-sm text-[#8b7355]">
-                          Note: For ERC20 tokens, you'll need to approve the token transfer before depositing.
-                        </p>
-                      </div>
-                    )}
-
-                    {isApprovalPending && (
-                      <div className="mt-4 p-3 bg-[#fff8f0] rounded-lg text-[#4a3520]">
-                        Waiting for token approval... Please confirm the transaction in your wallet.
+                    {/* Cooldown timer */}
+                    {isInCooldown && (
+                      <div className="mt-4 bg-background-light rounded-lg p-6">
+                        <CountdownTimer
+                          lastWithdrawalTimestamp={
+                            config.accessType === "Whitelist"
+                              ? Number(config.lastWithdrawalWhitelist)
+                              : Number(config.lastWithdrawalNft)
+                          }
+                          interval={Number(config.withdrawalInterval)}
+                          onComplete={() => {
+                            // Force a re-render when timer completes
+                            refetchJarData()
+                          }}
+                        />
                       </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                </div>
+              </div>
+            )}
 
             {/* Withdraw Tab */}
-            <TabsContent value="withdraw" className="mt-0">
-              <Card className="border-none shadow-md">
-                <CardHeader className="bg-[#fff8f0] rounded-t-lg">
-                  <CardTitle className="text-xl text-[#3c2a14]">Get Cookie</CardTitle>
-                  <CardDescription className="text-[#8b7355]">Receive cookies from this jar</CardDescription>
-                </CardHeader>
-                <CardContent className="p-8 relative min-h-[400px]">
+            {activeTab === "withdraw" && (
+              <div className="max-w-3xl mx-auto">
+                <h2 className="text-2xl font-bold text-white mb-6">Get Cookie</h2>
+
+                <div className="bg-[#2a2a2a] rounded-xl p-6 relative">
                   {config.blacklist ? (
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-10 rounded-b-lg">
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
                       <div className="bg-red-500 text-white font-medium px-6 py-2 rounded-full text-lg">
                         You are Blacklisted
                       </div>
                     </div>
+                  ) : hasAlreadyWithdrawn ? (
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
+                      <div className="bg-[#c0ff00] text-black font-medium px-6 py-2 rounded-full text-lg">
+                        You have already claimed from this jar
+                      </div>
+                    </div>
                   ) : isInCooldown ? (
-                    <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-10 rounded-b-lg">
-                      <div className="w-full max-w-xl mx-auto bg-[#f8f5f0]/90 rounded-xl shadow-lg">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
+                      <div className="w-full max-w-xl mx-auto p-6">
                         <CountdownTimer
-                          lastWithdrawalTimestamp={Number(config.lastWithdrawalWhitelist)}
+                          lastWithdrawalTimestamp={
+                            config.accessType === "Whitelist"
+                              ? Number(config.lastWithdrawalWhitelist)
+                              : Number(config.lastWithdrawalNft)
+                          }
                           interval={Number(config.withdrawalInterval)}
                           onComplete={() => {
                             // Force a re-render when timer completes
-                            window.location.reload()
+                            refetchJarData()
                           }}
                         />
                       </div>
@@ -630,16 +1128,15 @@ export default function CookieJarConfigDetails() {
 
                   {showUserFunctions ? (
                     <WhitelistWithdrawalSection
-                      config={{
-                        ...config,
-                        isWithdrawPending: isWithdrawWhitelistPending,
-                      }}
+                      config={config}
                       withdrawPurpose={withdrawPurpose}
                       setWithdrawPurpose={setWithdrawPurpose}
                       withdrawAmount={withdrawAmount}
                       setWithdrawAmount={setWithdrawAmount}
                       handleWithdrawWhitelist={handleWithdrawWhitelist}
                       handleWithdrawWhitelistVariable={handleWithdrawWhitelistVariable}
+                      iconType="download"
+                      isLoading={isWithdrawLoading}
                     />
                   ) : showNFTGatedFunctions ? (
                     <NFTGatedWithdrawalSection
@@ -647,6 +1144,8 @@ export default function CookieJarConfigDetails() {
                         ...config,
                         isWithdrawPending: isWithdrawNFTPending,
                       }}
+                      withdrawPurpose={withdrawPurpose}
+                      setWithdrawPurpose={setWithdrawPurpose}
                       withdrawAmount={withdrawAmount}
                       setWithdrawAmount={setWithdrawAmount}
                       gateAddress={gateAddress}
@@ -655,67 +1154,131 @@ export default function CookieJarConfigDetails() {
                       setTokenId={setTokenId}
                       handleWithdrawNFT={handleWithdrawNFT}
                       handleWithdrawNFTVariable={handleWithdrawNFTVariable}
+                      iconType="download"
+                      isLoading={isWithdrawLoading}
                     />
                   ) : (
                     <div className="flex flex-col items-center justify-center py-16">
                       <div className="bg-red-500 text-white font-medium px-6 py-2 rounded-full text-lg">
-                        Not Whitelisted
+                        {config.accessType === "Whitelist" ? "Not Whitelisted" : "Missing Required NFT"}
+                      </div>
+                      {config.accessType === "NFTGated" && (
+                        <p className="mt-4 text-gray-400 text-center max-w-md">
+                          You need to own one of the required NFTs to withdraw from this jar.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Deposit/Donate Tab */}
+            {activeTab === "deposit" && (
+              <div className="max-w-3xl mx-auto">
+                <h2 className="text-2xl font-bold text-white mb-6">{isAdmin ? "Deposit Funds" : "Donate to Jar"}</h2>
+
+                <div className="bg-[#2a2a2a] rounded-xl p-6">
+                  <FundingSection
+                    amount={amount}
+                    setAmount={setAmount}
+                    onSubmit={onSubmit}
+                    walletBalance={walletBalance?.value}
+                    isAdmin={isAdmin}
+                  />
+
+                  {config.currency !== ETH_ADDRESS && (
+                    <div className="pt-2 text-center">
+                      <p className="text-sm text-gray-400">
+                        Note: For ERC20 tokens, you'll need to approve the token transfer before depositing.
+                      </p>
+                    </div>
+                  )}
+
+                  {isApprovalPending && (
+                    <div className="mt-4 p-3 bg-[#333333] rounded-lg text-gray-200">
+                      <div className="flex items-center">
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin text-[#c0ff00]" />
+                        <span>Waiting for token approval... Please confirm the transaction in your wallet.</span>
                       </div>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            </TabsContent>
 
-            {/* Admin Tab */}
-            {isAdmin && (
-              <TabsContent value="admin" className="mt-0">
-                <Card className="border-none shadow-md">
-                  <CardHeader className="bg-[#fff8f0] rounded-t-lg">
-                    <CardTitle className="text-xl text-[#3c2a14]">Admin Controls</CardTitle>
-                    <CardDescription className="text-[#8b7355]">
-                      Manage jar settings and access controls
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <AdminFunctions address={address as `0x${string}`} />
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                  {pendingTx && (
+                    <div className="mt-4 p-3 bg-[#333333] rounded-lg text-gray-200">
+                      <div className="flex items-center">
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin text-[#c0ff00]" />
+                        <span>Transaction pending. Data will update automatically after confirmation.</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* History Tab */}
+            {activeTab === "history" && (
+              <div>
+                <h2 className="text-2xl font-bold text-[#C3FF00] mb-6">Withdrawal History</h2>
+
+                <div className="bg-[#2a2a2a] rounded-xl p-6 shadow-lg animate-appear">
+                  <div className="mb-4 p-4 bg-[#333333] rounded-lg border-l-4 border-[#C3FF00]">
+                    <p className="text-white">
+                      This section shows all past withdrawals from this jar. Each withdrawal includes the amount and
+                      purpose.
+                    </p>
+                  </div>
+
+                  <WithdrawalHistorySection
+                    pastWithdrawals={config.pastWithdrawals ? ([...config.pastWithdrawals] as Withdrawal[]) : undefined}
+                  />
+                </div>
+              </div>
+            )}
+
+            {activeTab === "admin" && isAdmin && (
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-4">Admin Controls</h2>
+
+                <div className="bg-[#2a2a2a] rounded-xl p-6 shadow-lg animate-appear">
+                  <AdminFunctions address={address as `0x${string}`} />
+                </div>
+              </div>
             )}
 
             {/* Fee Collector Tab */}
-            {isFeeCollector && (
-              <TabsContent value="feeCollector" className="mt-0">
-                <Card className="border-none shadow-md">
-                  <CardHeader className="bg-[#fff8f0] rounded-t-lg">
-                    <CardTitle className="text-xl text-[#3c2a14]">Fee Collector Settings</CardTitle>
-                    <CardDescription className="text-[#8b7355]">Manage fee collection settings</CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <DefaultFeeCollector contractAddress={address as `0x${string}`} />
-                  </CardContent>
-                </Card>
-              </TabsContent>
+            {activeTab === "feeCollector" && isFeeCollector && (
+              <div>
+                <h2 className="text-2xl font-bold text-text-primary mb-4">Fee Collector Settings</h2>
+
+                <div className="bg-background-paper rounded-xl p-6">
+                  <DefaultFeeCollector contractAddress={address as `0x${string}`} />
+                </div>
+              </div>
             )}
-          </Tabs>
+          </div>
         </div>
       </div>
+      {/* Loading Overlay */}
+      <LoadingOverlay
+        isOpen={isDepositLoading || isWithdrawLoading || isAdminActionLoading}
+        message={loadingMessage}
+        onClose={() => {
+          setIsDepositLoading(false)
+          setIsWithdrawLoading(false)
+          setIsAdminActionLoading(false)
+        }}
+      />
 
-      {/* Withdrawal History Section */}
-      <div className="mt-8">
-        <Card className="border-none shadow-md">
-          <CardHeader className="bg-[#fff8f0] rounded-t-lg">
-            <CardTitle className="text-xl text-[#3c2a14]">Withdrawal History</CardTitle>
-            <CardDescription className="text-[#8b7355]">Past withdrawals from this cookie jar</CardDescription>
-          </CardHeader>
-          <CardContent className="p-6">
-            <WithdrawalHistorySection
-              pastWithdrawals={config.pastWithdrawals ? ([...config.pastWithdrawals] as Withdrawal[]) : undefined}
-            />
-          </CardContent>
-        </Card>
-      </div>
+      {/* Error Dialog */}
+      <ErrorDialog
+        open={showErrorDialog}
+        onOpenChange={() => {
+          setErrorMessage(null)
+          setShowErrorDialog(false)
+        }}
+        message={errorMessage}
+      />
     </div>
   )
 }

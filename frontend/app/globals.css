@@ -4,53 +4,65 @@
 
 @layer base {
   :root {
-    /* Cookie-themed color palette with dark brown and orange */
-    --background: 30 25% 95%;
-    --foreground: 25 40% 15%;
-    --card: 30 25% 98%;
-    --card-foreground: 25 40% 15%;
-    --popover: 30 25% 98%;
-    --popover-foreground: 25 40% 15%;
-    --primary: 20 95% 50%;
-    --primary-foreground: 25 40% 98%;
-    --secondary: 30 30% 92%;
-    --secondary-foreground: 25 40% 20%;
-    --muted: 30 20% 92%;
-    --muted-foreground: 25 30% 45%;
-    --accent: 20 90% 65%;
-    --accent-foreground: 25 40% 15%;
-    --destructive: 0 85% 60%;
-    --destructive-foreground: 25 40% 98%;
-    --border: 30 30% 88%;
-    --input: 30 30% 88%;
-    --ring: 20 95% 50%;
-    --radius: 0.75rem;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
   }
 
   .dark {
-    --background: 25 40% 10%;
-    --foreground: 30 25% 90%;
-    --card: 25 40% 12%;
-    --card-foreground: 30 25% 90%;
-    --popover: 25 40% 12%;
-    --popover-foreground: 30 25% 90%;
-    --primary: 20 95% 50%;
-    --primary-foreground: 25 40% 98%;
-    --secondary: 25 30% 20%;
-    --secondary-foreground: 30 25% 90%;
-    --muted: 25 30% 20%;
-    --muted-foreground: 30 20% 70%;
-    --accent: 20 90% 50%;
-    --accent-foreground: 30 25% 90%;
-    --destructive: 0 70% 45%;
-    --destructive-foreground: 30 25% 90%;
-    --border: 25 30% 25%;
-    --input: 25 30% 25%;
-    --ring: 20 95% 50%;
-  }
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
 
-  html {
-    font-family: var(--font-clash-display), sans-serif;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
   }
 }
 
@@ -75,20 +87,35 @@
   }
 }
 
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-appear {
+  animation: appear 0.5s ease-out forwards;
+}
+
 @layer components {
-  /* Update text colors to dark brown */
+  /* Update text colors to white */
   .mega-text {
     @apply text-6xl md:text-8xl lg:text-9xl font-black tracking-tight uppercase;
-    color: #3c2a14; /* Darker brown for main text */
+    color: #ffffff; /* White for main text (previously dark brown) */
   }
 
   .text-light-gray {
-    color: #e0dcd5;
+    color: #e0e0e0;
   }
 
-  /* Override muted text to be dark brown */
+  /* Override muted text to be light gray */
   .text-muted-foreground {
-    color: #4a3520;
+    color: #e0e0e0;
   }
 
   /* Increase container width to fill gaps */
@@ -138,7 +165,7 @@
   }
 
   .cookie-gradient {
-    background: linear-gradient(135deg, #ff5e14 0%, #ff8e14 100%);
+    background: linear-gradient(135deg, #c3ff00 0%, #d4ff33 100%);
   }
 
   .page-section {
@@ -155,8 +182,8 @@
 
   /* Custom button styles to match the reference */
   .cta-button {
-    @apply rounded-full text-white font-bold text-xl py-4 px-8 shadow-lg transition-all;
-    background-color: #ff5e14;
+    @apply rounded-full text-background font-bold text-xl py-4 px-8 shadow-lg transition-all;
+    background-color: #c3ff00;
   }
 
   .cta-button:hover {
@@ -164,32 +191,32 @@
   }
 
   .secondary-cta {
-    @apply font-bold text-xl text-[#3c2a14] hover:text-primary transition-colors;
+    @apply font-bold text-xl text-white hover:text-primary transition-colors;
   }
 
   /* Page background styles */
-  .cream-bg {
-    background-color: #fff8f0;
+  .dark-bg {
+    background-color: #1f1f1f;
   }
 
   /* Card styles for inner pages */
   .feature-card {
-    @apply bg-white rounded-2xl shadow-xl p-8 transition-all duration-300 hover:shadow-2xl border-none;
+    @apply bg-[#393939] rounded-2xl shadow-xl p-8 transition-all duration-300 hover:shadow-2xl border-none;
   }
 
   /* Header styles */
   .page-header {
     @apply sticky top-0 z-50 py-6 backdrop-blur-md;
-    background-color: rgba(255, 248, 240, 0.8);
+    background-color: rgba(31, 31, 31, 0.8);
   }
 
   /* Custom animated button styles */
   .btn-conteiner {
     display: flex;
     justify-content: center;
-    --color-text: #ffffff;
-    --color-background: #ff5e14;
-    --color-outline: #ff5e1480;
+    --color-text: #1f1f1f;
+    --color-background: #c3ff00;
+    --color-outline: #c3ff0080;
     --color-shadow: #00000080;
   }
 
@@ -273,7 +300,7 @@
   /* SVG animations */
   @keyframes color_anim {
     0% {
-      fill: white;
+      fill: #1f1f1f;
     }
 
     50% {
@@ -281,7 +308,7 @@
     }
 
     100% {
-      fill: white;
+      fill: #1f1f1f;
     }
   }
 
@@ -302,45 +329,45 @@
 
   /* New styles for the explore page to match design */
   .explore-heading {
-    color: #3c2a14;
+    color: #ffffff;
     @apply text-5xl md:text-6xl lg:text-7xl font-black uppercase tracking-tight mb-4;
   }
 
   .explore-subheading {
-    color: #4a3520;
+    color: #e0e0e0;
     @apply text-xl md:text-2xl mb-8;
   }
 
   .jar-card {
-    @apply bg-white rounded-2xl shadow-xl p-6 transition-all duration-300 hover:shadow-2xl border-none;
+    @apply bg-[#393939] rounded-2xl shadow-xl p-6 transition-all duration-300 hover:shadow-2xl border-none;
   }
 
   .jar-card-title {
-    color: #3c2a14;
+    color: #ffffff;
     @apply text-2xl font-bold mb-2;
   }
 
   .jar-card-description {
-    color: #4a3520;
+    color: #e0e0e0;
     @apply text-lg mb-4;
   }
 
   .jar-balance {
-    color: #ff5e14;
+    color: #c3ff00;
     @apply text-xl font-medium;
   }
 
   .jar-network-badge {
-    @apply px-4 py-1 rounded-full text-white font-medium text-sm;
-    background-color: #ff5e14;
+    @apply px-4 py-1 rounded-full text-[#1F1F1F] font-medium text-sm;
+    background-color: #c3ff00;
   }
 
   .jar-info-icon {
-    color: #ff5e14;
+    color: #c3ff00;
   }
 
   .network-badge-sepolia {
-    background-color: #ff5e14;
+    background-color: #c3ff00;
   }
 
   .network-badge-base {
@@ -358,7 +385,7 @@
   }
 
   .sidebar-nav-item.active {
-    @apply bg-[#ff5e14] bg-opacity-20 border-[#ff5e14] border-2;
+    @apply bg-[#C3FF00] bg-opacity-20 border-[#C3FF00] border-2;
   }
 
   .sidebar-icon {
@@ -366,7 +393,7 @@
   }
 
   .sidebar-icon.active {
-    @apply text-[#ff5e14];
+    @apply text-[#C3FF00];
   }
 
   .sidebar-text {
@@ -374,7 +401,7 @@
   }
 
   .sidebar-text.active {
-    @apply text-[#ff5e14];
+    @apply text-[#C3FF00];
   }
 
   /* Adjust main content for sidebar */
@@ -404,7 +431,7 @@
   /* Sticky header styles */
   .sticky-jars-header {
     @apply fixed top-0 left-0 right-0 z-40 shadow-md transition-transform duration-300;
-    background-color: rgba(255, 248, 240, 0.95);
+    background-color: rgba(31, 31, 31, 0.95);
   }
 
   .sticky-jars-header.hidden {
@@ -413,6 +440,336 @@
 
   .sticky-jars-header.visible {
     @apply translate-y-0;
+  }
+
+  /* Sticky header with scroll behavior */
+  .header-scroll-hide {
+    @apply fixed top-0 left-0 right-0 z-40 transition-transform duration-300 ease-in-out;
+    transform: translateY(0);
+  }
+
+  .header-scroll-hide.hidden {
+    transform: translateY(-100%);
+  }
+
+  /* Ensure content doesn't jump when header hides */
+  .content-with-sticky-header {
+    @apply pt-0 transition-all duration-300;
+  }
+
+  .content-with-sticky-header.header-hidden {
+    @apply pt-0;
+  }
+
+  /* Custom CSS Buttons IO Style */
+  .cssbuttons-io-button {
+    background: #c3ff00;
+    color: white;
+    font-family: inherit;
+    padding: 0.35em;
+    padding-left: 1.2em;
+    font-size: 17px;
+    font-weight: 500;
+    border-radius: 0.9em;
+    border: none;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    box-shadow: inset 0 0 1.6em -0.6em #c3ff00;
+    overflow: hidden;
+    position: relative;
+    height: 2.8em;
+    padding-right: 3.3em;
+    cursor: pointer;
+  }
+
+  .cssbuttons-io-button .icon {
+    background: white;
+    margin-left: 1em;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.2em;
+    width: 2.2em;
+    border-radius: 0.7em;
+    box-shadow: 0.1em 0.1em 0.6em 0.2em #c3ff00;
+    right: 0.3em;
+    transition: all 0.3s;
+  }
+
+  .cssbuttons-io-button:hover .icon {
+    width: calc(100% - 0.6em);
+  }
+
+  .cssbuttons-io-button .icon svg {
+    width: 1.1em;
+    transition: transform 0.3s;
+    color: #c3ff00;
+  }
+
+  .cssbuttons-io-button:hover .icon svg {
+    transform: translateX(0.1em);
+  }
+
+  .cssbuttons-io-button:active .icon {
+    transform: scale(0.95);
+  }
+
+  /* Dark version for Create A Jar button */
+  .cssbuttons-io-button.dark {
+    background: #393939;
+    box-shadow: inset 0 0 1.6em -0.6em #1f1f1f;
+  }
+
+  .cssbuttons-io-button.dark .icon {
+    box-shadow: 0.1em 0.1em 0.6em 0.2em #1f1f1f;
+  }
+
+  .cssbuttons-io-button.dark .icon svg {
+    color: #393939;
+  }
+
+  /* Custom tooltip styles for jar cards */
+  .jar-card-tooltip {
+    position: absolute;
+    z-index: 50;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background-color: #393939;
+    color: #ffffff;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    max-width: 24rem;
+    width: max-content;
+    top: 100%;
+    left: 0;
+    margin-top: 0.25rem;
+    pointer-events: none;
+    word-wrap: break-word;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .jar-card-tooltip-trigger:hover .jar-card-tooltip {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  /* Professional jar card styles */
+  .jar-card-pro {
+    position: relative;
+    overflow: hidden;
+    background-color: #393939;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    border-left: 4px solid #c3ff00;
+    cursor: pointer;
+  }
+
+  .jar-card-pro:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+  }
+
+  .jar-card-header-gradient {
+    background: linear-gradient(to right, #c3ff00, #d4ff33);
+    height: 0.75rem;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .jar-card-content {
+    padding: 1.5rem;
+    padding-top: 2rem;
+  }
+
+  .jar-card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+    padding-right: 5rem;
+  }
+
+  .jar-card-address {
+    font-size: 0.875rem;
+    color: #e0e0e0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 1rem;
+  }
+
+  .jar-card-description-container {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+
+  .jar-card-description-label {
+    font-size: 0.875rem;
+    color: #e0e0e0;
+    font-weight: 500;
+  }
+
+  .jar-card-description {
+    color: #ffffff;
+  }
+
+  .jar-card-footer {
+    margin-top: auto;
+    padding-top: 0.5rem;
+    border-top: 1px solid #555555;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .jar-card-hover-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(195, 255, 0, 0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .jar-card-pro:hover .jar-card-hover-overlay {
+    opacity: 1;
+  }
+
+  /* Tooltip styles */
+  .group\/tooltip:hover .tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .tooltip {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease-in-out;
+    z-index: 50;
+  }
+
+  /* List view animations and transitions */
+  .list-view-enter {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .list-view-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 300ms, transform 300ms;
+  }
+  .list-view-exit {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .list-view-exit-active {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 300ms, transform 300ms;
+  }
+
+  /* Grid/List view toggle button */
+  .view-toggle-button {
+    @apply flex items-center justify-center w-10 h-10 rounded-md bg-white border border-[#555555] text-[#E0E0E0] transition-colors;
+  }
+  .view-toggle-button.active {
+    @apply bg-[#C3FF00] text-[#1F1F1F] border-[#C3FF00];
+  }
+
+  /* Social Media Icons */
+  .wrapper {
+    display: inline-flex;
+    list-style: none;
+    height: 80px;
+    width: 100%;
+    padding-top: 10px;
+    font-family: "Poppins", sans-serif;
+    justify-content: flex-start;
+  }
+
+  .wrapper .icon {
+    position: relative;
+    background: #393939;
+    border-radius: 50%;
+    margin: 10px;
+    width: 50px;
+    height: 50px;
+    font-size: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    box-shadow: 0 10px 10px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .wrapper .tooltip {
+    position: absolute;
+    top: 0;
+    font-size: 14px;
+    background: #393939;
+    color: #ffffff;
+    padding: 5px 8px;
+    border-radius: 5px;
+    box-shadow: 0 10px 10px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .wrapper .tooltip::before {
+    position: absolute;
+    content: "";
+    height: 8px;
+    width: 8px;
+    background: #393939;
+    bottom: -3px;
+    left: 50%;
+    transform: translate(-50%) rotate(45deg);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .wrapper .icon:hover .tooltip {
+    top: -45px;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .wrapper .icon:hover span,
+  .wrapper .icon:hover .tooltip {
+    text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
+  }
+
+  .wrapper .facebook:hover,
+  .wrapper .facebook:hover .tooltip,
+  .wrapper .facebook:hover .tooltip::before {
+    background: #1877f2;
+    color: #fff;
+  }
+
+  .wrapper .twitter:hover,
+  .wrapper .twitter:hover .tooltip,
+  .wrapper .twitter:hover .tooltip::before {
+    background: #1da1f2;
+    color: #fff;
+  }
+
+  .wrapper .instagram:hover,
+  .wrapper .instagram:hover .tooltip,
+  .wrapper .instagram:hover .tooltip::before {
+    background: #e4405f;
+    color: #fff;
   }
 }
 
@@ -424,23 +781,23 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 94, 20, 0.05);
+  background: rgba(195, 255, 0, 0.05);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 94, 20, 0.7);
+  background: rgba(195, 255, 0, 0.7);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 94, 20, 0.9);
+  background: rgba(195, 255, 0, 0.9);
 }
 
 /* For Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 94, 20, 0.7) rgba(255, 94, 20, 0.05);
+  scrollbar-color: rgba(195, 255, 0, 0.7) rgba(195, 255, 0, 0.05);
 }
 
 /* For the docs sidebar scrollbar specifically */
@@ -449,10 +806,459 @@
 }
 
 .docs-sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255, 94, 20, 0.6);
+  background: rgba(195, 255, 0, 0.6);
 }
 
 .docs-sidebar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 94, 20, 0.6) transparent;
+  scrollbar-color: rgba(195, 255, 0, 0.6) transparent;
+}
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+@keyframes slideInFromBottomRight {
+  0% {
+    transform: translate(100%, 100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+}
+
+.cookie-button-animation {
+  animation: slideInFromBottomRight 0.5s ease-out forwards;
+}
+
+@keyframes slideInFromBottomRight {
+  0% {
+    transform: translate(100%, 100%) scale(0.5);
+    opacity: 0;
+  }
+  70% {
+    transform: translate(-5%, -5%) scale(1.1);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+.cookie-button-animation {
+  animation: slideInFromBottomRight 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 50;
+}
+
+.cookie-details-container {
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #222222;
+  border-radius: 1rem;
+  border: 1px solid #333333;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.cookie-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.cookie-detail-item {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  background-color: #2a2a2a;
+  border-radius: 0.75rem;
+  border-left: 3px solid #c3ff00;
+}
+
+.cookie-detail-label {
+  font-size: 0.875rem;
+  color: #c3ff00;
+  margin-bottom: 0.5rem;
+}
+
+.cookie-detail-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+}
+
+.get-cookie-btn {
+  background-color: #c3ff00;
+  color: #1f1f1f;
+  font-weight: bold;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.get-cookie-btn:hover:not(:disabled) {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+  background-color: #d4ff33;
+}
+
+.get-cookie-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.get-cookie-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Custom scrollbar for the history section */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #333333;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c3ff00;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a3d500;
+}
+
+/* Add these styles to the end of the file for the updated jars page */
+
+/* Professional jar list item styles */
+.jar-list-item {
+  background-color: #1a1a1a;
+  border: 1px solid #333333;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.jar-list-item:hover {
+  border-color: #444444;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.jar-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.jar-list-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  border-bottom: 2px solid #c3ff00;
+  padding-bottom: 0.25rem;
+  display: inline-block;
+}
+
+.jar-list-address {
+  display: flex;
+  align-items: center;
+  background-color: #111111;
+  border: 1px solid #333333;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.jar-list-address-text {
+  color: #999999;
+  font-size: 0.875rem;
+  font-family: monospace;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 0.5rem;
+}
+
+.jar-list-copy-button {
+  padding: 0.25rem;
+  border-radius: 9999px;
+  transition: background-color 0.2s;
+}
+
+.jar-list-copy-button:hover {
+  background-color: #333333;
+}
+
+.jar-list-metadata {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.jar-list-metadata-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.jar-list-metadata-label {
+  color: #999999;
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.jar-list-metadata-value {
+  color: white;
+  font-weight: 500;
+}
+
+.jar-list-action {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.jar-list-button {
+  background-color: #c3ff00;
+  color: #111111;
+  font-weight: 700;
+  border-radius: 9999px;
+  padding: 0.5rem 1.5rem;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.jar-list-button:hover {
+  background-color: #d4ff33;
+  transform: translateY(-2px);
+}
+
+.jar-list-button:active {
+  transform: translateY(0);
+}
+
+.jar-list-button-icon {
+  height: 1rem;
+  width: 1rem;
+  margin-right: 0.5rem;
+}
+
+/* Updated counter box styles */
+.counter-box {
+  width: 4rem;
+  height: 4rem;
+  border: 1px solid #c3ff00;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1a1a1a;
+}
+
+.counter-box-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+}
+
+.counter-box-label {
+  font-size: 0.75rem;
+  color: #999999;
+  margin-bottom: 0.25rem;
+}
+
+/* Tag tooltip styles */
+.tag-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background-color: #333333;
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 50;
+}
+
+.tag-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0.25rem;
+  border-style: solid;
+  border-color: #333333 transparent transparent transparent;
+}
+
+.tag-container:hover .tag-tooltip {
+  opacity: 1;
+}
+
+/* Slightly lighter background colors for the jars page */
+.bg-dark-primary {
+  background-color: #121212;
+}
+
+.bg-dark-secondary {
+  background-color: #222222;
+}
+
+.bg-dark-tertiary {
+  background-color: #1a1a1a;
+}
+
+.border-dark {
+  border-color: #333333;
+}
+
+.border-dark-hover:hover {
+  border-color: #444444;
+}
+
+/* Update the tag tooltip styles to position them better */
+.tag-tooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  background-color: #333333;
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 50;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.tag-tooltip::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  right: 5px;
+  border-width: 0.25rem;
+  border-style: solid;
+  border-color: transparent transparent #333333 transparent;
+}
+
+.tag-container:hover .tag-tooltip {
+  opacity: 1;
+}
+
+/* Add this for better icon display */
+.status-icon {
+  display: inline-flex;
+  position: relative;
+  cursor: help;
+}
+
+.status-icon-tooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #333333;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 50;
+  margin-top: 5px;
+}
+
+.status-icon:hover .status-icon-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Custom CSS for the jars page */
+.cssbuttons-io-button-jars {
+  background: #c3ff00;
+  color: #333333;
+  font-family: inherit;
+  padding: 0.35em;
+  padding-left: 1.2em;
+  font-size: 17px;
+  font-weight: 500;
+  border-radius: 0.9em;
+  border: none;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  box-shadow: inset 0 0 1.6em -0.6em #c3ff00;
+  overflow: hidden;
+  position: relative;
+  height: 2.8em;
+  padding-right: 3.3em;
+  cursor: pointer;
+}
+
+.cssbuttons-io-button-jars .icon {
+  background: #333333;
+  margin-left: 1em;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.2em;
+  width: 2.2em;
+  border-radius: 0.7em;
+  box-shadow: 0.1em 0.1em 0.6em 0.2em #c3ff00;
+  right: 0.3em;
+  transition: all 0.3s;
+}
+
+.cssbuttons-io-button-jars:hover .icon {
+  width: calc(100% - 0.6em);
+}
+
+.cssbuttons-io-button-jars .icon svg {
+  width: 1.1em;
+  transition: transform 0.3s;
+  color: #c3ff00;
+}
+
+.cssbuttons-io-button-jars:hover .icon svg {
+  transform: translateX(0.1em);
+}
+
+.cssbuttons-io-button-jars:active .icon {
+  transform: scale(0.95);
 }

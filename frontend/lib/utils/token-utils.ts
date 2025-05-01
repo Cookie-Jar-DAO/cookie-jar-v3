@@ -1,10 +1,11 @@
-import { useReadContracts } from 'wagmi';
-import { parseUnits, formatUnits, erc20Abi,isAddress, ethAddress } from 'viem';
-import type {Address} from 'viem';
-import { log } from 'console';
+import { useReadContracts } from "wagmi"
+import { parseUnits, formatUnits, erc20Abi, isAddress, ethAddress } from "viem"
+import type { Address } from "viem"
 
 // Known address constants
-export const ETH_ADDRESS = "0x0000000000000000000000000000000000000003";
+export const ETH_ADDRESS = "0x0000000000000000000000000000000000000003"
+
+// Update the useTokenInfo hook to provide better fallback values and error handling
 
 /**
  * Hook to fetch token information (symbol and decimals)
@@ -12,9 +13,9 @@ export const ETH_ADDRESS = "0x0000000000000000000000000000000000000003";
  * @returns Token information including symbol, decimals, and error states
  */
 export function useTokenInfo(tokenAddress: Address) {
-  const isERC20 = isAddress(tokenAddress)  && tokenAddress !== ETH_ADDRESS;
-  
-  const { data: tokenInfo } = useReadContracts({
+  const isERC20 = isAddress(tokenAddress) && tokenAddress !== ETH_ADDRESS
+
+  const { data: tokenInfo, isLoading } = useReadContracts({
     contracts: [
       {
         address: tokenAddress,
@@ -30,36 +31,39 @@ export function useTokenInfo(tokenAddress: Address) {
     query: {
       enabled: !!isERC20,
     },
-  });
+  })
 
   // For ETH, use default values
-  if (tokenAddress===ethAddress) {
+  if (tokenAddress === ethAddress || tokenAddress === ETH_ADDRESS) {
     return {
       symbol: "ETH",
       decimals: 18,
       isERC20: false,
       isEth: true,
       error: false,
-      errorMessage: ""
-    };
+      errorMessage: "",
+      isLoading: false,
+    }
   }
 
   // Check if we have valid token data
-  const hasSymbol = tokenInfo?.[0]?.result !== undefined;
-  const hasDecimals = tokenInfo?.[1]?.result !== undefined;
-  const error = isERC20 && (!hasSymbol || !hasDecimals);
-  const symbol = hasSymbol ? (tokenInfo[0].result as string) : "ERROR";
-  const decimals = hasDecimals ? Number(tokenInfo[1].result) : 0;
+  const hasSymbol = tokenInfo?.[0]?.result !== undefined
+  const hasDecimals = tokenInfo?.[1]?.result !== undefined
+  const error = isERC20 && (!hasSymbol || !hasDecimals) && !isLoading
+
+  // Use better fallback values
+  const symbol = hasSymbol ? (tokenInfo[0].result as string) : isLoading ? "..." : "Token"
+  const decimals = hasDecimals ? Number(tokenInfo[1].result) : 18 // Default to 18 decimals as most tokens use this
 
   // Generate appropriate error message
-  let errorMessage = "";
+  let errorMessage = ""
   if (error) {
     if (!hasSymbol && !hasDecimals) {
-      errorMessage = "Invalid ERC20 token address or contract doesn't implement ERC20 standard";
+      errorMessage = "Invalid ERC20 token address or contract doesn't implement ERC20 standard"
     } else if (!hasSymbol) {
-      errorMessage = "Token contract doesn't implement symbol() method";
+      errorMessage = "Token contract doesn't implement symbol() method"
     } else if (!hasDecimals) {
-      errorMessage = "Token contract doesn't implement decimals() method";
+      errorMessage = "Token contract doesn't implement decimals() method"
     }
   }
 
@@ -69,8 +73,9 @@ export function useTokenInfo(tokenAddress: Address) {
     isERC20,
     isEth: false,
     error,
-    errorMessage
-  };
+    errorMessage,
+    isLoading,
+  }
 }
 
 /**
@@ -81,20 +86,15 @@ export function useTokenInfo(tokenAddress: Address) {
  * @param maxDecimals Maximum number of decimals to display
  * @returns Formatted amount string with symbol
  */
-export function formatTokenAmount(
-  amount: bigint | undefined, 
-  decimals: number, 
-  symbol: string,
-  maxDecimals: number = 4
-) {
-  if (!amount) return `0 ${symbol}`;
+export function formatTokenAmount(amount: bigint | undefined, decimals: number, symbol: string, maxDecimals = 4) {
+  if (!amount) return `0 ${symbol}`
 
   try {
-    const formatted = formatUnits(amount, decimals);
-    return `${Number(formatted).toFixed(maxDecimals)} ${symbol}`;
+    const formatted = formatUnits(amount, decimals)
+    return `${Number(formatted).toFixed(maxDecimals)} ${symbol}`
   } catch (error) {
-    console.error("Error formatting amount:", error);
-    return `${amount || 0} ${symbol}`;
+    console.error("Error formatting amount:", error)
+    return `${amount || 0} ${symbol}`
   }
 }
 
@@ -105,8 +105,8 @@ export function formatTokenAmount(
  * @returns Amount in smallest unit as BigInt
  */
 export function parseTokenAmount(amountStr: string, decimals: number) {
-  if (!amountStr || amountStr === "0") return BigInt(0);
-  return parseUnits(amountStr, decimals) || BigInt(0);
+  if (!amountStr || amountStr === "0") return BigInt(0)
+  return parseUnits(amountStr, decimals) || BigInt(0)
 }
 
 /**
@@ -117,25 +117,25 @@ export function parseTokenAmount(amountStr: string, decimals: number) {
  */
 export function checkDecimals(value: string, tokenDecimals: number): { value: string | null; error: string | null } {
   if (value === "") {
-    return { value, error: null };
+    return { value, error: null }
   }
-  
+
   if (/^[0-9]*\.?[0-9]*$/.test(value)) {
     // Validate that the number of decimal places doesn't exceed the token's decimal precision
-    const parts = value.split('.');
+    const parts = value.split(".")
     if (
       parts.length === 1 || // No decimal point
       parts[1].length <= tokenDecimals // Has decimal point but not exceeding max decimals
     ) {
-      return { value, error: null };
+      return { value, error: null }
     } else {
       // Too many decimal places
-      return { 
-        value: null, 
-        error: `You entered too many decimal places. This token only allows ${tokenDecimals} decimals.` 
-      };
+      return {
+        value: null,
+        error: `You entered too many decimal places. This token only allows ${tokenDecimals} decimals.`,
+      }
     }
   }
-  
-  return { value: null, error: "Please enter a valid number." };
+
+  return { value: null, error: "Please enter a valid number." }
 }

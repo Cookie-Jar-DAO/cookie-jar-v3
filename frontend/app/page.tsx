@@ -5,11 +5,11 @@ import { Footer } from "@/components/page/home/footer"
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col">
-      <LandingHero />
-      <Features />
-      <NetworkSupport />
-      <Footer />
-    </main>
+    <div className="bg-background min-h-screen">
+      <LandingHero key="landing-hero" />
+      <Features key="features" />
+      <NetworkSupport key="network-support" />
+      <Footer key="footer" />
+    </div>
   )
 }
