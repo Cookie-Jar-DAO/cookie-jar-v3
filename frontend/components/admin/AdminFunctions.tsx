@@ -23,6 +23,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AlertCircle, Shield, UserPlus, UserMinus, AlertTriangle, Tag, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/design/use-toast"
 import { useAccount } from "wagmi"
+import { LoadingOverlay } from "@/components/design/loading-overlay"
+import { ethers } from "ethers"
+import { z } from "zod"
+import { isAddress } from "viem"
+import { ErrorDialog } from "@/components/ui/error-dialog"
+
+// Replace the isValidEthAddress function (if it exists) or add it near the top of the component
+const ethereumAddressSchema = z
+  .string()
+  .refine((address) => isAddress(address), { message: "Invalid Ethereum address format" })
 
 enum NFTType {
   ERC721 = 0,
@@ -44,6 +54,12 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
   const [isTransferring, setIsTransferring] = useState(false)
   const { toast } = useToast()
   const { address: currentUserAddress } = useAccount()
+
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadingMessage, setLoadingMessage] = useState("Processing...")
+  const [jarBalance, setJarBalance] = useState<string>("0")
+  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   // Read the current jar owner
   const { data: currentOwner, refetch: refetchOwner } = useReadCookieJarJarOwner({
@@ -114,7 +130,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
     isSuccess: isRemoveNftGateSuccess,
   } = useWriteCookieJarRemoveNftGate()
 
-  // Show success toasts
+  // Show success toasts and handle loading state
   useEffect(() => {
     if (isTransferSuccess) {
       toast({
@@ -122,6 +138,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
         description: "The jar ownership has been successfully transferred.",
       })
       setIsTransferring(false)
+      setIsLoading(false)
       setNewJarOwner("")
 
       // Refresh the owner data after successful transfer
@@ -137,42 +154,49 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
         title: "Emergency Withdrawal Complete",
         description: "Funds have been successfully withdrawn.",
       })
+      setIsLoading(false)
     }
     if (isWhitelistGrantSuccess) {
       toast({
         title: "Whitelist Updated",
         description: "Address has been added to the whitelist.",
       })
+      setIsLoading(false)
     }
     if (isWhitelistRevokeSuccess) {
       toast({
         title: "Whitelist Updated",
         description: "Address has been removed from the whitelist.",
       })
+      setIsLoading(false)
     }
     if (isBlacklistGrantSuccess) {
       toast({
         title: "Blacklist Updated",
         description: "Address has been added to the blacklist.",
       })
+      setIsLoading(false)
     }
     if (isBlacklistRevokeSuccess) {
       toast({
         title: "Blacklist Updated",
         description: "Address has been removed from the blacklist.",
       })
+      setIsLoading(false)
     }
     if (isNftGateSuccess) {
       toast({
         title: "NFT Gate Added",
         description: "New NFT gate has been added successfully.",
       })
+      setIsLoading(false)
     }
     if (isRemoveNftGateSuccess) {
       toast({
         title: "NFT Gate Removed",
         description: "NFT gate has been removed successfully.",
       })
+      setIsLoading(false)
     }
   }, [
     isTransferSuccess,
@@ -196,11 +220,51 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
         variant: "destructive",
       })
       setIsTransferring(false)
+      setIsLoading(false)
     }
   }, [transferError, toast])
 
+  const handlePercentageClick = async (percent: number) => {
+    try {
+      // Get the jar's balance
+      let balance = "0"
+
+      if (tokenAddress && tokenAddress.length > 3) {
+        // For ERC20 tokens
+        const provider = window.ethereum ? new ethers.BrowserProvider(window.ethereum) : null
+        if (provider) {
+          const erc20Contract = new ethers.Contract(
+            tokenAddress as `0x${string}`,
+            ["function balanceOf(address) view returns (uint256)"],
+            provider,
+          )
+          const tokenBalance = await erc20Contract.balanceOf(address)
+          balance = tokenBalance.toString()
+        }
+      } else {
+        // For ETH
+        const provider = window.ethereum ? new ethers.BrowserProvider(window.ethereum) : null
+        if (provider) {
+          const ethBalance = await provider.getBalance(address)
+          balance = ethBalance.toString()
+        }
+      }
+
+      // Calculate the percentage
+      const balanceBigInt = BigInt(balance)
+      const percentAmount = (balanceBigInt * BigInt(Math.floor(percent * 100))) / BigInt(100)
+
+      // Convert to ETH for display
+      const formattedAmount = ethers.formatEther(percentAmount)
+      setWithdrawalAmount(formattedAmount)
+      setJarBalance(balance)
+    } catch (error) {
+      console.error("Error getting balance:", error)
+    }
+  }
+
   // Admin functions
-  const handleTransferJarOwnership = () => {
+  const handleTransferJarOwnership = async () => {
     if (!newJarOwner || !newJarOwner.startsWith("0x")) {
       toast({
         title: "Invalid Address",
@@ -211,93 +275,321 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
     }
 
     setIsTransferring(true)
+    setIsLoading(true)
+    setLoadingMessage("Transferring ownership...")
 
     try {
-      transferJarOwnership({
+      // Validate the address format
+      ethereumAddressSchema.parse(newJarOwner)
+
+      await transferJarOwnership({
         address: address,
         args: [newJarOwner as `0x${string}`],
       })
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error transferring ownership:", error)
       setIsTransferring(false)
-      toast({
-        title: "Transfer Failed",
-        description: "An error occurred while transferring ownership",
-        variant: "destructive",
-      })
+      setIsLoading(false)
+
+      if (error instanceof z.ZodError) {
+        setErrorMessage("Invalid Ethereum address format")
+      } else if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error &&
+        typeof error.message === "string" &&
+        error.message.includes("rejected")
+      ) {
+        setErrorMessage("Transaction rejected by user")
+      } else {
+        setErrorMessage("An error occurred while transferring ownership")
+      }
     }
   }
 
-  const handleEmergencyWithdraw = () => {
+  const handleEmergencyWithdraw = async () => {
     if (!withdrawalAmount) return
     console.log("Emergency withdrawal amount:", withdrawalAmount)
-    if (tokenAddress.length > 3) {
-      emergencyWithdrawWithoutState({
-        address: address,
-        args: [tokenAddress as `0x${string}`, BigInt(withdrawalAmount || "0")],
-      })
-    } else {
-      emergencyWithdrawCurrencyWithState({
-        address: address,
-        args: [
-          parseEther(withdrawalAmount), // amount as second argument
-        ],
-      })
+
+    setIsLoading(true)
+    setLoadingMessage("Processing emergency withdrawal...")
+
+    try {
+      if (tokenAddress.length > 3) {
+        await emergencyWithdrawWithoutState({
+          address: address,
+          args: [tokenAddress as `0x${string}`, BigInt(withdrawalAmount || "0")],
+        })
+      } else {
+        await emergencyWithdrawCurrencyWithState({
+          address: address,
+          args: [
+            parseEther(withdrawalAmount), // amount as second argument
+          ],
+        })
+      }
+    } catch (error: unknown) {
+      console.error("Emergency withdrawal error:", error)
+      setIsLoading(false)
+
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error &&
+        typeof error.message === "string" &&
+        error.message.includes("rejected")
+      ) {
+        setErrorMessage("Transaction rejected by user")
+      } else {
+        setErrorMessage("An error occurred during emergency withdrawal")
+      }
     }
   }
 
-  const handleGrantJarBlacklistRole = () => {
+  // Update the handleRevokeJarBlacklistRole function
+  const handleRevokeJarBlacklistRole = async () => {
     if (!addressToUpdate) return
-    console.log(`"Adding addresses to blacklist:`, addressToUpdate)
-    grantJarBlacklistRole({
-      address: address,
-      args: [[addressToUpdate as `0x${string}`]],
-    })
+
+    // Validate the address format
+    try {
+      ethereumAddressSchema.parse(addressToUpdate)
+      console.log(`Removing address from blacklist:`, addressToUpdate)
+
+      setIsLoading(true)
+      setLoadingMessage("Removing address from blacklist...")
+
+      try {
+        await revokeJarBlacklistRole({
+          address: address,
+          args: [[addressToUpdate as `0x${string}`]],
+        })
+      } catch (error: unknown) {
+        console.error("Blacklist error:", error)
+        setIsLoading(false)
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          "message" in error &&
+          typeof error.message === "string" &&
+          error.message.includes("rejected")
+        ) {
+          setErrorMessage("Transaction rejected by user")
+        } else {
+          setErrorMessage("An error occurred while revoking blacklist role")
+        }
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setErrors({ ...errors, addressToUpdate: "Invalid Ethereum address format" })
+        setErrorMessage("Invalid Ethereum address format")
+      }
+      console.error("Address validation error:", error)
+    }
   }
 
-  const handleRevokeJarBlacklistRole = () => {
+  // Similarly update the handleGrantJarBlacklistRole function
+  const handleGrantJarBlacklistRole = async () => {
     if (!addressToUpdate) return
-    console.log(`Removing address from blacklist:`, addressToUpdate)
-    revokeJarBlacklistRole({
-      address: address,
-      args: [[addressToUpdate as `0x${string}`]],
-    })
+
+    // Validate the address format
+    try {
+      ethereumAddressSchema.parse(addressToUpdate)
+      console.log(`Adding address to blacklist:`, addressToUpdate)
+
+      setIsLoading(true)
+      setLoadingMessage("Adding address to blacklist...")
+
+      try {
+        await grantJarBlacklistRole({
+          address: address,
+          args: [[addressToUpdate as `0x${string}`]],
+        })
+      } catch (error: unknown) {
+        console.error("Blacklist error:", error)
+        setIsLoading(false)
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          "message" in error &&
+          typeof error.message === "string" &&
+          error.message.includes("rejected")
+        ) {
+          setErrorMessage("Transaction rejected by user")
+        } else {
+          setErrorMessage("An error occurred while granting blacklist role")
+        }
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setErrors({ ...errors, addressToUpdate: "Invalid Ethereum address format" })
+        setErrorMessage("Invalid Ethereum address format")
+      }
+      console.error("Address validation error:", error)
+    }
   }
 
-  const handleGrantJarWhitelistRole = () => {
+  // Update the handleGrantJarWhitelistRole function
+  const handleGrantJarWhitelistRole = async () => {
     if (!addressToUpdate) return
-    console.log(`Adding address to whitelist:`, addressToUpdate)
-    grantJarWhitelistRole({
-      address: address,
-      args: [[addressToUpdate as `0x${string}`]],
-    })
+
+    // Validate the address format
+    try {
+      ethereumAddressSchema.parse(addressToUpdate)
+      console.log(`Adding address to whitelist:`, addressToUpdate)
+
+      setIsLoading(true)
+      setLoadingMessage("Adding address to whitelist...")
+
+      try {
+        await grantJarWhitelistRole({
+          address: address,
+          args: [[addressToUpdate as `0x${string}`]],
+        })
+      } catch (error: unknown) {
+        console.error("Whitelist error:", error)
+        setIsLoading(false)
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          "message" in error &&
+          typeof error.message === "string" &&
+          error.message.includes("rejected")
+        ) {
+          setErrorMessage("Transaction rejected by user")
+        } else {
+          setErrorMessage("An error occurred while granting whitelist role")
+        }
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setErrors({ ...errors, addressToUpdate: "Invalid Ethereum address format" })
+        setErrorMessage("Invalid Ethereum address format")
+      }
+      console.error("Address validation error:", error)
+    }
   }
 
-  const handleRevokeJarWhitelistRole = () => {
+  // Update the handleRevokeJarWhitelistRole function
+  const handleRevokeJarWhitelistRole = async () => {
     if (!addressToUpdate) return
-    console.log(`Removing address from whitelist:`, addressToUpdate)
-    revokeJarWhitelistRole({
-      address: address,
-      args: [[addressToUpdate as `0x${string}`]],
-    })
+
+    // Validate the address format
+    try {
+      ethereumAddressSchema.parse(addressToUpdate)
+      console.log(`Removing address from whitelist:`, addressToUpdate)
+
+      setIsLoading(true)
+      setLoadingMessage("Removing address from whitelist...")
+
+      try {
+        await revokeJarWhitelistRole({
+          address: address,
+          args: [[addressToUpdate as `0x${string}`]],
+        })
+      } catch (error: unknown) {
+        console.error("Whitelist error:", error)
+        setIsLoading(false)
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          "message" in error &&
+          typeof error.message === "string" &&
+          error.message.includes("rejected")
+        ) {
+          setErrorMessage("Transaction rejected by user")
+        } else {
+          setErrorMessage("An error occurred while revoking whitelist role")
+        }
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setErrors({ ...errors, addressToUpdate: "Invalid Ethereum address format" })
+        setErrorMessage("Invalid Ethereum address format")
+      }
+      console.error("Address validation error:", error)
+    }
   }
 
-  const handleAddNFTGate = () => {
+  // Update the addNFTGate function
+  const handleAddNFTGate = async () => {
     if (!nftAddress || !nftTokenId) return
-    console.log("Adding NFT gate:", nftAddress, nftTokenId)
-    addNftGate({
-      address: address,
-      args: [nftAddress as `0x${string}`, Number.parseInt(nftTokenId, 10)],
-    })
+
+    // Validate the NFT address format
+    try {
+      ethereumAddressSchema.parse(nftAddress)
+      console.log("Adding NFT gate:", nftAddress, nftTokenId)
+
+      setIsLoading(true)
+      setLoadingMessage("Adding NFT gate...")
+
+      try {
+        await addNftGate({
+          address: address,
+          args: [nftAddress as `0x${string}`, Number.parseInt(nftTokenId, 10)],
+        })
+      } catch (error: unknown) {
+        console.error("NFT gate error:", error)
+        setIsLoading(false)
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          "message" in error &&
+          typeof error.message === "string" &&
+          error.message.includes("rejected")
+        ) {
+          setErrorMessage("Transaction rejected by user")
+        } else {
+          setErrorMessage("An error occurred while adding NFT gate")
+        }
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setErrors({ ...errors, nftAddress: "Invalid Ethereum address format" })
+        setErrorMessage("Invalid Ethereum address format")
+      }
+      console.error("Address validation error:", error)
+    }
   }
 
-  const handleRemoveNFTGate = () => {
+  // Update the removeNFTGate function
+  const handleRemoveNFTGate = async () => {
     if (!nftAddress) return
-    console.log("Removing NFT gate:", nftAddress)
-    removeNftGate({
-      address: address,
-      args: [nftAddress as `0x${string}`],
-    })
+
+    // Validate the NFT address format
+    try {
+      ethereumAddressSchema.parse(nftAddress)
+      console.log("Removing NFT gate:", nftAddress)
+
+      setIsLoading(true)
+      setLoadingMessage("Removing NFT gate...")
+
+      try {
+        await removeNftGate({
+          address: address,
+          args: [nftAddress as `0x${string}`],
+        })
+      } catch (error: unknown) {
+        console.error("NFT gate error:", error)
+        setIsLoading(false)
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          "message" in error &&
+          typeof error.message === "string" &&
+          error.message.includes("rejected")
+        ) {
+          setErrorMessage("Transaction rejected by user")
+        } else {
+          setErrorMessage("An error occurred while removing NFT gate")
+        }
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setErrors({ ...errors, nftAddress: "Invalid Ethereum address format" })
+        setErrorMessage("Invalid Ethereum address format")
+      }
+      console.error("Address validation error:", error)
+    }
   }
 
   // Format the current owner address for display
@@ -308,33 +600,33 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
     currentUserAddress && currentOwner && currentUserAddress.toLowerCase() === currentOwner.toLowerCase()
 
   return (
-    <div className="space-y-6 bg-[#2b1d0e] p-4 rounded-lg">
+    <div className="space-y-6 bg-[#2a2a2a] p-4 rounded-lg">
       <Tabs defaultValue="ownership" className="w-full">
-        <TabsList className="mb-6 bg-[#fff8f0] p-1">
+        <TabsList className="mb-6 bg-[#333333] p-1">
           <TabsTrigger
             value="ownership"
-            className="data-[state=active]:bg-white data-[state=active]:text-[#ff5e14] data-[state=active]:shadow-sm text-[#4a3520]"
+            className={`data-[state=active]:bg-[#c0ff00] data-[state=active]:text-black data-[state=active]:shadow-sm text-white`}
           >
             <Shield className="h-4 w-4 mr-2" />
             Ownership
           </TabsTrigger>
           <TabsTrigger
             value="access"
-            className="data-[state=active]:bg-white data-[state=active]:text-[#ff5e14] data-[state=active]:shadow-sm text-[#4a3520]"
+            className={`data-[state=active]:bg-[#c0ff00] data-[state=active]:text-black data-[state=active]:shadow-sm text-white`}
           >
             <UserPlus className="h-4 w-4 mr-2" />
             Access Control
           </TabsTrigger>
           <TabsTrigger
             value="emergency"
-            className="data-[state=active]:bg-white data-[state=active]:text-[#ff5e14] data-[state=active]:shadow-sm text-[#4a3520]"
+            className={`data-[state=active]:bg-[#c0ff00] data-[state=active]:text-black data-[state=active]:shadow-sm text-white`}
           >
             <AlertTriangle className="h-4 w-4 mr-2" />
             Emergency
           </TabsTrigger>
           {/* <TabsTrigger
             value="nft"
-            className="data-[state=active]:bg-white data-[state=active]:text-[#ff5e14] data-[state=active]:shadow-sm text-[#4a3520]"
+            className={`data-[state=active]:bg-[#c0ff00] data-[state=active]:text-black data-[state=active]:shadow-sm text-white`}
           >
             <Tag className="h-4 w-4 mr-2" />
             NFT Gates
@@ -342,21 +634,21 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
         </TabsList>
 
         <TabsContent value="ownership" className="mt-0">
-          <Card className="border-none shadow-sm">
-            <CardHeader className="bg-[#fff8f0] rounded-t-lg">
-              <CardTitle className="text-xl text-[#3c2a14] flex items-center">
-                <Shield className="h-5 w-5 mr-2 text-[#ff5e14]" />
+          <Card className="border-[#333333] bg-[#2a2a2a] shadow-md">
+            <CardHeader className="bg-[#333333] rounded-t-lg">
+              <CardTitle className="text-xl text-white flex items-center">
+                <Shield className="h-5 w-5 mr-2 text-[#c0ff00]" />
                 Transfer Jar Ownership
               </CardTitle>
-              <CardDescription className="text-[#8b7355]">
+              <CardDescription className="text-gray-400">
                 Transfer ownership of this jar to another address
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-6 bg-[#2a2a2a]">
               <div className="space-y-4">
-                <div className="bg-[#fff8f0] p-4 rounded-lg mb-4">
-                  <p className="text-[#3c2a14] font-medium">Current Owner: {formattedCurrentOwner}</p>
-                  <p className="text-sm text-[#8b7355] mt-1">
+                <div className="bg-[#333333] p-4 rounded-lg mb-4">
+                  <p className="text-white font-medium">Current Owner: {formattedCurrentOwner}</p>
+                  <p className="text-sm text-gray-400 mt-1">
                     {isCurrentUserOwner
                       ? "You are currently the owner of this jar"
                       : "You are not the current owner of this jar"}
@@ -364,7 +656,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="newOwner" className="text-[#ff5e14] font-medium">
+                  <label htmlFor="newOwner" className="text-[#c0ff00] font-medium">
                     New Owner Address
                   </label>
                   <Input
@@ -372,17 +664,17 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                     placeholder="0x..."
                     value={newJarOwner}
                     onChange={(e) => setNewJarOwner(e.target.value)}
-                    className="border-[#f0e6d8] bg-white text-[#3c2a14]"
+                    className="border-[#444444] bg-[#333333] text-white"
                     disabled={isTransferring}
                   />
-                  <p className="text-sm text-[#8b7355]">The new address will have full owner rights to this jar</p>
+                  <p className="text-sm text-gray-400">The new address will have full owner rights to this jar</p>
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="bg-[#fff8f0] p-4 rounded-b-lg flex justify-end">
+            <CardFooter className="bg-[#333333] p-4 rounded-b-lg flex justify-end">
               <Button
                 onClick={handleTransferJarOwnership}
-                className="bg-[#ff5e14] hover:bg-[#e54d00] text-white"
+                className="bg-[#c0ff00] hover:bg-[#d4ff33] text-black"
                 disabled={!newJarOwner || !newJarOwner.startsWith("0x") || isTransferring}
               >
                 {isTransferring ? (
@@ -399,20 +691,20 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
         </TabsContent>
 
         <TabsContent value="access" className="mt-0">
-          <Card className="border-none shadow-sm">
-            <CardHeader className="bg-[#fff8f0] rounded-t-lg">
-              <CardTitle className="text-xl text-[#3c2a14] flex items-center">
-                <UserPlus className="h-5 w-5 mr-2 text-[#ff5e14]" />
+          <Card className="border-[#333333] bg-[#2a2a2a] shadow-md">
+            <CardHeader className="bg-[#333333] rounded-t-lg">
+              <CardTitle className="text-xl text-white flex items-center">
+                <UserPlus className="h-5 w-5 mr-2 text-[#c0ff00]" />
                 Whitelist & Blacklist Management
               </CardTitle>
-              <CardDescription className="text-[#8b7355]">
+              <CardDescription className="text-gray-400">
                 Control who can access and withdraw from this jar
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-6 bg-[#2a2a2a]">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label htmlFor="addressToUpdate" className="text-[#ff5e14] font-medium">
+                  <label htmlFor="addressToUpdate" className="text-[#c0ff00] font-medium">
                     Address to Update
                   </label>
                   <Input
@@ -420,18 +712,19 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                     placeholder="0x..."
                     value={addressToUpdate}
                     onChange={(e) => setAddressToUpdate(e.target.value)}
-                    className="border-[#f0e6d8] bg-white text-[#3c2a14]"
+                    className="border-[#444444] bg-[#333333] text-white"
                   />
+                  {errors.addressToUpdate && <p className="text-red-500 text-sm">{errors.addressToUpdate}</p>}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 pt-4">
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-[#ff5e14]">Whitelist</h3>
+                    <h3 className="text-lg font-medium text-[#c0ff00]">Whitelist</h3>
                     <div className="flex flex-col gap-2">
                       <Button
                         onClick={handleGrantJarWhitelistRole}
-                        className="bg-[#e6f7e6] text-[#2e7d32] hover:bg-[#c8e6c9] hover:text-[#1b5e20] border border-[#c8e6c9]"
-                        disabled={!addressToUpdate || !addressToUpdate.startsWith("0x")}
+                        className="bg-[#2a2a2a] text-[#c0ff00] hover:bg-[#333333] hover:text-[#c0ff00] border border-[#c0ff00]"
+                        disabled={!addressToUpdate}
                       >
                         <UserPlus className="h-4 w-4 mr-2" />
                         Add to Whitelist
@@ -439,8 +732,8 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                       <Button
                         onClick={handleRevokeJarWhitelistRole}
                         variant="outline"
-                        className="text-[#2e7d32] hover:bg-[#e6f7e6] border-[#c8e6c9]"
-                        disabled={!addressToUpdate || !addressToUpdate.startsWith("0x")}
+                        className="text-[#c0ff00] hover:bg-[#333333] border-[#c0ff00]"
+                        disabled={!addressToUpdate}
                       >
                         <UserMinus className="h-4 w-4 mr-2" />
                         Remove from Whitelist
@@ -449,12 +742,12 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-[#ff5e14]">Blacklist</h3>
+                    <h3 className="text-lg font-medium text-[#c0ff00]">Blacklist</h3>
                     <div className="flex flex-col gap-2">
                       <Button
                         onClick={handleGrantJarBlacklistRole}
-                        className="bg-[#ffebee] text-[#c62828] hover:bg-[#ffcdd2] hover:text-[#b71c1c] border border-[#ffcdd2]"
-                        disabled={!addressToUpdate || !addressToUpdate.startsWith("0x")}
+                        className="bg-[#2a2a2a] text-red-500 hover:bg-[#333333] hover:text-red-500 border border-red-500"
+                        disabled={!addressToUpdate}
                       >
                         <UserPlus className="h-4 w-4 mr-2" />
                         Add to Blacklist
@@ -462,8 +755,8 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                       <Button
                         onClick={handleRevokeJarBlacklistRole}
                         variant="outline"
-                        className="text-[#c62828] hover:bg-[#ffebee] border-[#ffcdd2]"
-                        disabled={!addressToUpdate || !addressToUpdate.startsWith("0x")}
+                        className="text-red-500 hover:bg-[#333333] border-red-500"
+                        disabled={!addressToUpdate}
                       >
                         <UserMinus className="h-4 w-4 mr-2" />
                         Remove from Blacklist
@@ -477,17 +770,17 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
         </TabsContent>
 
         <TabsContent value="emergency" className="mt-0">
-          <Card className="border-none shadow-sm">
-            <CardHeader className="bg-[#fff8f0] rounded-t-lg">
-              <CardTitle className="text-xl text-[#3c2a14] flex items-center">
-                <AlertTriangle className="h-5 w-5 mr-2 text-[#ff5e14]" />
+          <Card className="border-[#333333] bg-[#2a2a2a] shadow-md">
+            <CardHeader className="bg-[#333333] rounded-t-lg">
+              <CardTitle className="text-xl text-white flex items-center">
+                <AlertTriangle className="h-5 w-5 mr-2 text-[#c0ff00]" />
                 Emergency Withdrawal
               </CardTitle>
-              <CardDescription className="text-[#8b7355]">Withdraw funds in case of emergency</CardDescription>
+              <CardDescription className="text-gray-400">Withdraw funds in case of emergency</CardDescription>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-6 bg-[#2a2a2a]">
               <div className="space-y-4">
-                <div className="bg-[#fff0e0] border border-[#ffcc80] rounded-lg p-4 text-[#e65100] flex items-start">
+                <div className="bg-[#444444] border border-yellow-700 rounded-lg p-4 text-yellow-200 flex items-start">
                   <AlertCircle className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-medium">Warning: Emergency Use Only</p>
@@ -500,7 +793,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div className="space-y-2">
-                    <label htmlFor="withdrawalAmount" className="text-[#ff5e14] font-medium">
+                    <label htmlFor="withdrawalAmount" className="text-[#c0ff00] font-medium">
                       Amount to Withdraw
                     </label>
                     <Input
@@ -508,12 +801,48 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                       placeholder="Amount"
                       value={withdrawalAmount}
                       onChange={(e) => setWithdrawalAmount(e.target.value)}
-                      className="border-[#f0e6d8] bg-white text-[#3c2a14]"
+                      className="border-[#444444] bg-[#333333] text-white"
                     />
+
+                    {/* Add percentage buttons */}
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePercentageClick(0.25)}
+                        className="flex-1 border-[#c0ff00] text-[#c0ff00] hover:bg-[#333333] hover:text-[#c0ff00] bg-[#2a2a2a]"
+                      >
+                        25%
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePercentageClick(0.5)}
+                        className="flex-1 border-[#c0ff00] text-[#c0ff00] hover:bg-[#333333] hover:text-[#c0ff00] bg-[#2a2a2a]"
+                      >
+                        50%
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePercentageClick(0.75)}
+                        className="flex-1 border-[#c0ff00] text-[#c0ff00] hover:bg-[#333333] hover:text-[#c0ff00] bg-[#2a2a2a]"
+                      >
+                        75%
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePercentageClick(1.0)}
+                        className="flex-1 border-[#c0ff00] text-[#c0ff00] hover:bg-[#333333] hover:text-[#c0ff00] bg-[#2a2a2a]"
+                      >
+                        Max
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor="tokenAddress" className="text-[#ff5e14] font-medium">
+                    <label htmlFor="tokenAddress" className="text-[#c0ff00] font-medium">
                       Token Address (optional)
                     </label>
                     <Input
@@ -521,18 +850,18 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                       placeholder="0x... (leave empty for ETH)"
                       value={tokenAddress}
                       onChange={(e) => setTokenAddress(e.target.value)}
-                      className="border-[#f0e6d8] bg-white text-[#3c2a14]"
+                      className="border-[#444444] bg-[#333333] text-white"
                     />
-                    <p className="text-sm text-[#8b7355]">Only fill this in if withdrawing a specific token</p>
+                    <p className="text-sm text-gray-400">Only fill this in if withdrawing a specific token</p>
                   </div>
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="bg-[#fff8f0] p-4 rounded-b-lg flex justify-end">
+            <CardFooter className="bg-[#333333] p-4 rounded-b-lg flex justify-end">
               <Button
                 onClick={handleEmergencyWithdraw}
                 variant="destructive"
-                className="bg-[#d32f2f] hover:bg-[#b71c1c]"
+                className="bg-red-600 hover:bg-red-700"
                 disabled={!withdrawalAmount}
               >
                 <AlertTriangle className="h-4 w-4 mr-2" />
@@ -543,21 +872,21 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
         </TabsContent>
 
         <TabsContent value="nft" className="mt-0">
-          <Card className="border-none shadow-sm">
-            <CardHeader className="bg-[#fff8f0] rounded-t-lg">
-              <CardTitle className="text-xl text-[#3c2a14] flex items-center">
-                <Tag className="h-5 w-5 mr-2 text-[#ff5e14]" />
+          <Card className="border-border shadow-sm">
+            <CardHeader className="bg-background-light rounded-t-lg">
+              <CardTitle className="text-xl text-text-primary flex items-center">
+                <Tag className="h-5 w-5 mr-2 text-primary" />
                 NFT Gate Management
               </CardTitle>
-              <CardDescription className="text-[#8b7355]">
+              <CardDescription className="text-text-secondary">
                 Control access to the jar using NFT ownership
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-6 bg-background-paper">
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label htmlFor="nftAddress" className="text-[#ff5e14] font-medium">
+                    <label htmlFor="nftAddress" className="text-primary font-medium">
                       NFT Contract Address
                     </label>
                     <Input
@@ -565,17 +894,18 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                       placeholder="0x..."
                       value={nftAddress}
                       onChange={(e) => setNftAddress(e.target.value)}
-                      className="border-[#f0e6d8] bg-white text-[#3c2a14]"
+                      className="border-border bg-background-paper text-text-primary"
                     />
+                    {errors.nftAddress && <p className="text-red-500 text-sm">{errors.nftAddress}</p>}
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor="nftType" className="text-[#ff5e14] font-medium">
+                    <label htmlFor="nftType" className="text-primary font-medium">
                       NFT Type & Token ID
                     </label>
                     <div className="flex gap-2">
                       <Select onValueChange={setNftTokenId}>
-                        <SelectTrigger className="border-[#f0e6d8] bg-white text-[#3c2a14]">
+                        <SelectTrigger className="border-border bg-background-paper text-text-primary">
                           <SelectValue placeholder="Select NFT Type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -593,20 +923,20 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="bg-[#fff8f0] p-4 rounded-b-lg flex justify-between">
+            <CardFooter className="bg-background-light p-4 rounded-b-lg flex justify-between">
               <Button
                 onClick={handleRemoveNFTGate}
                 variant="outline"
-                className="border-[#f0e6d8] text-[#8b7355] hover:bg-[#fff0e0] hover:text-[#ff5e14]"
-                disabled={!nftAddress || !nftAddress.startsWith("0x")}
+                className="border-border text-text-secondary hover:bg-background-light hover:text-primary"
+                disabled={!nftAddress}
               >
                 Remove NFT Gate
               </Button>
 
               <Button
                 onClick={handleAddNFTGate}
-                className="bg-[#ff5e14] hover:bg-[#e54d00] text-white"
-                disabled={!nftAddress || !nftAddress.startsWith("0x") || !nftTokenId}
+                className="bg-primary hover:bg-primary-dark text-black"
+                disabled={!nftAddress || !nftTokenId}
               >
                 Add NFT Gate
               </Button>
@@ -614,6 +944,11 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
           </Card>
         </TabsContent>
       </Tabs>
+      {/* Loading Overlay */}
+      <LoadingOverlay isOpen={isLoading} message={loadingMessage} onClose={() => setIsLoading(false)} />
+      {errorMessage && (
+        <ErrorDialog open={!!errorMessage} onOpenChange={() => setErrorMessage(null)} message={errorMessage} />
+      )}
     </div>
   )
 }

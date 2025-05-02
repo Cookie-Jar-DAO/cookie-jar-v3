@@ -243,7 +243,7 @@ export const useCookieJarConfig = (address: `0x${string}`) => {
   const JAR_BLACKLISTED = keccak256(toUtf8Bytes("JAR_BLACKLISTED")) as `0x${string}`
   const JAR_WHITELISTED = keccak256(toUtf8Bytes("JAR_WHITELISTED")) as `0x${string}`
 
-  const { data, isLoading, isError, error } = useReadContracts({
+  const { data, isLoading, isError, error, refetch } = useReadContracts({
     contracts: [
       { address, abi: cookieJarAbi, functionName: "accessType" },
       { address, abi: cookieJarAbi, functionName: "jarOwner" },
@@ -295,5 +295,10 @@ export const useCookieJarConfig = (address: `0x${string}`) => {
     isLoading,
     hasError: isError,
     errors: error ? [error] : [],
+    refetch: async () => {
+      // Use the refetch function from useReadContracts
+      const result = await refetch()
+      return result
+    },
   }
 }

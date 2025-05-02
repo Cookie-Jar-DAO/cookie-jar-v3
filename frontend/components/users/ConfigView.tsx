@@ -2,16 +2,15 @@
 
 // Main ConfigView component that uses all the above components
 import type React from "react"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useWriteCookieJarWithdrawWhitelistMode, useWriteCookieJarWithdrawNftMode } from "../../generated"
 import { ConfigDetailsSection } from "./ConfigDetailsSection"
 import { WhitelistWithdrawalSection } from "./WhitelistWithdrawalSection"
 import { NFTGatedWithdrawalSection } from "./NFTGatedWithdrawalSection"
 import { WithdrawalHistorySection } from "./WithdrawlHistorySection"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Coins, ArrowDownToLine } from "lucide-react"
+import { Coins } from "lucide-react"
+import { FundingSection } from "./FundingSection"
 
 interface ConfigViewProps {
   config: any // Ideally this would be more specifically typed
@@ -20,6 +19,7 @@ interface ConfigViewProps {
   amount: string
   setAmount: (value: string) => void
   onSubmit: (value: string) => void
+  refetchData?: () => Promise<any> // Add this new prop
 }
 
 interface Withdrawal {
@@ -34,29 +34,49 @@ export const ConfigView: React.FC<ConfigViewProps> = ({
   setTokenAddress,
   setAmount,
   onSubmit,
+  refetchData,
 }) => {
   // State management
   const [withdrawAmount, setWithdrawAmount] = useState<string>("")
   const [withdrawPurpose, setWithdrawPurpose] = useState<string>("")
   const [gateAddress, setGateAddress] = useState<string>("")
   const [tokenId, setTokenId] = useState<string>("")
+  const [isApprovalSuccess, setIsApprovalSuccess] = useState(false)
+  const [approvalCompleted, setApprovalCompleted] = useState(false)
+  const [isWithdrawWhitelistSuccess, setIsWithdrawWhitelistSuccess] = useState(false)
+  const [isWithdrawNFTSuccess, setIsWithdrawNFTSuccess] = useState(false)
 
   // Check conditions for showing different UI sections
   const showUserFunctionsWhitelisted = config?.whitelist === true && config?.accessType === "Whitelist"
   const showUserFunctionsNFTGated = config?.accessType === "NFTGated"
+  console.log(config?.accessType)
 
   // Contract hooks
   const {
     writeContract: withdrawWhitelistMode,
     data: withdrawWhitelistModeData,
     error: withdrawWhitelistModeError,
+    isSuccess: withdrawWhitelistSuccess,
   } = useWriteCookieJarWithdrawWhitelistMode()
 
   const {
     writeContract: withdrawNFTMode,
     data: withdrawNFTModeData,
     error: withdrawNFTModeError,
+    isSuccess: withdrawNFTSuccess,
   } = useWriteCookieJarWithdrawNftMode()
+
+  useEffect(() => {
+    if (withdrawWhitelistSuccess) {
+      setIsWithdrawWhitelistSuccess(true)
+    }
+  }, [withdrawWhitelistSuccess])
+
+  useEffect(() => {
+    if (withdrawNFTSuccess) {
+      setIsWithdrawNFTSuccess(true)
+    }
+  }, [withdrawNFTSuccess])
 
   // Handler functions
   const handleWithdrawWhitelist = () => {
@@ -110,62 +130,52 @@ export const ConfigView: React.FC<ConfigViewProps> = ({
     }
   }, [config.balance, config.currency])
 
+  useEffect(() => {
+    // If deposit or withdrawal was successful, refetch data
+    if (isApprovalSuccess && approvalCompleted && refetchData) {
+      // Wait a bit for the transaction to be processed
+      setTimeout(async () => {
+        await refetchData()
+      }, 2000)
+    }
+  }, [isApprovalSuccess, approvalCompleted, refetchData])
+
+  // Also add a similar effect for withdrawals:
+  useEffect(() => {
+    if ((isWithdrawWhitelistSuccess || isWithdrawNFTSuccess) && refetchData) {
+      // Wait a bit for the transaction to be processed
+      setTimeout(async () => {
+        await refetchData()
+      }, 2000)
+    }
+  }, [isWithdrawWhitelistSuccess, isWithdrawNFTSuccess, refetchData])
+
   return (
     <div className="space-y-8">
       {/* Funding Section */}
-      <Card className="border-none shadow-sm overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-[#ff5e14] to-[#ff8e14] text-white">
-          <CardTitle className="text-xl flex items-center">
+      <Card className="border-border shadow-sm overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-primary to-primary-light">
+          <CardTitle className="text-xl flex items-center text-primary-foreground">
             <Coins className="h-5 w-5 mr-2" />
             Fund Cookie Jar
           </CardTitle>
-          <p className="text-white/80 text-sm">Current Balance: {formattedBalance}</p>
+          <p className="text-primary-foreground/80 text-sm">Current Balance: {formattedBalance}</p>
         </CardHeader>
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2">
-                <label htmlFor="fundAmount" className="block text-[#3c2a14] font-medium mb-2">
-                  Amount to Deposit
-                </label>
-                <Input
-                  id="fundAmount"
-                  type="text"
-                  placeholder={
-                    config.currency === "0x0000000000000000000000000000000000000003" ? "0.1 ETH" : "1000 Tokens"
-                  }
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="border-[#f0e6d8] bg-white text-[#3c2a14]"
-                />
-              </div>
-              <div className="flex items-end">
-                <Button
-                  onClick={() => onSubmit(amount)}
-                  className="w-full bg-[#ff5e14] hover:bg-[#e54d00] text-white h-10"
-                  disabled={!amount || Number(amount) <= 0}
-                >
-                  <ArrowDownToLine className="h-4 w-4 mr-2" />
-                  Fund Jar
-                </Button>
-              </div>
-            </div>
-
-            {config.currency !== "0x0000000000000000000000000000000000000003" && (
-              <div className="pt-2">
-                <p className="text-sm text-[#8b7355]">
-                  Note: For ERC20 tokens, you'll need to approve the token transfer before depositing.
-                </p>
-              </div>
-            )}
-          </div>
+        <CardContent className="p-6 bg-background-paper">
+          <FundingSection
+            amount={amount}
+            setAmount={setAmount}
+            onSubmit={onSubmit}
+            walletBalance={config.userWalletBalance}
+            isAdmin={config.isAdmin}
+          />
         </CardContent>
       </Card>
 
       {/* Configuration Details */}
-      <Card className="border-none shadow-sm">
-        <CardHeader className="bg-[#fff8f0]">
-          <CardTitle className="text-xl text-[#3c2a14]">Jar Configuration</CardTitle>
+      <Card className="border-border shadow-sm">
+        <CardHeader className="bg-background-light">
+          <CardTitle className="text-xl text-text-primary">Jar Configuration</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           <ConfigDetailsSection config={config} />
@@ -174,9 +184,9 @@ export const ConfigView: React.FC<ConfigViewProps> = ({
 
       {/* Withdrawal Sections */}
       {showUserFunctionsWhitelisted && (
-        <Card className="border-none shadow-sm">
-          <CardHeader className="bg-[#fff8f0]">
-            <CardTitle className="text-xl text-[#3c2a14]">Whitelist Withdrawal</CardTitle>
+        <Card className="border-border shadow-sm">
+          <CardHeader className="bg-background-light">
+            <CardTitle className="text-xl text-text-primary">Whitelist Withdrawal</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <WhitelistWithdrawalSection
@@ -193,13 +203,15 @@ export const ConfigView: React.FC<ConfigViewProps> = ({
       )}
 
       {showUserFunctionsNFTGated && (
-        <Card className="border-none shadow-sm">
-          <CardHeader className="bg-[#fff8f0]">
-            <CardTitle className="text-xl text-[#3c2a14]">NFT-Gated Withdrawal</CardTitle>
+        <Card className="border-border shadow-sm">
+          <CardHeader className="bg-background-light">
+            <CardTitle className="text-xl text-text-primary">NFT-Gated Withdrawal</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <NFTGatedWithdrawalSection
               config={config}
+              withdrawPurpose={withdrawPurpose}
+              setWithdrawPurpose={setWithdrawPurpose}
               withdrawAmount={withdrawAmount}
               setWithdrawAmount={setWithdrawAmount}
               gateAddress={gateAddress}
@@ -214,9 +226,9 @@ export const ConfigView: React.FC<ConfigViewProps> = ({
       )}
 
       {/* Withdrawal History */}
-      <Card className="border-none shadow-sm">
-        <CardHeader className="bg-[#fff8f0]">
-          <CardTitle className="text-xl text-[#3c2a14]">Withdrawal History</CardTitle>
+      <Card className="border-border shadow-sm">
+        <CardHeader className="bg-background-light">
+          <CardTitle className="text-xl text-text-primary">Withdrawal History</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           <WithdrawalHistorySection pastWithdrawals={config.pastWithdrawals} />

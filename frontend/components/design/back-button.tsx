@@ -22,14 +22,15 @@ export function BackButton({ className = "", showWalletInfo = false, children }:
   if (pathname === "/") return null
 
   return (
-    <div className={cn("flex items-center justify-between w-full bg-white rounded-xl py-2 px-4 shadow-sm", className)}>
-      <button
-        type="button"
-        onClick={() => router.back()}
-        className="flex items-center gap-2 text-[#3c2a14] font-medium"
-      >
-        <div className="bg-[#ff5e14] rounded-full h-8 w-8 flex items-center justify-center">
-          <ArrowLeft className="w-5 h-5 text-white" />
+    <div
+      className={cn(
+        "flex items-center justify-between bg-transparent rounded-xl py-1 px-4 shadow-sm border border-gray-700",
+        className,
+      )}
+    >
+      <button type="button" onClick={() => router.back()} className="flex items-center gap-2 text-white font-medium">
+        <div className="bg-[#C3FF00] rounded-full h-8 w-8 flex items-center justify-center">
+          <ArrowLeft className="w-5 h-5 text-gray-800" />
         </div>
         <span>Go Back</span>
       </button>
@@ -42,7 +43,7 @@ export function BackButton({ className = "", showWalletInfo = false, children }:
               ready && account && chain && (!authenticationStatus || authenticationStatus === "authenticated")
 
             if (!connected) {
-              return null  // Don't show network buttons if not connected
+              return null // Don't show network buttons if not connected
             }
 
             if (chain?.unsupported) {
@@ -52,7 +53,7 @@ export function BackButton({ className = "", showWalletInfo = false, children }:
                 </Button>
               )
             }
-            
+
             return (
               <div className="flex items-center gap-2 ml-auto">
                 <Button onClick={openAccountModal} variant="outline" size="sm" className="flex items-center gap-1">

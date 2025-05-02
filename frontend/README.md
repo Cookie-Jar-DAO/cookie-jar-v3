@@ -4,7 +4,8 @@ A decentralized platform for creating and managing shared token pools with custo
 
 ## Interface 
 
-![image](https://github.com/user-attachments/assets/0e7cbea8-7d26-4de1-9176-fc06d2463c1f)
+![image](https://github.com/user-attachments/assets/becf0364-08cb-4fcb-83e6-ec9416152df3)
+
 
 
 ## Overview

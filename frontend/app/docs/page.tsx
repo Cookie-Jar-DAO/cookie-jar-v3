@@ -8,7 +8,7 @@ export default function DocsPage() {
   const [activeItem, setActiveItem] = useState("introduction")
 
   return (
-    <div className="container flex-1 items-start md:grid md:grid-cols-[240px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-10 bg-[#2b1d0e] min-h-screen">
+    <div className="container flex-1 items-start md:grid md:grid-cols-[240px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-10 bg-[#1D1D1D] min-h-screen">
       <aside className="fixed top-20 z-30 hidden h-[calc(100vh-5rem)] w-[240px] lg:w-[280px] overflow-y-auto md:block">
         <DocsSidebar activeItem={activeItem} setActiveItem={setActiveItem} />
       </aside>

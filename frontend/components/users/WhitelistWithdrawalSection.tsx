@@ -5,8 +5,8 @@ import React from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowUpToLine } from "lucide-react"
-import { ETH_ADDRESS, useTokenInfo, parseTokenAmount, formatTokenAmount, checkDecimals } from "@/lib/utils/token-utils"
+import { ArrowUpToLine, ArrowDownToLine } from "lucide-react"
+import { ETH_ADDRESS, useTokenInfo, formatTokenAmount, checkDecimals } from "@/lib/utils/token-utils"
 
 interface WhitelistWithdrawalSectionProps {
   config: any // Ideally this would be more specifically typed
@@ -16,6 +16,8 @@ interface WhitelistWithdrawalSectionProps {
   setWithdrawAmount: (value: string) => void
   handleWithdrawWhitelist: () => void
   handleWithdrawWhitelistVariable: () => void
+  iconType?: "download" | "arrow" // Prop to control which icon to show
+  isLoading?: boolean // Prop to indicate loading state
 }
 
 export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProps> = ({
@@ -26,14 +28,20 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
   setWithdrawAmount,
   handleWithdrawWhitelist,
   handleWithdrawWhitelistVariable,
+  iconType = "arrow",
+  isLoading = false,
 }) => {
   // Get token information using the token utils
   const { symbol: tokenSymbol, decimals: tokenDecimals } = useTokenInfo(
-    config?.currency !== ETH_ADDRESS ? config?.currency : undefined
-  );
-  
+    config?.currency !== ETH_ADDRESS ? config?.currency : undefined,
+  )
+
   // State for validation errors
-  const [amountError, setAmountError] = React.useState<string | null>(null);
+  const [amountError, setAmountError] = React.useState<string | null>(null)
+
+  // Choose which icon to display based on the iconType prop
+  const WithdrawIcon = iconType === "download" ? ArrowDownToLine : ArrowUpToLine
+
   // Fixed amount withdrawal with purpose
   if (config.strictPurpose && config.withdrawalOption === "Fixed") {
     return (
@@ -56,17 +64,21 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
           <Button
             onClick={handleWithdrawWhitelist}
             className="w-full bg-[#ff5e14] hover:bg-[#e54d00] text-white py-6 text-lg"
-            disabled={!withdrawPurpose || withdrawPurpose.length < 10 || config.isWithdrawPending}
+            disabled={!withdrawPurpose || withdrawPurpose.length < 10 || config.isWithdrawPending || isLoading}
           >
-            {config.isWithdrawPending ? (
+            {isLoading || config.isWithdrawPending ? (
               <>
                 <span className="animate-spin mr-2">⟳</span>
                 Processing...
               </>
             ) : (
               <>
-                <ArrowUpToLine className="h-5 w-5 mr-2" />
-                Get Fixed Cookie ({config.fixedAmount ? formatTokenAmount(BigInt(config.fixedAmount), tokenDecimals, tokenSymbol) : `0 ${tokenSymbol || 'ETH'}`})
+                <WithdrawIcon className="h-5 w-5 mr-2" />
+                Get Fixed Cookie (
+                {config.fixedAmount
+                  ? formatTokenAmount(BigInt(config.fixedAmount), tokenDecimals || 18, tokenSymbol || "ETH")
+                  : `0 ${tokenSymbol || "ETH"}`}
+                )
               </>
             )}
           </Button>
@@ -78,34 +90,82 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
   // Fixed amount withdrawal without purpose
   if (!config.strictPurpose && config.withdrawalOption === "Fixed") {
     return (
-      <div className="space-y-6 py-8">
-        <p className="text-[#ff5e14] font-medium text-xl text-center">
-          You can get a fixed cookie of {config.fixedAmount ? formatTokenAmount(BigInt(config.fixedAmount), tokenDecimals , tokenSymbol ) : `0 ${tokenSymbol || 'ETH'}`} from this jar.
-        </p>
-        {Number(config.lastWithdrawalWhitelist) > 0 && (
-          <p className="text-sm text-[#8b7355] text-center">
-            Note: After withdrawal, a cooldown period will be applied before you can withdraw again.
+      <div className="py-8 relative min-h-[500px]">
+        {/* Cookie Details Section - Centered and using full width */}
+        <div className="cookie-details-container">
+          <h3 className="text-[#c0ff00] text-3xl font-bold mb-8 text-center">Cookie Details</h3>
+
+          <div className="cookie-details-grid mb-8">
+            <div className="cookie-detail-item">
+              <span className="cookie-detail-label">Amount</span>
+              <span className="cookie-detail-value">
+                {config.fixedAmount
+                  ? formatTokenAmount(BigInt(config.fixedAmount), tokenDecimals || 18, tokenSymbol || "ETH")
+                  : `0 ${tokenSymbol || "ETH"}`}
+              </span>
+            </div>
+
+            <div className="cookie-detail-item">
+              <span className="cookie-detail-label">Type</span>
+              <span className="cookie-detail-value">Fixed Amount</span>
+            </div>
+
+            <div className="cookie-detail-item">
+              <span className="cookie-detail-label">Cooldown</span>
+              <span className="cookie-detail-value">
+                {config.withdrawalInterval
+                  ? (() => {
+                      try {
+                        const seconds = Number(config.withdrawalInterval)
+                        if (seconds === 60) return "1 minute"
+                        if (seconds < 60) return `${seconds} seconds`
+                        if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes`
+                        if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours`
+                        return `${Math.floor(seconds / 86400)} days`
+                      } catch (e) {
+                        return "None"
+                      }
+                    })()
+                  : "None"}
+              </span>
+            </div>
+
+            <div className="cookie-detail-item">
+              <span className="cookie-detail-label">One-time only</span>
+              <span className="cookie-detail-value">{config.oneTimeWithdrawal ? "Yes" : "No"}</span>
+            </div>
+          </div>
+
+          <p className="text-gray-300 text-center text-lg max-w-2xl mx-auto">
+            By clicking the button below, you'll receive{" "}
+            <span className="text-[#c0ff00] font-medium">
+              {formatTokenAmount(BigInt(config.fixedAmount), tokenDecimals || 18, tokenSymbol || "ETH")}
+            </span>{" "}
+            from this jar.
+            {Number(config.lastWithdrawalWhitelist) > 0 &&
+              " After withdrawal, a cooldown period will be applied before you can withdraw again."}
           </p>
-        )}
-        <div className="pt-4 flex justify-center">
-          <Button
-            onClick={handleWithdrawWhitelist}
-            className="px-8 py-6 bg-[#ff5e14] hover:bg-[#e54d00] text-white text-lg"
-            disabled={config.isWithdrawPending}
-          >
-            {config.isWithdrawPending ? (
-              <>
-                <span className="animate-spin mr-2">⟳</span>
-                Processing...
-              </>
-            ) : (
-              <>
-                <ArrowUpToLine className="h-5 w-5 mr-2" />
-                Get Fixed Cookie
-              </>
-            )}
-          </Button>
         </div>
+
+        {/* Get Cookie Button - Fixed position at bottom right */}
+        <button
+          onClick={handleWithdrawWhitelist}
+          className="cookie-button-animation get-cookie-btn w-48 h-48 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={config.isWithdrawPending || isLoading}
+        >
+          {isLoading || config.isWithdrawPending ? (
+            <>
+              <span className="animate-spin text-3xl mb-2">⟳</span>
+              <span>Processing...</span>
+            </>
+          ) : (
+            <>
+              <WithdrawIcon className="h-12 w-12 mb-3" />
+              <span className="font-bold text-2xl">GET COOKIE</span>
+              <span className="text-sm mt-1">Click to withdraw</span>
+            </>
+          )}
+        </button>
       </div>
     )
   }
@@ -125,20 +185,23 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
             value={withdrawAmount}
             onChange={(e) => {
               // Only allow numbers and decimal points with validation based on decimal precision
-              const value = e.target.value;
-              const result = checkDecimals(value, tokenDecimals); 
-              setAmountError(result.error);
+              const value = e.target.value
+              const result = checkDecimals(value, tokenDecimals || 18)
+              setAmountError(result.error)
               if (result.value !== null) {
-                setWithdrawAmount(result.value);
+                setWithdrawAmount(result.value)
               }
             }}
-            className={`border-[#f0e6d8] bg-white text-[#3c2a14] ${amountError ? 'border-red-500' : ''}`}
+            className={`border-[#f0e6d8] bg-white text-[#3c2a14] ${amountError ? "border-red-500" : ""}`}
           />
           {amountError ? (
             <p className="text-sm text-red-500">{amountError}</p>
           ) : (
             <p className="text-sm text-[#8b7355]">
-              Maximum withdrawal: {config.maxWithdrawal ? formatTokenAmount(BigInt(config.maxWithdrawal), tokenDecimals, tokenSymbol) : `0 ${tokenSymbol}`}
+              Maximum withdrawal:{" "}
+              {config.maxWithdrawal
+                ? formatTokenAmount(BigInt(config.maxWithdrawal), tokenDecimals || 18, tokenSymbol || "ETH")
+                : `0 ${tokenSymbol || "ETH"}`}
             </p>
           )}
         </div>
@@ -165,18 +228,20 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
               Number(withdrawAmount) <= 0 ||
               !withdrawPurpose ||
               withdrawPurpose.length < 10 ||
-              config.isWithdrawPending
+              !!amountError ||
+              config.isWithdrawPending ||
+              isLoading
             }
           >
-            {config.isWithdrawPending ? (
+            {isLoading || config.isWithdrawPending ? (
               <>
                 <span className="animate-spin mr-2">⟳</span>
                 Processing...
               </>
             ) : (
               <>
-                <ArrowUpToLine className="h-4 w-4 mr-2" />
-                Get Cookie ({withdrawAmount || "0"} {tokenSymbol})
+                <WithdrawIcon className="h-4 w-4 mr-2" />
+                Get Cookie ({withdrawAmount || "0"} {tokenSymbol || "ETH"})
               </>
             )}
           </Button>
@@ -200,20 +265,23 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
             value={withdrawAmount}
             onChange={(e) => {
               // Only allow numbers and decimal points with validation based on decimal precision
-              const value = e.target.value;
-              const result = checkDecimals(value, tokenDecimals); 
-              setAmountError(result.error);
+              const value = e.target.value
+              const result = checkDecimals(value, tokenDecimals || 18)
+              setAmountError(result.error)
               if (result.value !== null) {
-                setWithdrawAmount(result.value);
+                setWithdrawAmount(result.value)
               }
             }}
-            className={`border-[#f0e6d8] bg-white text-[#3c2a14] ${amountError ? 'border-red-500' : ''}`}
+            className={`border-[#f0e6d8] bg-white text-[#3c2a14] ${amountError ? "border-red-500" : ""}`}
           />
           {amountError ? (
             <p className="text-sm text-red-500">{amountError}</p>
           ) : (
             <p className="text-sm text-[#8b7355]">
-              Maximum withdrawal: {config.maxWithdrawal ? formatTokenAmount(BigInt(config.maxWithdrawal), tokenDecimals, tokenSymbol) : `0 ${tokenSymbol }`}
+              Maximum withdrawal:{" "}
+              {config.maxWithdrawal
+                ? formatTokenAmount(BigInt(config.maxWithdrawal), tokenDecimals || 18, tokenSymbol || "ETH")
+                : `0 ${tokenSymbol || "ETH"}`}
             </p>
           )}
         </div>
@@ -222,17 +290,19 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
           <Button
             onClick={handleWithdrawWhitelistVariable}
             className="w-full bg-[#ff5e14] hover:bg-[#e54d00] text-white"
-            disabled={!withdrawAmount || Number(withdrawAmount) <= 0 || !!amountError || config.isWithdrawPending}
+            disabled={
+              !withdrawAmount || Number(withdrawAmount) <= 0 || !!amountError || config.isWithdrawPending || isLoading
+            }
           >
-            {config.isWithdrawPending ? (
+            {isLoading || config.isWithdrawPending ? (
               <>
                 <span className="animate-spin mr-2">⟳</span>
                 Processing...
               </>
             ) : (
               <>
-                <ArrowUpToLine className="h-4 w-4 mr-2" />
-                Get Cookie ({withdrawAmount || "0"} {tokenSymbol || 'ETH'})
+                <WithdrawIcon className="h-4 w-4 mr-2" />
+                Get Cookie ({withdrawAmount || "0"} {tokenSymbol || "ETH"})
               </>
             )}
           </Button>

@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle, AlertCircle } from "lucide-react"
+import { LoadingOverlay } from "@/components/design/loading-overlay"
 
 const DefaultFeeCollector = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
   const [newFeeCollectorAddress, setNewFeeCollectorAddress] = useState("")
   const [isSuccess, setIsSuccess] = useState(false)
   const { address } = useAccount()
+  const [isLoading, setIsLoading] = useState(false)
 
   const {
     writeContract: updateFeeCollector,
@@ -26,6 +28,7 @@ const DefaultFeeCollector = ({ contractAddress }: { contractAddress: `0x${string
     if (isTransactionSuccess) {
       setIsSuccess(true)
       setNewFeeCollectorAddress("")
+      setIsLoading(false)
 
       // Reset success message after 5 seconds
       const timer = setTimeout(() => {
@@ -34,16 +37,27 @@ const DefaultFeeCollector = ({ contractAddress }: { contractAddress: `0x${string
 
       return () => clearTimeout(timer)
     }
-  }, [isTransactionSuccess])
 
-  const handleSubmit = (e: any) => {
+    if (isError) {
+      setIsLoading(false)
+    }
+  }, [isTransactionSuccess, isError])
+
+  const handleSubmit = async (e: any) => {
     e.preventDefault()
     if (!newFeeCollectorAddress || !newFeeCollectorAddress.startsWith("0x")) return
 
-    updateFeeCollector({
-      address: contractAddress,
-      args: [newFeeCollectorAddress as `0x${string}`],
-    })
+    setIsLoading(true)
+
+    try {
+      await updateFeeCollector({
+        address: contractAddress,
+        args: [newFeeCollectorAddress as `0x${string}`],
+      })
+    } catch (error: unknown) {
+      console.error("Fee collector update error:", error)
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -103,6 +117,9 @@ const DefaultFeeCollector = ({ contractAddress }: { contractAddress: `0x${string
           this role will give another address these privileges.
         </p>
       </div>
+
+      {/* Loading Overlay */}
+      <LoadingOverlay isOpen={isLoading} message="Updating fee collector..." onClose={() => setIsLoading(false)} />
     </div>
   )
 }

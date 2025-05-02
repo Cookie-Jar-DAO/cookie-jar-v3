@@ -10,7 +10,7 @@ interface LoadingOverlayProps {
   onClose?: () => void
 }
 
-export function LoadingOverlay({ message = "Processing...", isOpen, onClose }: LoadingOverlayProps) {
+export function LoadingOverlay({ message = "Processing", isOpen, onClose }: LoadingOverlayProps) {
   // If component is mounted
   const [mounted, setMounted] = useState(false)
 
@@ -21,48 +21,44 @@ export function LoadingOverlay({ message = "Processing...", isOpen, onClose }: L
   if (!mounted || !isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="relative bg-transparent rounded-lg p-6 max-w-md w-full flex flex-col items-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="relative bg-[#333333] rounded-lg p-8 max-w-md w-full flex flex-col items-center">
         {/* Always show the close button */}
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-2 right-2 text-white hover:bg-white/20 z-10"
+          className="absolute top-2 right-2 text-white hover:bg-[#C3FF00]/20 z-10"
           onClick={() => onClose && onClose()}
         >
           <X className="h-5 w-5" />
         </Button>
 
-        <div className="content">
-          <div className="pill">
-            <div className="medicine">
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
-              <i></i>
+        <div className="loader">
+          <div className="loading-text">
+            {message}
+            <div className="dots-container">
+              <span className="dot"></span>
+              <span className="dot"></span>
+              <span className="dot"></span>
             </div>
-            <div className="side"></div>
-            <div className="side"></div>
+          </div>
+          <div className="loading-bar-background">
+            <div className="loading-bar">
+              <div className="white-bars-container">
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+              </div>
+            </div>
           </div>
         </div>
-
-        <p className="text-white text-xl font-medium mt-4">{message}</p>
       </div>
     </div>
   )
