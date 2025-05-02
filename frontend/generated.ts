@@ -5,10 +5,6 @@ import {
   createUseWatchContractEvent,
 } from 'wagmi/codegen'
 
-export const cookieJarFactoryAddress =
-  "0x30a470795f02810c44e7d966206963fd49234995";
-export const cookieJarRegistryAddress =
-  "0xb4c6c00183a7c2c90719a2e5d44fa753e86c0bf8";
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CookieJar
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -672,6 +668,7 @@ export const cookieJarAbi = [
   { type: 'error', inputs: [], name: 'CookieJar__WithdrawalAlreadyDone' },
   { type: 'error', inputs: [], name: 'DuplicateNFTGate' },
   { type: 'error', inputs: [], name: 'EmergencyWithdrawalDisabled' },
+  { type: 'error', inputs: [], name: 'FeeCollectorAddressCannotBeZeroAddress' },
   { type: 'error', inputs: [], name: 'FeeTransferFailed' },
   { type: 'error', inputs: [], name: 'InsufficientBalance' },
   { type: 'error', inputs: [], name: 'InvalidAccessType' },
@@ -1087,6 +1084,7 @@ export const cookieJarFactoryAbi = [
     inputs: [],
     name: 'CookieJarFactory__WithdrawingMoreThanDeposited',
   },
+  { type: 'error', inputs: [], name: 'FeeCollectorAddressCannotBeZeroAddress' },
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1371,163 +1369,103 @@ export const cookieJarRegistryAbi = [
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ERC20
+// erc20
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export const erc20Abi = [
   {
+    type: 'event',
+    inputs: [
+      { name: 'owner', type: 'address', indexed: true },
+      { name: 'spender', type: 'address', indexed: true },
+      { name: 'value', type: 'uint256', indexed: false },
+    ],
+    name: 'Approval',
+  },
+  {
+    type: 'event',
+    inputs: [
+      { name: 'from', type: 'address', indexed: true },
+      { name: 'to', type: 'address', indexed: true },
+      { name: 'value', type: 'uint256', indexed: false },
+    ],
+    name: 'Transfer',
+  },
+  {
     type: 'function',
     inputs: [
-      { name: 'owner', internalType: 'address', type: 'address' },
-      { name: 'spender', internalType: 'address', type: 'address' },
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
     ],
     name: 'allowance',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
   },
   {
     type: 'function',
     inputs: [
-      { name: 'spender', internalType: 'address', type: 'address' },
-      { name: 'value', internalType: 'uint256', type: 'uint256' },
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' },
     ],
     name: 'approve',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'nonpayable',
   },
   {
     type: 'function',
-    inputs: [{ name: 'account', internalType: 'address', type: 'address' }],
+    inputs: [{ name: 'account', type: 'address' }],
     name: 'balanceOf',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
   },
   {
     type: 'function',
     inputs: [],
     name: 'decimals',
-    outputs: [{ name: '', internalType: 'uint8', type: 'uint8' }],
+    outputs: [{ name: '', type: 'uint8' }],
     stateMutability: 'view',
   },
   {
     type: 'function',
     inputs: [],
     name: 'name',
-    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    outputs: [{ name: '', type: 'string' }],
     stateMutability: 'view',
   },
   {
     type: 'function',
     inputs: [],
     name: 'symbol',
-    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    outputs: [{ name: '', type: 'string' }],
     stateMutability: 'view',
   },
   {
     type: 'function',
     inputs: [],
     name: 'totalSupply',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
   },
   {
     type: 'function',
     inputs: [
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'value', internalType: 'uint256', type: 'uint256' },
+      { name: 'recipient', type: 'address' },
+      { name: 'amount', type: 'uint256' },
     ],
     name: 'transfer',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'nonpayable',
   },
   {
     type: 'function',
     inputs: [
-      { name: 'from', internalType: 'address', type: 'address' },
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'value', internalType: 'uint256', type: 'uint256' },
+      { name: 'sender', type: 'address' },
+      { name: 'recipient', type: 'address' },
+      { name: 'amount', type: 'uint256' },
     ],
     name: 'transferFrom',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'nonpayable',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'owner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'spender',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'value',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-    ],
-    name: 'Approval',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      { name: 'from', internalType: 'address', type: 'address', indexed: true },
-      { name: 'to', internalType: 'address', type: 'address', indexed: true },
-      {
-        name: 'value',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-    ],
-    name: 'Transfer',
-  },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'spender', internalType: 'address', type: 'address' },
-      { name: 'allowance', internalType: 'uint256', type: 'uint256' },
-      { name: 'needed', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'ERC20InsufficientAllowance',
-  },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'sender', internalType: 'address', type: 'address' },
-      { name: 'balance', internalType: 'uint256', type: 'uint256' },
-      { name: 'needed', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'ERC20InsufficientBalance',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'approver', internalType: 'address', type: 'address' }],
-    name: 'ERC20InvalidApprover',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'receiver', internalType: 'address', type: 'address' }],
-    name: 'ERC20InvalidReceiver',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'sender', internalType: 'address', type: 'address' }],
-    name: 'ERC20InvalidSender',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'spender', internalType: 'address', type: 'address' }],
-    name: 'ERC20InvalidSpender',
   },
 ] as const
 
@@ -2320,7 +2258,6 @@ export const useWriteCookieJarFactory = /*#__PURE__*/ createUseWriteContract({
 export const useWriteCookieJarFactoryCreateCookieJar =
   /*#__PURE__*/ createUseWriteContract({
     abi: cookieJarFactoryAbi,
-    address: cookieJarFactoryAddress,
     functionName: 'createCookieJar',
   })
 
@@ -2574,7 +2511,6 @@ export const useReadCookieJarRegistryCookieJarFactory =
 export const useReadCookieJarRegistryGetAllJars =
   /*#__PURE__*/ createUseReadContract({
     abi: cookieJarRegistryAbi,
-    address:cookieJarRegistryAddress,
     functionName: 'getAllJars',
   })
 

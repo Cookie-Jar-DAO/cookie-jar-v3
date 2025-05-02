@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useChainId } from "wagmi"
 import { useReadCookieJarRegistryGetAllJars } from "../generated"
+import { contractAddresses } from "../config/supported-networks"
 
 interface JarData {
   jarAddress: string
@@ -23,6 +25,22 @@ export function useCookieJarData() {
   const [error, setError] = useState<Error | null>(null)
   const [shouldFetchJar, setShouldFetchJar] = useState(true)
 
+  // Get the current chain ID from the connected wallet
+  const chainId = useChainId()
+
+  // Get the registry address for the current chain ID
+  // Check if the current chainId has a registry address configured
+
+    const registryAddress = chainId 
+    ? contractAddresses.cookieJarRegistry[chainId] : undefined
+    
+  // Log if no registry address is found for the current chain
+  useEffect(() => {
+    if (chainId && !registryAddress) {
+      console.warn(`No registry address found for chain ID: ${chainId}`)
+    }
+  }, [chainId, registryAddress])
+
   // Query: Get the jar data
   const {
     data: jarResponse,
@@ -30,9 +48,10 @@ export function useCookieJarData() {
     isLoading: isJarLoading,
     error: jarError,
   } = useReadCookieJarRegistryGetAllJars({
+    address: registryAddress,
     args: [],
     query: {
-      enabled: shouldFetchJar,
+      enabled: shouldFetchJar && !!registryAddress,
     },
   })
   console.log(jarResponse)

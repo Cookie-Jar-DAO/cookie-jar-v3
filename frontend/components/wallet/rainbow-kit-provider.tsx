@@ -9,48 +9,31 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query"
 import { http } from "wagmi"
 import { useTheme } from "next-themes"
 import { useEffect } from "react"
-
-const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || ""
-const infuraId = process.env.NEXT_PUBLIC_INFURA_ID || ""
+import { wagmiConfig } from "@/config/supported-networks"
 
 // Define Base Sepolia chain if not already defined in wagmi/chains
-const baseSepoliaConfig = {
-  id: 84532,
-  name: "Base Sepolia",
-  network: "base-sepolia",
-  nativeCurrency: {
-    decimals: 18,
-    name: "Ethereum",
-    symbol: "ETH",
-  },
-  rpcUrls: {
-    public: { http: ["https://sepolia.base.org"] },
-    default: { http: ["https://sepolia.base.org"] },
-  },
-  blockExplorers: {
-    default: { name: "BaseScan", url: "https://sepolia-explorer.base.org" },
-  },
-  testnet: true,
-}
+//commenting this out because I not certain if it's important or not
+// const baseSepoliaConfig = {
+//   id: 84532,
+//   name: "Base Sepolia",
+//   network: "base-sepolia",
+//   nativeCurrency: {
+//     decimals: 18,
+//     name: "Ethereum",
+//     symbol: "ETH",
+//   },
+//   rpcUrls: {
+//     public: { http: ["https://sepolia.base.org"] },
+//     default: { http: ["https://sepolia.base.org"] },
+//   },
+//   blockExplorers: {
+//     default: { name: "BaseScan", url: "https://sepolia-explorer.base.org" },
+//   },
+//   testnet: true,
+// }
 
 // Define our custom orange color
 const orangeColor = "#ff5e14"
-
-const config = getDefaultConfig({
-  appName: "Cookie Jar V3",
-  projectId,
-  chains: [base, optimism, arbitrum, gnosis, baseSepolia, sepolia, mainnet],
-  ssr: true,
-  transports: {
-    [base.id]: http(`https://base-mainnet.infura.io/v3/${infuraId}`),
-    [optimism.id]: http(`https://optimism-mainnet.infura.io/v3/${infuraId}`),
-    [arbitrum.id]: http(`https://arbitrum-mainnet.infura.io/v3/${infuraId}`),
-    [gnosis.id]: http(`https://gnosis-mainnet.infura.io/v3/${infuraId}`),
-    [baseSepolia.id]: http(`https://sepolia.base.org`),
-    [sepolia.id]: http(`https://sepolia.infura.io/v3/${infuraId}`),
-    [mainnet.id]: http(`https://mainnet.infura.io/v3/${infuraId}`),
-  },
-})
 
 const queryClient = new QueryClient()
 
@@ -103,7 +86,7 @@ export function RainbowKitProviderWrapper({ children }: { children: ReactNode })
   }, [])
 
   return (
-    <WagmiProvider config={config}>
+    <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider theme={themeWithCustomColors} coolMode={false}>
           {children}

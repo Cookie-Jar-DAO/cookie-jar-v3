@@ -22,6 +22,7 @@ import { keccak256, toUtf8Bytes } from "ethers"
 import { ethers } from "ethers"
 import { JarCard } from "@/components/ui/jar-card"
 import { useAdminStatus } from "@/hooks/use-admin-status"
+import { MemoizedCustomConnectButton } from "@/components/wallet/custom-connect-button"
 
 // Add this new component inside the file, before the main CookieJarPage component
 function CounterBox({ value }: { value: number }) {
@@ -358,15 +359,7 @@ export default function CookieJarPage() {
         <div className="bg-[#2A2A2A] border border-[#444444] p-8 rounded-xl shadow-lg max-w-md text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Connect Your Wallet</h2>
           <p className="text-lg text-[#AAAAAA] mb-6">Please connect your wallet to view Cookie Jars.</p>
-          <div className="flex flex-col items-center gap-4">
-            <p className="text-[#AAAAAA]">Return to the home page to connect your wallet.</p>
-            <Button
-              onClick={() => router.push("/")}
-              className="bg-[#C3FF00] hover:bg-[#A3DF00] text-[#1F1F1F] font-medium"
-            >
-              Go to Home Page
-            </Button>
-          </div>
+          <MemoizedCustomConnectButton className="w-full mx-auto mt-4" />
         </div>
       </div>
     )

@@ -1,18 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useChainId, useSwitchChain, useConfig, useAccount } from "wagmi"
+import { useAccount, useChainId, useConfig } from "wagmi"
 import { Button } from "@/components/ui/button"
+import { useChainModal } from "@rainbow-me/rainbowkit"
+import { supportedChains } from "@/config/supported-networks"
 
 export function NetworkSwitcher() {
+  const { isConnected } = useAccount()
   const chainId = useChainId()
-  const { switchChain, isPending } = useSwitchChain()
   const [mounted, setMounted] = useState(false)
   const config = useConfig()
-  const { isConnected } = useAccount() // Add this to check if wallet is connected
-
-  // Base Sepolia chain ID
-  const BASE_SEPOLIA_CHAIN_ID = 84532
+  const { openChainModal } = useChainModal()
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -35,12 +34,72 @@ export function NetworkSwitcher() {
     }
   }, [config])
 
+  // Get the actual connected chain from the browser's ethereum provider
+  const [actualChainId, setActualChainId] = useState<number | null>(null)
+
+  // Effect to get the actual chain ID from the browser's ethereum provider
+  useEffect(() => {
+    const getActualChainId = async () => {
+      if (typeof window !== "undefined" && window.ethereum) {
+        try {
+          // Get the actual chainId from the ethereum provider
+          const id = (await window.ethereum.request({ method: "eth_chainId" })) as string
+          const parsedId = Number.parseInt(id, 16)
+          setActualChainId(parsedId)
+          console.log("Actual chainId from provider:", parsedId)
+        } catch (error) {
+          console.error("Error getting chainId from provider:", error)
+        }
+      }
+    }
+
+    getActualChainId()
+
+    // Set up listener for chain changes
+    if (typeof window !== "undefined" && window.ethereum) {
+      window.ethereum.on("chainChanged", (chainId: string) => {
+        const parsedId = Number.parseInt(chainId, 16)
+        setActualChainId(parsedId)
+        console.log("Chain changed to:", parsedId)
+      })
+    }
+
+    return () => {
+      // Clean up listeners
+      if (typeof window !== "undefined" && window.ethereum) {
+        window.ethereum.removeListener("chainChanged", () => {})
+      }
+    }
+  }, [])
+
+  // Check if wagmi's chainId is showing Sepolia (11155111) but the actual chainId is different
+  // This would indicate a fallback mechanism is active
+  const isFallbackActive =
+    chainId === (11155111 as unknown as number) && actualChainId !== null && actualChainId !== 11155111
+
+  // Check if the actual chain is supported
+  const isActualChainSupported = actualChainId ? supportedChains.some((chain) => chain.id === actualChainId) : false
+
+  // Debug logs
+  console.log("Wagmi chainId:", chainId)
+  console.log("Actual chainId:", actualChainId)
+  console.log("Is fallback active:", isFallbackActive)
+  console.log("Is actual chain supported:", isActualChainSupported)
+  console.log(
+    "Supported chains:",
+    supportedChains.map((chain) => ({ id: chain.id, name: chain.name })),
+  )
+
   if (!mounted) return null
 
-  // Only show network switcher if wallet is connected AND user is not on Base Sepolia
-  if (!isConnected || chainId === BASE_SEPOLIA_CHAIN_ID) {
+  // Show network switcher when:
+  // 1. User is connected AND
+  // 2. Either the fallback is active OR the actual chain is not supported
+  if (!isConnected || (!isFallbackActive && isActualChainSupported)) {
     return null
   }
+
+  // At this point we know the user is connected and on an unsupported network
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -57,18 +116,18 @@ export function NetworkSwitcher() {
             </svg>
           </div>
 
-          <h3 className="text-xl font-bold text-white mb-2">Wrong Network Detected</h3>
+          <h3 className="text-xl font-bold text-white mb-2">Unsupported Network</h3>
           <p className="text-[#e0e0e0] mb-6">
-            Cookie Jar currently only supports Base Sepolia network. Please switch your network to continue.
+            The network you're currently connected to is not supported by Cookie Jar. Please switch to a supported
+            network to continue.
           </p>
 
           <div className="flex flex-col gap-3">
             <Button
-              onClick={() => switchChain({ chainId: BASE_SEPOLIA_CHAIN_ID })}
-              disabled={isPending}
+              onClick={openChainModal}
               className="w-full bg-[#C3FF00] hover:bg-[#d4ff33] text-[#222222] font-medium"
             >
-              {isPending ? "Switching..." : "Switch to Base Sepolia"}
+              Switch to a Supported Network
             </Button>
           </div>
         </div>

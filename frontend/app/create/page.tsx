@@ -2,8 +2,8 @@
 
 import type React from "react"
 import { useState, useTransition, useEffect } from "react"
-import { useWriteCookieJarFactoryCreateCookieJar } from "@/generated"
-import { useWaitForTransactionReceipt, useAccount } from "wagmi"
+import { cookieJarFactoryAbi } from "@/generated"
+import { useWaitForTransactionReceipt, useAccount, useChainId, useWriteContract } from "wagmi"
 import { parseEther } from "viem"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -45,6 +45,7 @@ import { useRouter } from "next/navigation"
 import { keccak256, toUtf8Bytes } from "ethers"
 import { z } from "zod"
 import { isAddress } from "viem"
+import { contractAddresses } from "@/config/supported-networks"
 
 // Import token utilities
 import { ETH_ADDRESS, useTokenInfo, parseTokenAmount } from "@/lib/utils/token-utils"
@@ -214,12 +215,12 @@ export default function CreateCookieJarForm() {
 
   // Contract write hook
   const {
-    writeContract: createCookieJar,
+    writeContract,
     data: txHash,
     isPending: isCreatingContract,
     isSuccess: isSubmitted,
     error: createError,
-  } = useWriteCookieJarFactoryCreateCookieJar()
+  } = useWriteContract()
 
   // Transaction receipt hook
   const {
@@ -232,6 +233,11 @@ export default function CreateCookieJarForm() {
   })
 
   // Set the jar owner to the connected wallet by default
+  const chainId = useChainId()
+
+  // Get the factory address for the current chain
+  const factoryAddress = chainId ? contractAddresses.cookieJarFactory[chainId] : undefined
+
   useEffect(() => {
     if (address) {
       setJarOwnerAddress(address)
@@ -471,7 +477,8 @@ export default function CreateCookieJarForm() {
 
   // Confirm submission
   const confirmSubmit = () => {
-    setShowConfirmDialog(false)
+    // Don't close the dialog immediately
+    // setShowConfirmDialog(false) - removed this line
     setIsCreating(true)
     setErrorMessage(null)
 
@@ -480,31 +487,51 @@ export default function CreateCookieJarForm() {
       const effectiveNftAddresses = accessType === AccessType.NFTGated ? nftAddresses : []
       const effectiveNftTypes = accessType === AccessType.NFTGated ? nftTypes : []
 
-      // Calculate total seconds for withdrawal interval
-      const totalSeconds = calculateTotalSeconds(
-        Number(withdrawalDays || "0"),
-        Number(withdrawalHours || "0"),
-        Number(withdrawalMinutes || "0"),
-        Number(withdrawalSeconds || "0"),
-      )
+      try {
+        // Check if we have a valid factory address for this chain
+        if (!factoryAddress) {
+          throw new Error(
+            `No contract address found for the current network (Chain ID: ${chainId}). Please switch to a supported network.`,
+          )
+        }
 
-      createCookieJar({
-        args: [
-          jarOwnerAddress,
-          supportedCurrency,
-          accessType,
-          effectiveNftAddresses as readonly `0x${string}`[],
-          effectiveNftTypes,
-          withdrawalOption,
-          parseAmount(fixedAmount),
-          parseAmount(maxWithdrawal),
-          BigInt(totalSeconds), // Use calculated total seconds
-          strictPurpose,
-          emergencyWithdrawalEnabled,
-          oneTimeWithdrawal,
-          `${jarName}: ${metadata}`, // Combine name and description
-        ],
-      })
+        writeContract({
+          address: factoryAddress,
+          abi: cookieJarFactoryAbi,
+          functionName: "createCookieJar",
+          args: [
+            jarOwnerAddress,
+            supportedCurrency,
+            accessType,
+            effectiveNftAddresses as readonly `0x${string}`[],
+            effectiveNftTypes,
+            withdrawalOption,
+            parseAmount(fixedAmount),
+            parseAmount(maxWithdrawal),
+            BigInt(
+              calculateTotalSeconds(
+                Number(withdrawalDays || "0"),
+                Number(withdrawalHours || "0"),
+                Number(withdrawalMinutes || "0"),
+                Number(withdrawalSeconds || "0"),
+              ),
+            ),
+            strictPurpose,
+            emergencyWithdrawalEnabled,
+            oneTimeWithdrawal,
+            `${jarName}: ${metadata}`, // Combine name and description
+          ],
+        })
+
+        // Only close the dialog after the transaction is submitted
+        if (txHash) {
+          setShowConfirmDialog(false)
+        }
+      } catch (error) {
+        console.error("Error creating cookie jar:", error)
+        setErrorMessage("Failed to create Cookie Jar. Please try again.")
+        setIsCreating(false)
+      }
     })
   }
 
@@ -533,6 +560,10 @@ export default function CreateCookieJarForm() {
 
   // Handle transaction confirmation
   useEffect(() => {
+    // Add this line to the beginning of the useEffect for transaction confirmation
+    if (isSubmitted) {
+      setShowConfirmDialog(false)
+    }
     if (txConfirmed && receipt) {
       console.log("Transaction confirmed:", receipt)
 
@@ -640,7 +671,7 @@ export default function CreateCookieJarForm() {
       setIsCreating(false)
       resetForm()
     }
-  }, [txConfirmed, receipt, toast, router, txHash])
+  }, [txConfirmed, receipt, toast, router, txHash, isSubmitted])
 
   // Handle transaction error
   useEffect(() => {
@@ -1637,70 +1668,92 @@ export default function CreateCookieJarForm() {
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <DialogContent className="sm:max-w-md bg-[#333333] text-white border-[#444444]">
           <DialogHeader>
-            <DialogTitle>Confirm Cookie Jar Creation</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl font-bold">Confirm Cookie Jar Creation</DialogTitle>
+            <DialogDescription className="text-[#AAAAAA]">
               Please review your jar configuration before proceeding. Once created, most settings cannot be changed.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="bg-[#252525] p-4 rounded-lg">
-              <h3 className="text-lg font-medium mb-2 text-white">Cookie Jar Summary</h3>
-              <ul className="space-y-2 text-sm">
-                <li className="text-white">
-                  <span className="font-medium">Name:</span> {jarName}
-                </li>
-                <li className="text-white">
-                  <span className="font-medium">Owner:</span>{" "}
-                  {jarOwnerAddress === address ? "Your wallet" : jarOwnerAddress}
-                </li>
-                <li className="text-white">
-                  <span className="font-medium">Currency:</span> {isEthCurrency ? "ETH (Native)" : supportedCurrency}
-                </li>
-                <li className="text-white">
-                  <span className="font-medium">Access Type:</span>{" "}
-                  {accessType === AccessType.Whitelist ? "Whitelist" : "NFT Gated"}
-                </li>
-                <li className="text-white">
-                  <span className="font-medium">Withdrawal:</span>{" "}
-                  {withdrawalOption === WithdrawalTypeOptions.Fixed ? "Fixed" : "Variable"}
-                </li>
-                <li className="text-white">
-                  <span className="font-medium">Amount:</span>{" "}
-                  {withdrawalOption === WithdrawalTypeOptions.Fixed ? fixedAmount : `Up to ${maxWithdrawal}`}
-                  {isEthCurrency ? " ETH" : " Tokens"}
-                </li>
-                <li className="text-white">
-                  <span className="font-medium">Interval:</span>{" "}
-                  {formatTimeString(
-                    Number(withdrawalDays || "0"),
-                    Number(withdrawalHours || "0"),
-                    Number(withdrawalMinutes || "0"),
-                    Number(withdrawalSeconds || "0"),
-                  )}
-                </li>
-                <li className="text-white">
-                  <span className="font-medium">Features:</span>{" "}
-                  {[
-                    strictPurpose ? "Purpose Required" : null,
-                    emergencyWithdrawalEnabled ? "Emergency Enabled" : null,
-                    oneTimeWithdrawal ? "One-Time Only" : null,
-                  ]
-                    .filter(Boolean)
-                    .join(", ") || "None"}
-                </li>
-              </ul>
+              <h3 className="text-lg font-medium mb-4 text-white border-b border-[#444444] pb-2">Cookie Jar Summary</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[#AAAAAA] font-medium">Name:</span>
+                  <span className="font-medium text-white">{jarName}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#AAAAAA] font-medium">Owner:</span>
+                  <span className="font-medium text-white">
+                    {jarOwnerAddress === address ? "Your wallet" : jarOwnerAddress}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#AAAAAA] font-medium">Currency:</span>
+                  <span className="font-medium text-white">{isEthCurrency ? "ETH (Native)" : tokenSymbol}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#AAAAAA] font-medium">Access Type:</span>
+                  <span className="font-medium text-white">
+                    {accessType === AccessType.Whitelist ? "Whitelist" : "NFT Gated"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#AAAAAA] font-medium">Withdrawal:</span>
+                  <span className="font-medium text-white">
+                    {withdrawalOption === WithdrawalTypeOptions.Fixed ? "Fixed" : "Variable"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#AAAAAA] font-medium">Amount:</span>
+                  <span className="font-medium text-white">
+                    {withdrawalOption === WithdrawalTypeOptions.Fixed ? fixedAmount : `Up to ${maxWithdrawal}`}
+                    {isEthCurrency ? " ETH" : ` ${tokenSymbol || "Tokens"}`}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#AAAAAA] font-medium">Interval:</span>
+                  <span className="font-medium text-white">
+                    {formatTimeString(
+                      Number(withdrawalDays || "0"),
+                      Number(withdrawalHours || "0"),
+                      Number(withdrawalMinutes || "0"),
+                      Number(withdrawalSeconds || "0"),
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#AAAAAA] font-medium">Features:</span>
+                  <span className="font-medium text-white">
+                    {[
+                      strictPurpose ? "Purpose Required" : null,
+                      emergencyWithdrawalEnabled ? "Emergency Enabled" : null,
+                      oneTimeWithdrawal ? "One-Time Only" : null,
+                    ]
+                      .filter(Boolean)
+                      .join(", ") || "None"}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-          <DialogFooter className="flex justify-between sm:justify-between">
+          <DialogFooter className="flex justify-between sm:justify-between gap-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => setShowConfirmDialog(false)}
-              className="border-[#C3FF00] text-[#C3FF00] hover:bg-[#252525]"
+              className="border-[#C3FF00] text-[#C3FF00] hover:bg-[#252525] flex-1"
             >
               Go Back
             </Button>
-            <Button type="button" onClick={confirmSubmit} className="bg-[#C3FF00] hover:bg-[#d4ff33] text-black">
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                confirmSubmit()
+              }}
+              className="bg-[#C3FF00] hover:bg-[#d4ff33] text-black flex-1"
+            >
               Create Cookie Jar
             </Button>
           </DialogFooter>

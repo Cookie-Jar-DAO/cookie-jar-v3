@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
-import { useAccount } from "wagmi"
+import { useAccount, useChainId } from "wagmi"
 import { useRouter } from "next/navigation"
 import { useCookieJarData } from "@/hooks/use-cookie-jar-registry"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
@@ -23,6 +23,7 @@ import {
   ChevronRight,
 } from "lucide-react"
 import { shortenAddress } from "@/lib/utils/utils"
+import { getExplorerAddressUrl, getNetworkName } from "@/lib/utils/network-utils"
 import { BackButton } from "@/components/design/back-button"
 import { useAdminStatus } from "@/hooks/use-admin-status"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -33,6 +34,7 @@ import { CustomTooltip } from "@/components/ui/custom-tooltip"
 
 export default function ProfilePage() {
   const { address, isConnected } = useAccount()
+  const chainId = useChainId()
   const router = useRouter()
   const { cookieJarsData, isLoading, error } = useCookieJarData()
   const [mounted, setMounted] = useState(false)
@@ -309,7 +311,7 @@ export default function ProfilePage() {
                   asChild
                 >
                   <a
-                    href={`https://sepolia-explorer.base.org/address/${address}`}
+                    href={address ? getExplorerAddressUrl(address, chainId) : "#"}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -320,6 +322,12 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex flex-wrap gap-4">
+              {/* Network info */}
+              <div className="bg-[#ffffff15] backdrop-blur-sm rounded-lg px-6 py-4 text-center">
+                <div className="text-[#AAAAAA] text-sm">Network</div>
+                <div className="text-white font-medium">{getNetworkName(chainId)}</div>
+              </div>
+
               {/* Stats cards */}
               <div className="bg-[#ffffff15] backdrop-blur-sm rounded-lg px-6 py-4 text-center">
                 <div className="text-3xl font-bold text-white">{createdJars.length}</div>

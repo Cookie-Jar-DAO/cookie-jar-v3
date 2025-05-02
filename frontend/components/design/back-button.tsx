@@ -5,8 +5,8 @@ import type React from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { cn } from "@/lib/utils/utils"
-import { Badge } from "@/components/ui/badge"
-import { useChainId } from "wagmi"
+import { Button } from "@/components/ui/button"
+import { ConnectButton } from "@rainbow-me/rainbowkit"
 
 interface BackButtonProps {
   className?: string
@@ -17,32 +17,9 @@ interface BackButtonProps {
 export function BackButton({ className = "", showWalletInfo = false, children }: BackButtonProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const chainId = useChainId()
 
   // Don't show on home page
   if (pathname === "/") return null
-
-  // Get network name and color based on chain ID
-  const getNetworkInfo = () => {
-    if (!chainId) return { name: "Disconnected", color: "bg-gray-500" }
-
-    switch (chainId) {
-      case 84532: // Base Sepolia
-        return { name: "Base Sepolia", color: "bg-[#C3FF00]" }
-      case 8453: // Base Mainnet
-        return { name: "Base", color: "bg-blue-500" }
-      case 10: // Optimism
-        return { name: "Optimism", color: "bg-red-500" }
-      case 100: // Gnosis
-        return { name: "Gnosis", color: "bg-green-500" }
-      case 42161: // Arbitrum
-        return { name: "Arbitrum", color: "bg-blue-700" }
-      default:
-        return { name: "Unknown", color: "bg-gray-500" }
-    }
-  }
-
-  const networkInfo = getNetworkInfo()
 
   return (
     <div
@@ -59,9 +36,48 @@ export function BackButton({ className = "", showWalletInfo = false, children }:
       </button>
 
       {children || (
-        <Badge className={`ml-auto ${networkInfo.color} text-gray-800 border-none px-4 py-1 rounded-full`}>
-          {networkInfo.name}
-        </Badge>
+        <ConnectButton.Custom>
+          {({ account, chain, openAccountModal, openChainModal, openConnectModal, authenticationStatus, mounted }) => {
+            const ready = mounted && authenticationStatus !== "loading"
+            const connected =
+              ready && account && chain && (!authenticationStatus || authenticationStatus === "authenticated")
+
+            if (!connected) {
+              return null // Don't show network buttons if not connected
+            }
+
+            if (chain?.unsupported) {
+              return (
+                <Button onClick={openChainModal} variant="destructive" size="sm" className="ml-auto">
+                  Wrong network
+                </Button>
+              )
+            }
+
+            return (
+              <div className="flex items-center gap-2 ml-auto">
+                <Button onClick={openAccountModal} variant="outline" size="sm" className="flex items-center gap-1">
+                  {chain.hasIcon && (
+                    <div className="w-4 h-4">
+                      {chain.iconUrl && (
+                        <img
+                          alt={chain.name ?? "Chain icon"}
+                          src={chain.iconUrl || "/placeholder.svg"}
+                          className="w-4 h-4"
+                        />
+                      )}
+                    </div>
+                  )}
+                  {chain.name}
+                </Button>
+
+                <Button onClick={openChainModal} variant="outline" size="sm" className="flex items-center gap-1">
+                  Change Networks
+                </Button>
+              </div>
+            )
+          }}
+        </ConnectButton.Custom>
       )}
     </div>
   )

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate": "wagmi generate",
+    "generate:watch": "wagmi generate --watch"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
@@ -58,6 +60,7 @@
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
     "@types/three": "^0.158.2",
+    "@wagmi/cli": "^2.2.1",
     "autoprefixer": "^10.4.16",
     "eslint": "^8.54.0",
     "eslint-config-next": "15.2.3",
