@@ -582,19 +582,25 @@ export default function CookieJarConfigDetails() {
 
   // Add a new useEffect to handle deposit errors
   useEffect(() => {
-    // Only show error dialog if there was an actual user rejection
-    // and we're not just in a pending state during initial load
+    // Only show error dialog if there was an actual error
+    // and not just a pending state during transaction processing
     if (
       isDepositEthPending === false &&
       isDepositCurrencyPending === false &&
       pendingTx === undefined &&
-      isDepositLoading === true
+      isDepositLoading === true &&
+      !isApprovalPending // Add this check to prevent false positives during approval
     ) {
-      setIsDepositLoading(false)
-      setErrorMessage("Transaction cancelled by user")
-      setShowErrorDialog(true)
+      // Wait a short delay to ensure we're not in a transition state
+      const timer = setTimeout(() => {
+        setIsDepositLoading(false)
+        setErrorMessage("Transaction may have been cancelled")
+        setShowErrorDialog(true)
+      }, 1000)
+
+      return () => clearTimeout(timer)
     }
-  }, [isDepositEthPending, isDepositCurrencyPending, pendingTx, isDepositLoading])
+  }, [isDepositEthPending, isDepositCurrencyPending, pendingTx, isDepositLoading, isApprovalPending])
 
   // Format balance for display using the token decimals
 
@@ -811,16 +817,18 @@ export default function CookieJarConfigDetails() {
                 History
               </Button>
 
-              <Button
-                variant={activeTab === "admin" ? "default" : "ghost"}
-                onClick={() => setActiveTab("admin")}
-                className={
-                  activeTab === "admin" ? "bg-[#c0ff00] text-black" : "text-white hover:bg-[#c0ff00] hover:text-black"
-                }
-              >
-                <ShieldAlert className="h-4 w-4 mr-2" />
-                Admin
-              </Button>
+              {isAdmin && (
+                <Button
+                  variant={activeTab === "admin" ? "default" : "ghost"}
+                  onClick={() => setActiveTab("admin")}
+                  className={
+                    activeTab === "admin" ? "bg-[#c0ff00] text-black" : "text-white hover:bg-[#c0ff00] hover:text-black"
+                  }
+                >
+                  <ShieldAlert className="h-4 w-4 mr-2" />
+                  Admin
+                </Button>
+              )}
 
               {isFeeCollector && (
                 <Button
@@ -1243,6 +1251,14 @@ export default function CookieJarConfigDetails() {
                 <div className="bg-[#2a2a2a] rounded-xl p-6 shadow-lg animate-appear">
                   <AdminFunctions address={address as `0x${string}`} />
                 </div>
+              </div>
+            )}
+
+            {activeTab === "admin" && !isAdmin && (
+              <div className="p-8 text-center">
+                <ShieldAlert className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">Access Denied</h3>
+                <p className="text-gray-400">You don't have admin permissions for this jar.</p>
               </div>
             )}
 
