@@ -600,37 +600,30 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
     currentUserAddress && currentOwner && currentUserAddress.toLowerCase() === currentOwner.toLowerCase()
 
   return (
-    <div className="space-y-6 bg-[#2a2a2a] p-4 rounded-lg">
+    <div className="space-y-4 md:space-y-6 bg-[#2a2a2a] p-3 md:p-4 rounded-lg">
       <Tabs defaultValue="ownership" className="w-full">
-        <TabsList className="mb-6 bg-[#333333] p-1">
+        <TabsList className="mb-4 md:mb-6 bg-[#333333] p-1 overflow-x-auto hide-scrollbar">
           <TabsTrigger
             value="ownership"
-            className={`data-[state=active]:bg-[#c0ff00] data-[state=active]:text-black data-[state=active]:shadow-sm text-white`}
+            className="data-[state=active]:bg-[#c0ff00] data-[state=active]:text-black data-[state=active]:shadow-sm text-white text-xs md:text-sm whitespace-nowrap px-2 md:px-3"
           >
-            <Shield className="h-4 w-4 mr-2" />
-            Ownership
+            <Shield className="h-4 w-4 mr-1 md:mr-2" />
+            <span className="truncate">Ownership</span>
           </TabsTrigger>
           <TabsTrigger
             value="access"
-            className={`data-[state=active]:bg-[#c0ff00] data-[state=active]:text-black data-[state=active]:shadow-sm text-white`}
+            className="data-[state=active]:bg-[#c0ff00] data-[state=active]:text-black data-[state=active]:shadow-sm text-white text-xs md:text-sm whitespace-nowrap px-2 md:px-3"
           >
-            <UserPlus className="h-4 w-4 mr-2" />
-            Access Control
+            <UserPlus className="h-4 w-4 mr-1 md:mr-2" />
+            <span className="truncate">Access</span>
           </TabsTrigger>
           <TabsTrigger
             value="emergency"
-            className={`data-[state=active]:bg-[#c0ff00] data-[state=active]:text-black data-[state=active]:shadow-sm text-white`}
+            className="data-[state=active]:bg-[#c0ff00] data-[state=active]:text-black data-[state=active]:shadow-sm text-white text-xs md:text-sm whitespace-nowrap px-2 md:px-3"
           >
-            <AlertTriangle className="h-4 w-4 mr-2" />
-            Emergency
+            <AlertTriangle className="h-4 w-4 mr-1 md:mr-2" />
+            <span className="truncate">Emergency</span>
           </TabsTrigger>
-          {/* <TabsTrigger
-            value="nft"
-            className={`data-[state=active]:bg-[#c0ff00] data-[state=active]:text-black data-[state=active]:shadow-sm text-white`}
-          >
-            <Tag className="h-4 w-4 mr-2" />
-            NFT Gates
-          </TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="ownership" className="mt-0">
@@ -644,7 +637,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                 Transfer ownership of this jar to another address
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6 bg-[#2a2a2a]">
+            <CardContent className="p-4 md:p-6 bg-[#2a2a2a]">
               <div className="space-y-4">
                 <div className="bg-[#333333] p-4 rounded-lg mb-4">
                   <p className="text-white font-medium">Current Owner: {formattedCurrentOwner}</p>
@@ -671,19 +664,19 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="bg-[#333333] p-4 rounded-b-lg flex justify-end">
+            <CardFooter className="bg-[#333333] p-3 md:p-4 rounded-b-lg flex justify-end">
               <Button
                 onClick={handleTransferJarOwnership}
-                className="bg-[#c0ff00] hover:bg-[#d4ff33] text-black"
+                className="bg-[#c0ff00] hover:bg-[#d4ff33] text-black text-xs md:text-sm px-2 md:px-4"
                 disabled={!newJarOwner || !newJarOwner.startsWith("0x") || isTransferring}
               >
                 {isTransferring ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Transferring...
+                    <Loader2 className="mr-1 md:mr-2 h-4 w-4 animate-spin" />
+                    <span className="truncate">Transferring...</span>
                   </>
                 ) : (
-                  "Transfer Ownership"
+                  <span className="truncate">Transfer</span>
                 )}
               </Button>
             </CardFooter>
@@ -701,7 +694,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                 Control who can access and withdraw from this jar
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6 bg-[#2a2a2a]">
+            <CardContent className="p-4 md:p-6 bg-[#2a2a2a]">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label htmlFor="addressToUpdate" className="text-[#c0ff00] font-medium">
@@ -723,20 +716,20 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                     <div className="flex flex-col gap-2">
                       <Button
                         onClick={handleGrantJarWhitelistRole}
-                        className="bg-[#2a2a2a] text-[#c0ff00] hover:bg-[#333333] hover:text-[#c0ff00] border border-[#c0ff00]"
+                        className="bg-[#2a2a2a] text-[#c0ff00] hover:bg-[#333333] hover:text-[#c0ff00] border border-[#c0ff00] text-xs md:text-sm"
                         disabled={!addressToUpdate}
                       >
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Add to Whitelist
+                        <UserPlus className="h-4 w-4 mr-1 md:mr-2" />
+                        <span className="truncate">Add</span>
                       </Button>
                       <Button
                         onClick={handleRevokeJarWhitelistRole}
                         variant="outline"
-                        className="text-[#c0ff00] hover:bg-[#333333] border-[#c0ff00]"
+                        className="text-[#c0ff00] hover:bg-[#333333] border-[#c0ff00] text-xs md:text-sm"
                         disabled={!addressToUpdate}
                       >
-                        <UserMinus className="h-4 w-4 mr-2" />
-                        Remove from Whitelist
+                        <UserMinus className="h-4 w-4 mr-1 md:mr-2" />
+                        <span className="truncate">Remove</span>
                       </Button>
                     </div>
                   </div>
@@ -746,20 +739,20 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                     <div className="flex flex-col gap-2">
                       <Button
                         onClick={handleGrantJarBlacklistRole}
-                        className="bg-[#2a2a2a] text-red-500 hover:bg-[#333333] hover:text-red-500 border border-red-500"
+                        className="bg-[#2a2a2a] text-red-500 hover:bg-[#333333] hover:text-red-500 border border-red-500 text-xs md:text-sm"
                         disabled={!addressToUpdate}
                       >
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Add to Blacklist
+                        <UserPlus className="h-4 w-4 mr-1 md:mr-2" />
+                        <span className="truncate">Add</span>
                       </Button>
                       <Button
                         onClick={handleRevokeJarBlacklistRole}
                         variant="outline"
-                        className="text-red-500 hover:bg-[#333333] border-red-500"
+                        className="text-red-500 hover:bg-[#333333] border-red-500 text-xs md:text-sm"
                         disabled={!addressToUpdate}
                       >
-                        <UserMinus className="h-4 w-4 mr-2" />
-                        Remove from Blacklist
+                        <UserMinus className="h-4 w-4 mr-1 md:mr-2" />
+                        <span className="truncate">Remove</span>
                       </Button>
                     </div>
                   </div>
@@ -778,7 +771,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
               </CardTitle>
               <CardDescription className="text-gray-400">Withdraw funds in case of emergency</CardDescription>
             </CardHeader>
-            <CardContent className="p-6 bg-[#2a2a2a]">
+            <CardContent className="p-4 md:p-6 bg-[#2a2a2a]">
               <div className="space-y-4">
                 <div className="bg-[#444444] border border-yellow-700 rounded-lg p-4 text-yellow-200 flex items-start">
                   <AlertCircle className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
@@ -810,7 +803,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                         variant="outline"
                         size="sm"
                         onClick={() => handlePercentageClick(0.25)}
-                        className="flex-1 border-[#c0ff00] text-[#c0ff00] hover:bg-[#333333] hover:text-[#c0ff00] bg-[#2a2a2a]"
+                        className="flex-1 border-[#c0ff00] text-[#c0ff00] hover:bg-[#333333] hover:text-[#c0ff00] bg-[#2a2a2a] text-xs"
                       >
                         25%
                       </Button>
@@ -818,7 +811,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                         variant="outline"
                         size="sm"
                         onClick={() => handlePercentageClick(0.5)}
-                        className="flex-1 border-[#c0ff00] text-[#c0ff00] hover:bg-[#333333] hover:text-[#c0ff00] bg-[#2a2a2a]"
+                        className="flex-1 border-[#c0ff00] text-[#c0ff00] hover:bg-[#333333] hover:text-[#c0ff00] bg-[#2a2a2a] text-xs"
                       >
                         50%
                       </Button>
@@ -826,7 +819,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                         variant="outline"
                         size="sm"
                         onClick={() => handlePercentageClick(0.75)}
-                        className="flex-1 border-[#c0ff00] text-[#c0ff00] hover:bg-[#333333] hover:text-[#c0ff00] bg-[#2a2a2a]"
+                        className="flex-1 border-[#c0ff00] text-[#c0ff00] hover:bg-[#333333] hover:text-[#c0ff00] bg-[#2a2a2a] text-xs"
                       >
                         75%
                       </Button>
@@ -834,7 +827,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                         variant="outline"
                         size="sm"
                         onClick={() => handlePercentageClick(1.0)}
-                        className="flex-1 border-[#c0ff00] text-[#c0ff00] hover:bg-[#333333] hover:text-[#c0ff00] bg-[#2a2a2a]"
+                        className="flex-1 border-[#c0ff00] text-[#c0ff00] hover:bg-[#333333] hover:text-[#c0ff00] bg-[#2a2a2a] text-xs"
                       >
                         Max
                       </Button>
@@ -857,15 +850,15 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="bg-[#333333] p-4 rounded-b-lg flex justify-end">
+            <CardFooter className="bg-[#333333] p-3 md:p-4 rounded-b-lg flex justify-end">
               <Button
                 onClick={handleEmergencyWithdraw}
                 variant="destructive"
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 text-xs md:text-sm px-2 md:px-4"
                 disabled={!withdrawalAmount}
               >
-                <AlertTriangle className="h-4 w-4 mr-2" />
-                Emergency Withdraw
+                <AlertTriangle className="h-4 w-4 mr-1 md:mr-2" />
+                <span className="truncate">Withdraw</span>
               </Button>
             </CardFooter>
           </Card>
@@ -927,18 +920,18 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
               <Button
                 onClick={handleRemoveNFTGate}
                 variant="outline"
-                className="border-border text-text-secondary hover:bg-background-light hover:text-primary"
+                className="border-border text-text-secondary hover:bg-background-light hover:text-primary text-xs md:text-sm"
                 disabled={!nftAddress}
               >
-                Remove NFT Gate
+                <span className="truncate">Remove</span>
               </Button>
 
               <Button
                 onClick={handleAddNFTGate}
-                className="bg-primary hover:bg-primary-dark text-black"
+                className="bg-primary hover:bg-primary-dark text-black text-xs md:text-sm"
                 disabled={!nftAddress || !nftTokenId}
               >
-                Add NFT Gate
+                <span className="truncate">Add</span>
               </Button>
             </CardFooter>
           </Card>

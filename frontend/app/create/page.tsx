@@ -37,7 +37,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { LoadingOverlay } from "@/components/design/loading-overlay"
-import { BackButton } from "@/components/design/back-button"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/design/use-toast"
 import { cn } from "@/lib/utils"
@@ -46,6 +45,7 @@ import { keccak256, toUtf8Bytes } from "ethers"
 import { z } from "zod"
 import { isAddress } from "viem"
 import { contractAddresses } from "@/config/supported-networks"
+import { ConnectButton } from "@rainbow-me/rainbowkit"
 
 // Import token utilities
 import { ETH_ADDRESS, useTokenInfo, parseTokenAmount } from "@/lib/utils/token-utils"
@@ -997,9 +997,6 @@ export default function CreateCookieJarForm() {
           </div>
         )
 
-      // The rest of the component code continues...
-      // I'll continue with the remaining case statements and the rest of the component
-
       case 3: // Access Control
         return (
           <div className="space-y-4">
@@ -1236,7 +1233,7 @@ export default function CreateCookieJarForm() {
                 <Badge className="ml-2 bg-[#C3FF00] text-black">Required</Badge>
               </Label>
 
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <div>
                   <Label htmlFor="withdrawalDays" className="text-sm text-[#AAAAAA]">
                     Days
@@ -1425,7 +1422,7 @@ export default function CreateCookieJarForm() {
             {/* Summary */}
             <div className="mt-6 p-4 bg-[#252525] rounded-lg">
               <h3 className="text-lg font-medium mb-2 text-white">Cookie Jar Summary</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-[#AAAAAA]">Name:</span>
@@ -1508,10 +1505,52 @@ export default function CreateCookieJarForm() {
       { id: 5, name: "Features", icon: <Settings className="h-5 w-5" /> },
     ]
 
+    // For mobile view, we'll show a horizontal scrolling step indicator
+    // For desktop, we'll keep the vertical sidebar
     return (
-      <div className="bg-[#333333] rounded-lg shadow-md p-4 sticky top-0 h-[calc(100vh-8rem)]">
-        <h3 className="text-lg font-semibold text-white mb-4 border-b border-[#444444] pb-2">Create Cookie Jar</h3>
-        <div className="space-y-1">
+      <div className="md:bg-[#333333] md:rounded-lg md:shadow-md md:p-4 md:sticky md:top-0 md:h-[calc(100vh-8rem)]">
+        {/* Mobile view - horizontal steps indicator */}
+        <div className="flex md:hidden overflow-x-auto pb-2 mb-2">
+          {steps.map((step) => (
+            <button
+              key={step.id}
+              onClick={() => {
+                if (step.id <= currentStep) {
+                  setCurrentStep(step.id)
+                }
+              }}
+              className={cn(
+                "flex flex-col items-center p-2 mx-1 rounded-md min-w-[4.5rem] transition-colors",
+                currentStep === step.id
+                  ? "bg-[#C3FF00] text-black"
+                  : currentStep > step.id
+                    ? "bg-[#444444] text-white"
+                    : "text-[#AAAAAA]",
+                step.id <= currentStep ? "cursor-pointer hover:bg-opacity-90" : "cursor-not-allowed opacity-60",
+              )}
+            >
+              <div
+                className={cn(
+                  "flex items-center justify-center w-8 h-8 rounded-full mb-1",
+                  currentStep === step.id
+                    ? "bg-[#333333] text-[#C3FF00]"
+                    : currentStep > step.id
+                      ? "bg-green-500 text-white"
+                      : "bg-[#e0e0e0] text-[#AAAAAA]",
+                )}
+              >
+                {currentStep > step.id ? <CheckCircle2 className="h-5 w-5" /> : step.icon}
+              </div>
+              <span className="text-xs font-medium">{step.name}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Desktop view - vertical steps */}
+        <h3 className="text-lg font-semibold text-white mb-4 border-b border-[#444444] pb-2 hidden md:block">
+          Create Cookie Jar
+        </h3>
+        <div className="space-y-1 hidden md:block">
           {steps.map((step) => (
             <button
               key={step.id}
@@ -1572,23 +1611,86 @@ export default function CreateCookieJarForm() {
 
   // Update the main layout structure to use fixed positioning and add scrollable content
   return (
-    <div className="h-screen bg-[#1D1D1D] flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-[#1D1D1D] flex flex-col overflow-hidden">
       {/* Header with back button - fixed at top */}
-      <div className="p-4 border-b border-[#444444]">
+      <div className="p-4 border-b border-[#444444] sticky top-0 z-10 bg-[#1D1D1D]">
         <div className="max-w-7xl mx-auto">
-          <BackButton className="rounded-full" />
+          {/* Direct back button implementation instead of using the BackButton component */}
+          <div className="flex items-center justify-between bg-transparent rounded-xl py-1 px-4 shadow-sm border border-gray-700">
+            <button
+              type="button"
+              onClick={() => router.push("/jars")}
+              className="flex items-center gap-2 text-white font-medium p-3 -m-1"
+            >
+              <div className="bg-[#C3FF00] rounded-full h-8 w-8 flex items-center justify-center">
+                <ArrowLeft className="w-5 h-5 text-gray-800" />
+              </div>
+              <span>Go Back</span>
+            </button>
+
+            <ConnectButton.Custom>
+              {({
+                account,
+                chain,
+                openAccountModal,
+                openChainModal,
+                openConnectModal,
+                authenticationStatus,
+                mounted,
+              }) => {
+                const ready = mounted && authenticationStatus !== "loading"
+                const connected =
+                  ready && account && chain && (!authenticationStatus || authenticationStatus === "authenticated")
+
+                if (!connected) {
+                  return null // Don't show network buttons if not connected
+                }
+
+                if (chain?.unsupported) {
+                  return (
+                    <Button onClick={openChainModal} variant="destructive" size="sm" className="ml-auto">
+                      Wrong network
+                    </Button>
+                  )
+                }
+
+                return (
+                  <div className="flex items-center gap-2 ml-auto">
+                    <Button onClick={openAccountModal} variant="outline" size="sm" className="flex items-center gap-1">
+                      {chain.hasIcon && (
+                        <div className="w-4 h-4">
+                          {chain.iconUrl && (
+                            <img
+                              alt={chain.name ?? "Chain icon"}
+                              src={chain.iconUrl || "/placeholder.svg"}
+                              className="w-4 h-4"
+                            />
+                          )}
+                        </div>
+                      )}
+                      {chain.name}
+                    </Button>
+
+                    <Button onClick={openChainModal} variant="outline" size="sm" className="flex items-center gap-1">
+                      Change Networks
+                    </Button>
+                  </div>
+                )
+              }}
+            </ConnectButton.Custom>
+          </div>
         </div>
       </div>
 
       {/* Main content area - takes remaining height */}
       <div className="flex-1 flex overflow-hidden">
-        <div className="max-w-7xl mx-auto w-full flex gap-6 p-4">
-          {/* Left sidebar with steps - fixed */}
-          <div className="w-72 flex-shrink-0">
+        <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row gap-4 md:gap-6 p-4">
+          {/* Left sidebar with steps - will be at top on mobile, left on desktop */}
+          <div className="md:w-72 flex-shrink-0">
             <StepNavigation />
           </div>
 
-          {/* Main form card - fixed with scrollable content */}
+          {/* Main form card - takes full width on mobile */}
           <Card className="flex-1 bg-[#333333] shadow-xl flex flex-col">
             <CardHeader className="border-b border-[#444444] flex-shrink-0">
               <div className="flex items-center">
@@ -1597,7 +1699,7 @@ export default function CreateCookieJarForm() {
               </div>
             </CardHeader>
 
-            <CardContent className="pt-6 flex-1 overflow-y-auto">
+            <CardContent className="pt-6 flex-1 overflow-y-auto max-h-[calc(100vh-15rem)] md:max-h-[calc(100vh-12rem)]">
               <form onSubmit={handleSubmit} className="space-y-6 min-h-full">
                 {renderStep()}
 
@@ -1666,7 +1768,7 @@ export default function CreateCookieJarForm() {
 
       {/* Confirmation dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="sm:max-w-md bg-[#333333] text-white border-[#444444]">
+        <DialogContent className="w-[95vw] max-w-md bg-[#333333] text-white border-[#444444] p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Confirm Cookie Jar Creation</DialogTitle>
             <DialogDescription className="text-[#AAAAAA]">
@@ -1736,12 +1838,12 @@ export default function CreateCookieJarForm() {
               </div>
             </div>
           </div>
-          <DialogFooter className="flex justify-between sm:justify-between gap-4">
+          <DialogFooter className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4 mt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => setShowConfirmDialog(false)}
-              className="border-[#C3FF00] text-[#C3FF00] hover:bg-[#252525] flex-1"
+              className="border-[#C3FF00] text-[#C3FF00] hover:bg-[#252525] w-full sm:flex-1"
             >
               Go Back
             </Button>
@@ -1752,7 +1854,7 @@ export default function CreateCookieJarForm() {
                 e.stopPropagation()
                 confirmSubmit()
               }}
-              className="bg-[#C3FF00] hover:bg-[#d4ff33] text-black flex-1"
+              className="bg-[#C3FF00] hover:bg-[#d4ff33] text-black w-full sm:flex-1"
             >
               Create Cookie Jar
             </Button>

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { useInView, useAnimation } from "framer-motion"
 import { ChevronRight, Globe, Zap } from "lucide-react"
+import { useIsMobile } from "@/hooks/design/use-mobile"
 
 // Define network type
 interface Network {
@@ -170,7 +171,7 @@ export function NetworkSupport() {
       .map((network, index) => (
         <div
           key={network.name}
-          className={`mb-20 ${!contentLoaded ? "opacity-0" : "opacity-100 transition-opacity duration-500"}`}
+          className={`mb-8 md:mb-20 ${!contentLoaded ? "opacity-0" : "opacity-100 transition-opacity duration-500"}`}
         >
           <NetworkDisplay network={network} index={index} />
         </div>
@@ -178,7 +179,7 @@ export function NetworkSupport() {
   }
 
   return (
-    <section ref={ref} className="relative overflow-hidden bg-background text-white py-20 min-h-screen w-full">
+    <section ref={ref} className="relative overflow-hidden bg-background text-white py-12 md:py-20 min-h-screen w-full">
       {/* Background elements - Only network lines */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Network lines with neutral color */}
@@ -201,15 +202,15 @@ export function NetworkSupport() {
         {/* Main heading - Always visible */}
         <div className="mb-32">
           <div className="overflow-hidden w-full">
-            <h2 className="text-[9rem] md:text-[14rem] font-bold leading-none tracking-[0.02em] md:tracking-[0.03em] opacity-20 text-white/20 select-none">
+            <h2 className="text-[5rem] md:text-[14rem] font-bold leading-none tracking-[0.02em] md:tracking-[0.03em] opacity-20 text-white/20 select-none">
               NETWORKS
             </h2>
           </div>
-          <div className="relative -mt-32 md:-mt-40 ml-4 md:ml-8">
-            <h3 className="text-4xl md:text-6xl font-bold mb-4 text-white">
+          <div className="relative -mt-16 md:-mt-40 ml-4 md:ml-8">
+            <h3 className="text-3xl md:text-6xl font-bold mb-2 md:mb-4 text-white">
               Supported <span className="text-primary">Networks</span>
             </h3>
-            <p className="text-xl max-w-2xl text-white/80">
+            <p className="text-base md:text-xl max-w-2xl text-white/80">
               Cookie Jar is designed to work seamlessly across multiple blockchain networks, each offering unique
               benefits and capabilities for your cookie jar funds.
             </p>
@@ -219,12 +220,12 @@ export function NetworkSupport() {
         {/* Network display - Split into active and coming soon */}
         <div className="mb-24 px-4 md:px-8">
           {/* Active Networks */}
-          <div className="mb-16">
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-                <Zap className="w-6 h-6 text-background" />
+          <div className="mb-8 md:mb-16">
+            <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-8">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary flex items-center justify-center">
+                <Zap className="w-5 h-5 md:w-6 md:h-6 text-background" />
               </div>
-              <h3 className="text-3xl font-bold">Active Networks</h3>
+              <h3 className="text-2xl md:text-3xl font-bold">Active Networks</h3>
             </div>
 
             {/* Render with fallback */}
@@ -233,11 +234,11 @@ export function NetworkSupport() {
 
           {/* Coming Soon Networks */}
           <div>
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-12 h-12 rounded-full bg-background border-2 border-primary flex items-center justify-center">
-                <Globe className="w-6 h-6 text-primary" />
+            <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-8">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-background border-2 border-primary flex items-center justify-center">
+                <Globe className="w-5 h-5 md:w-6 md:h-6 text-primary" />
               </div>
-              <h3 className="text-3xl font-bold">Coming Soon</h3>
+              <h3 className="text-2xl md:text-3xl font-bold">Coming Soon</h3>
             </div>
 
             {/* Render with fallback */}
@@ -247,16 +248,16 @@ export function NetworkSupport() {
 
         {/* Call to action - Always visible */}
         <div
-          className={`py-16 px-8 bg-gradient-to-r from-background via-[#2a2a2a] to-background rounded-3xl border border-[#444] shadow-xl max-w-5xl mx-auto ${
+          className={`py-8 md:py-16 px-4 md:px-8 bg-gradient-to-r from-background via-[#2a2a2a] to-background rounded-3xl border border-[#444] shadow-xl max-w-5xl mx-auto ${
             !contentLoaded ? "opacity-0" : "opacity-100 transition-opacity duration-500"
           }`}
         >
-          <h3 className="text-3xl font-bold mb-4">Ready to deploy on multiple networks?</h3>
-          <p className="text-xl text-white/80 mb-8">
+          <h3 className="text-2xl md:text-3xl font-bold mb-2 md:mb-4">Ready to deploy on multiple networks?</h3>
+          <p className="text-base md:text-xl text-white/80 mb-4 md:mb-8">
             Cookie Jar gives you the flexibility to choose the network that best suits your specific use case, whether
             you need speed, security, or cost-effectiveness.
           </p>
-          <button className="bg-primary hover:bg-primary/90 text-background px-8 py-4 rounded-full font-bold text-lg transition-all flex items-center gap-2 group">
+          <button className="bg-primary hover:bg-primary/90 text-background px-6 md:px-8 py-3 md:py-4 rounded-full font-bold text-base md:text-lg transition-all flex items-center gap-2 group">
             Start exploring networks
             <ChevronRight className="group-hover:translate-x-1 transition-transform" />
           </button>
@@ -268,11 +269,15 @@ export function NetworkSupport() {
 
 // Component for displaying network information
 function NetworkDisplay({ network, index }: { network: Network; index: number }) {
+  const isMobile = useIsMobile()
+
   return (
-    <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 py-10 ${index % 2 === 1 ? "lg:pl-24" : ""}`}>
-      {/* Network Logo & Basic Info - 3 columns */}
-      <div className="lg:col-span-3 flex lg:flex-col items-center lg:items-start gap-4">
-        <div className="w-20 h-20 rounded-2xl bg-[#2a2a2a] flex items-center justify-center p-2 overflow-hidden">
+    <div
+      className={`grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8 py-6 md:py-10 ${index % 2 === 1 && !isMobile ? "lg:pl-24" : ""}`}
+    >
+      {/* Network Logo & Basic Info - 3 columns on desktop, full width on mobile */}
+      <div className="lg:col-span-3 flex flex-row lg:flex-col items-center lg:items-start gap-4">
+        <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-[#2a2a2a] flex items-center justify-center p-2 overflow-hidden">
           {network.logo ? (
             <Image
               src={network.logo || "/placeholder.svg"}
@@ -287,9 +292,9 @@ function NetworkDisplay({ network, index }: { network: Network; index: number })
         </div>
 
         <div>
-          <h4 className="text-2xl font-bold">{network.name}</h4>
+          <h4 className="text-xl md:text-2xl font-bold">{network.name}</h4>
           <div
-            className={`px-3 py-1 rounded-full text-sm font-medium inline-flex items-center gap-1 mt-2
+            className={`px-3 py-1 rounded-full text-xs md:text-sm font-medium inline-flex items-center gap-1 mt-2
               ${
                 network.status === "Active"
                   ? "bg-primary text-background"
@@ -308,41 +313,41 @@ function NetworkDisplay({ network, index }: { network: Network; index: number })
         </div>
       </div>
 
-      {/* Network Description - 4 columns */}
-      <div className="lg:col-span-4">
-        <h5 className="text-lg font-medium mb-2 text-primary/80">Overview</h5>
-        <p className="text-white/80 mb-4">{network.description}</p>
+      {/* Network Description - 4 columns on desktop, full width on mobile */}
+      <div className="lg:col-span-4 mt-4 lg:mt-0">
+        <h5 className="text-base md:text-lg font-medium mb-2 text-primary/80">Overview</h5>
+        <p className="text-sm md:text-base text-white/80 mb-4">{network.description}</p>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-[#2a2a2a] p-3 rounded-xl">
-            <div className="text-sm text-white/60 mb-1">TPS</div>
-            <div className="font-bold">{network.details.tps}</div>
+        <div className="grid grid-cols-2 gap-2 md:gap-4">
+          <div className="bg-[#2a2a2a] p-2 md:p-3 rounded-xl">
+            <div className="text-xs md:text-sm text-white/60 mb-1">TPS</div>
+            <div className="text-sm md:text-base font-bold">{network.details.tps}</div>
           </div>
-          <div className="bg-[#2a2a2a] p-3 rounded-xl">
-            <div className="text-sm text-white/60 mb-1">Gas Price</div>
-            <div className="font-bold">{network.details.gasPrice}</div>
+          <div className="bg-[#2a2a2a] p-2 md:p-3 rounded-xl">
+            <div className="text-xs md:text-sm text-white/60 mb-1">Gas Price</div>
+            <div className="text-sm md:text-base font-bold">{network.details.gasPrice}</div>
           </div>
-          <div className="bg-[#2a2a2a] p-3 rounded-xl">
-            <div className="text-sm text-white/60 mb-1">Finality</div>
-            <div className="font-bold">{network.details.finality}</div>
+          <div className="bg-[#2a2a2a] p-2 md:p-3 rounded-xl">
+            <div className="text-xs md:text-sm text-white/60 mb-1">Finality</div>
+            <div className="text-sm md:text-base font-bold">{network.details.finality}</div>
           </div>
-          <div className="bg-[#2a2a2a] p-3 rounded-xl">
-            <div className="text-sm text-white/60 mb-1">Type</div>
-            <div className="font-bold">{network.details.type}</div>
+          <div className="bg-[#2a2a2a] p-2 md:p-3 rounded-xl">
+            <div className="text-xs md:text-sm text-white/60 mb-1">Type</div>
+            <div className="text-sm md:text-base font-bold">{network.details.type}</div>
           </div>
         </div>
       </div>
 
-      {/* Network Benefits - 5 columns */}
-      <div className="lg:col-span-5">
-        <h5 className="text-lg font-medium mb-3 text-primary/80">Key Benefits</h5>
-        <ul className="space-y-3">
+      {/* Network Benefits - 5 columns on desktop, full width on mobile */}
+      <div className="lg:col-span-5 mt-4 lg:mt-0">
+        <h5 className="text-base md:text-lg font-medium mb-2 md:mb-3 text-primary/80">Key Benefits</h5>
+        <ul className="space-y-2 md:space-y-3">
           {network.benefits.map((benefit, i) => (
             <li key={i} className="flex items-start gap-2">
               <div className="mt-1 min-w-4 w-4 h-4 rounded-full bg-[#2a2a2a] flex items-center justify-center">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
               </div>
-              <span className="text-white/80">{benefit}</span>
+              <span className="text-sm md:text-base text-white/80">{benefit}</span>
             </li>
           ))}
         </ul>

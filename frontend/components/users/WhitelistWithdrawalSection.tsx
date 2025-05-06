@@ -45,7 +45,7 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
   // Fixed amount withdrawal with purpose
   if (config.strictPurpose && config.withdrawalOption === "Fixed") {
     return (
-      <div className="space-y-6 py-4">
+      <div className="space-y-4 md:space-y-6 py-3 md:py-4">
         <div className="space-y-3">
           <label htmlFor="withdrawPurpose" className="block text-[#ff5e14] font-medium text-lg">
             Withdrawal Purpose
@@ -63,7 +63,7 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
         <div className="pt-4">
           <Button
             onClick={handleWithdrawWhitelist}
-            className="w-full bg-[#ff5e14] hover:bg-[#e54d00] text-white py-6 text-lg"
+            className="w-full bg-[#ff5e14] hover:bg-[#e54d00] text-white py-4 md:py-6 text-base md:text-lg"
             disabled={!withdrawPurpose || withdrawPurpose.length < 10 || config.isWithdrawPending || isLoading}
           >
             {isLoading || config.isWithdrawPending ? (
@@ -90,10 +90,10 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
   // Fixed amount withdrawal without purpose
   if (!config.strictPurpose && config.withdrawalOption === "Fixed") {
     return (
-      <div className="py-8 relative min-h-[500px]">
+      <div className="py-4 md:py-8 relative min-h-[400px] md:min-h-[500px]">
         {/* Cookie Details Section - Centered and using full width */}
         <div className="cookie-details-container">
-          <h3 className="text-[#c0ff00] text-3xl font-bold mb-8 text-center">Cookie Details</h3>
+          <h3 className="text-[#c0ff00] text-2xl md:text-3xl font-bold mb-4 md:mb-8 text-center">Cookie Details</h3>
 
           <div className="cookie-details-grid mb-8">
             <div className="cookie-detail-item">
@@ -150,7 +150,7 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
         {/* Get Cookie Button - Fixed position at bottom right */}
         <button
           onClick={handleWithdrawWhitelist}
-          className="cookie-button-animation get-cookie-btn w-48 h-48 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="cookie-button-animation get-cookie-btn w-36 h-36 md:w-48 md:h-48 disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={config.isWithdrawPending || isLoading}
         >
           {isLoading || config.isWithdrawPending ? (
@@ -160,8 +160,8 @@ export const WhitelistWithdrawalSection: React.FC<WhitelistWithdrawalSectionProp
             </>
           ) : (
             <>
-              <WithdrawIcon className="h-12 w-12 mb-3" />
-              <span className="font-bold text-2xl">GET COOKIE</span>
+              <WithdrawIcon className="h-8 w-8 md:h-12 md:w-12 mb-2 md:mb-3" />
+              <span className="font-bold text-xl md:text-2xl">GET COOKIE</span>
               <span className="text-sm mt-1">Click to withdraw</span>
             </>
           )}

@@ -43,9 +43,9 @@ export function FundingSection({ amount, setAmount, onSubmit, walletBalance, isA
 
   return (
     <div className="w-full">
-      <div className="flex flex-col md:flex-row items-stretch justify-center gap-8 py-4">
+      <div className="flex flex-col md:flex-row items-stretch justify-center gap-4 md:gap-8 py-3 md:py-4">
         {/* Deposit Details Section */}
-        <div className="bg-[#222222] p-6 rounded-xl border border-[#333333] flex-1">
+        <div className="bg-[#222222] p-4 md:p-6 rounded-xl border border-[#333333] flex-1">
           <h3 className="text-[#c0ff00] text-xl font-bold mb-4">Deposit Details</h3>
 
           <div className="space-y-4 mb-6">
@@ -115,10 +115,10 @@ export function FundingSection({ amount, setAmount, onSubmit, walletBalance, isA
         <div className="flex items-center justify-center">
           <button
             onClick={handleSubmit}
-            className="bg-[#c0ff00] hover:bg-[#a8e600] text-black font-bold flex flex-col items-center justify-center text-xl shadow-lg rounded-lg w-56 h-56 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 animate-appear"
+            className="bg-[#c0ff00] hover:bg-[#a8e600] text-black font-bold flex flex-col items-center justify-center text-lg md:text-xl shadow-lg rounded-lg w-40 h-40 md:w-56 md:h-56 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 animate-appear"
           >
-            <Wallet className="h-10 w-10 mb-3" />
-            <span className="font-bold text-2xl">{isAdmin ? "DEPOSIT" : "DONATE"}</span>
+            <Wallet className="h-8 w-8 md:h-10 md:w-10 mb-2 md:mb-3" />
+            <span className="font-bold text-xl md:text-2xl">{isAdmin ? "DEPOSIT" : "DONATE"}</span>
             <span className="text-sm mt-2">Click to {isAdmin ? "deposit" : "donate"}</span>
           </button>
         </div>

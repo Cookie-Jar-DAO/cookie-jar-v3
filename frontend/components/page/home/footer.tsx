@@ -2,29 +2,10 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { useState, useEffect } from "react"
 import { SocialMediaButtons } from "@/components/page/home/social-media-buttons"
-import { ArrowUp, Cookie, Mail, MapPin, ChevronRight, ExternalLink, Github, BookOpen } from "lucide-react"
+import { Cookie, Mail, MapPin, ChevronRight, ExternalLink, Github, BookOpen } from "lucide-react"
 
 export function Footer() {
-  const [showScrollTop, setShowScrollTop] = useState(false)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 500)
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    })
-  }
-
   return (
     <footer className="relative w-full bg-background-paper pt-20 pb-8 overflow-hidden">
       {/* Top horizontal line */}
@@ -182,7 +163,7 @@ export function Footer() {
         <div className="border-t border-white/10 my-8"></div>
 
         {/* Bottom Footer */}
-        <div className="flex flex-col md:flex-row justify-between items-center text-sm text-white/60">
+        <div className="flex flex-col md:flex-row justify-between items-center text-sm text-white/60 pb-20 md:pb-0">
           <p>© 2025 Cookie Jar V3. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link href="/privacy" className="text-xs hover:text-[#C3FF00] transition-colors">
@@ -198,16 +179,7 @@ export function Footer() {
         </div>
       </div>
 
-      {/* Scroll to top button */}
-      <button
-        onClick={scrollToTop}
-        className={`fixed right-6 bottom-6 bg-[#C3FF00] text-[#1F1F1F] p-3 rounded-full shadow-lg hover:bg-white transition-all z-50 ${
-          showScrollTop ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"
-        }`}
-        aria-label="Scroll to top"
-      >
-        <ArrowUp className="h-5 w-5" />
-      </button>
+      {/* Removed the scroll to top button from here */}
     </footer>
   )
 }

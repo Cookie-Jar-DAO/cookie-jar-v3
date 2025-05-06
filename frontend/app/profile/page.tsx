@@ -283,7 +283,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1F1F1F]">
+    <div className="min-h-screen bg-[#1F1F1F] pb-24 md:pb-0 overflow-x-hidden">
       {/* Hero section with profile info */}
       <div className="relative bg-gradient-to-b from-[#2A2A2A] to-[#1F1F1F] pt-6 pb-12">
         <div className="container mx-auto px-4">
@@ -571,6 +571,8 @@ export default function ProfilePage() {
                         {/* Divider */}
                         <div className="h-px bg-[#444444] my-3"></div>
 
+                        {/* Action button - changed text and enhanced styling  my-3"></div>
+
                         {/* Action button - changed text and enhanced styling */}
                         <div className="flex justify-end">
                           <Button
@@ -676,6 +678,8 @@ export default function ProfilePage() {
           </Tabs>
         </div>
       </div>
+      {/* Spacer for scroll button on mobile */}
+      <div className="h-20 md:h-0 w-full" />
     </div>
   )
 }
