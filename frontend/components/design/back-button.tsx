@@ -28,7 +28,14 @@ export function BackButton({ className = "", showWalletInfo = false, children }:
         className,
       )}
     >
-      <button type="button" onClick={() => router.back()} className="flex items-center gap-2 text-white font-medium">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault()
+          router.back()
+        }}
+        className="flex items-center gap-2 text-white font-medium p-2 -m-2"
+      >
         <div className="bg-[#C3FF00] rounded-full h-8 w-8 flex items-center justify-center">
           <ArrowLeft className="w-5 h-5 text-gray-800" />
         </div>

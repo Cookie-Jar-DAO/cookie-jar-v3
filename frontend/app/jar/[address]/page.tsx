@@ -1,5 +1,7 @@
 "use client"
 
+import React from "react"
+
 import { useParams, useRouter } from "next/navigation"
 import { useMemo, useState, useEffect, useRef, useCallback } from "react"
 import { useCookieJarConfig } from "@/hooks/use-cookie-jar"
@@ -18,6 +20,7 @@ import {
   History,
   Wallet,
   RefreshCw,
+  Menu,
 } from "lucide-react"
 import { useAccount, useChainId, useWaitForTransactionReceipt, useBalance } from "wagmi"
 import type { ReadContractErrorType } from "viem"
@@ -38,6 +41,7 @@ import { LoadingOverlay } from "@/components/design/loading-overlay"
 import { FundingSection } from "@/components/users/FundingSection"
 import { ErrorDialog } from "@/components/ui/error-dialog"
 import { WhitelistWithdrawalSection } from "@/components/users/WhitelistWithdrawalSection"
+import { useIsMobile } from "@/hooks/design/use-mobile"
 
 // Import token utilities
 import { ETH_ADDRESS, useTokenInfo, parseTokenAmount, formatTokenAmount } from "@/lib/utils/token-utils"
@@ -45,6 +49,7 @@ import { ETH_ADDRESS, useTokenInfo, parseTokenAmount, formatTokenAmount } from "
 // Add these imports at the top of the file
 import { z } from "zod"
 import { isAddress } from "viem"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 
 // Add this schema near the top of the component
 const ethereumAddressSchema = z
@@ -67,8 +72,10 @@ export default function CookieJarConfigDetails() {
   const chainId = useChainId()
   const [activeTab, setActiveTab] = useState("overview")
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   // Fix: Initialize with undefined instead of null
   const [pendingTx, setPendingTx] = useState<`0x${string}` | undefined>(undefined)
+  const isMobile = useIsMobile()
 
   const [isDepositLoading, setIsDepositLoading] = useState(false)
   const [isWithdrawLoading, setIsWithdrawLoading] = useState(false)
@@ -638,19 +645,52 @@ export default function CookieJarConfigDetails() {
     )
   }
 
+  // Define navigation items
+  const navigationItems = [
+    { id: "overview", label: "Overview", icon: <Info className="h-5 w-5" /> },
+    {
+      id: "withdraw",
+      label: "Get Cookie",
+      icon: <ArrowDownToLine className="h-5 w-5" />,
+      disabled: config.blacklist || (!showUserFunctions && !showNFTGatedFunctions),
+    },
+    {
+      id: "deposit",
+      label: isAdmin ? "Deposit" : "Donate",
+      icon: <Wallet className="h-5 w-5" />,
+    },
+    { id: "history", label: "History", icon: <History className="h-5 w-5" /> },
+  ]
+
+  if (isAdmin) {
+    navigationItems.push({
+      id: "admin",
+      label: "Admin",
+      icon: <ShieldAlert className="h-5 w-5" />,
+    })
+  }
+
+  if (isFeeCollector) {
+    navigationItems.push({
+      id: "feeCollector",
+      label: "Fee Collector",
+      icon: <Coins className="h-5 w-5" />,
+    })
+  }
+
   // Main render
   return (
     <div className="min-h-screen bg-background-main" ref={pageRef}>
       {/* Hero section with jar info */}
-      <div className="relative bg-gradient-to-b from-background-dark to-background-main pt-6 pb-12">
+      <div className="relative bg-gradient-to-b from-background-dark to-background-main pt-4 pb-8">
         <div className="container mx-auto px-4">
-          <div className="mb-6">
+          <div className="mb-4">
             <BackButton />
           </div>
 
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mt-4">
+          <div className="flex flex-col gap-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{config.metadata ?? "Cookie Jar"}</h1>
+              <h1 className="text-2xl md:text-4xl font-bold text-white mb-2">{config.metadata ?? "Cookie Jar"}</h1>
               <div className="flex items-center gap-2 text-text-disabled">
                 <span>{formatAddress(addressString)}</span>
                 <Button
@@ -678,9 +718,9 @@ export default function CookieJarConfigDetails() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-wrap gap-2">
               {/* User status badges */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {config.blacklist ? (
                   <Badge
                     variant="outline"
@@ -734,26 +774,28 @@ export default function CookieJarConfigDetails() {
                 <Coins className="h-5 w-5 text-primary mr-2" />
                 <span className="text-text-primary font-medium">{formattedBalance()}</span>
               </div>
-
-              {/* Deposit/Donate button */}
-              <Button
-                onClick={() => setActiveTab("deposit")}
-                className="bg-primary hover:bg-primary-dark text-black"
-                disabled={isDepositEthPending || isDepositCurrencyPending || isApprovalPending}
-              >
-                {isDepositEthPending || isDepositCurrencyPending || isApprovalPending ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Wallet className="h-4 w-4 mr-2" />
-                    {isAdmin ? "Deposit" : "Donate"}
-                  </>
-                )}
-              </Button>
             </div>
+
+            {/* Quick action buttons for mobile */}
+            {isMobile && (
+              <div className="flex gap-2 mt-2">
+                <Button
+                  onClick={() => setActiveTab("withdraw")}
+                  className="flex-1 bg-[#c0ff00] hover:bg-[#a8e600] text-black"
+                  disabled={config.blacklist || (!showUserFunctions && !showNFTGatedFunctions)}
+                >
+                  <ArrowDownToLine className="h-4 w-4 mr-2" />
+                  Get Cookie
+                </Button>
+                <Button
+                  onClick={() => setActiveTab("deposit")}
+                  className="flex-1 bg-primary hover:bg-primary-dark text-black"
+                >
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Deposit
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -761,101 +803,117 @@ export default function CookieJarConfigDetails() {
       {/* Main content */}
       <div className="container mx-auto px-4 -mt-6">
         <div className="bg-background-paper backdrop-blur-sm rounded-xl border border-border shadow-3d-card overflow-hidden">
-          {/* Navigation tabs */}
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex overflow-x-auto hide-scrollbar space-x-2">
-              <Button
-                variant={activeTab === "overview" ? "default" : "ghost"}
-                onClick={() => setActiveTab("overview")}
-                className={
-                  activeTab === "overview"
-                    ? "bg-primary text-black"
-                    : "text-text-primary hover:bg-primary hover:text-black"
-                }
-              >
-                <Info className="h-4 w-4 mr-2" />
-                Overview
-              </Button>
-
-              <Button
-                variant={activeTab === "withdraw" ? "default" : "ghost"}
-                onClick={() => setActiveTab("withdraw")}
-                className={
-                  activeTab === "withdraw"
-                    ? "bg-primary text-black"
-                    : "text-text-primary hover:bg-primary hover:text-black"
-                }
-                disabled={config.blacklist || (!showUserFunctions && !showNFTGatedFunctions)}
-              >
-                <ArrowDownToLine className="h-4 w-4 mr-2" />
-                Get Cookie
-              </Button>
-
-              <Button
-                variant={activeTab === "deposit" ? "default" : "ghost"}
-                onClick={() => setActiveTab("deposit")}
-                className={
-                  activeTab === "deposit"
-                    ? "bg-primary text-black"
-                    : "text-text-primary hover:bg-primary hover:text-black"
-                }
-              >
-                <Wallet className="h-4 w-4 mr-2" />
-                {isAdmin ? "Deposit" : "Donate"}
-              </Button>
-
-              <Button
-                variant={activeTab === "history" ? "default" : "ghost"}
-                onClick={() => setActiveTab("history")}
-                className={
-                  activeTab === "history"
-                    ? "bg-primary text-black"
-                    : "text-text-primary hover:bg-primary hover:text-black"
-                }
-              >
-                <History className="h-4 w-4 mr-2" />
-                History
-              </Button>
-
-              {isAdmin && (
-                <Button
-                  variant={activeTab === "admin" ? "default" : "ghost"}
-                  onClick={() => setActiveTab("admin")}
-                  className={
-                    activeTab === "admin" ? "bg-[#c0ff00] text-black" : "text-white hover:bg-[#c0ff00] hover:text-black"
-                  }
-                >
-                  <ShieldAlert className="h-4 w-4 mr-2" />
-                  Admin
-                </Button>
-              )}
-
-              {isFeeCollector && (
-                <Button
-                  variant={activeTab === "feeCollector" ? "default" : "ghost"}
-                  onClick={() => setActiveTab("feeCollector")}
-                  className={
-                    activeTab === "feeCollector"
-                      ? "bg-primary text-black"
-                      : "text-text-primary hover:bg-primary hover:text-black"
-                  }
-                >
-                  <Coins className="h-4 w-4 mr-2" />
-                  Fee Collector
-                </Button>
-              )}
+          {/* Navigation tabs - Mobile version with bottom navigation */}
+          {isMobile ? (
+            <div className="fixed bottom-0 left-0 right-0 bg-[#222222] border-t border-[#333333] z-50">
+              <div className="flex justify-around items-center py-2">
+                {navigationItems.slice(0, 4).map((item) => (
+                  <Button
+                    key={item.id}
+                    variant={activeTab === item.id ? "default" : "ghost"}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`flex flex-col items-center px-2 py-1 h-auto ${
+                      activeTab === item.id
+                        ? "bg-[#c0ff00] text-black"
+                        : "text-gray-400 hover:text-white hover:bg-transparent"
+                    }`}
+                    disabled={item.disabled}
+                  >
+                    {item.icon}
+                    <span className="text-xs mt-1">
+                      {item.id === "overview"
+                        ? "Overview"
+                        : item.id === "withdraw"
+                          ? "Get Cookie"
+                          : item.id === "deposit"
+                            ? "Deposit"
+                            : item.id === "history"
+                              ? "History"
+                              : item.label}
+                    </span>
+                  </Button>
+                ))}
+                {(isAdmin || isFeeCollector) && (
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="flex flex-col items-center px-2 py-1 h-auto text-gray-400 hover:text-white hover:bg-transparent"
+                      >
+                        <Menu className="h-5 w-5" />
+                        <span className="text-xs mt-1">More</span>
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="bg-[#222222] text-white">
+                      <SheetHeader>
+                        <SheetTitle className="text-white">More Options</SheetTitle>
+                      </SheetHeader>
+                      <div className="grid grid-cols-2 gap-4 mt-4">
+                        {navigationItems.slice(4).map((item) => (
+                          <Button
+                            key={item.id}
+                            variant={activeTab === item.id ? "default" : "outline"}
+                            onClick={() => {
+                              setActiveTab(item.id)
+                              document
+                                .querySelector('[data-state="open"]')
+                                ?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }))
+                            }}
+                            className={`flex items-center justify-center gap-2 ${
+                              activeTab === item.id
+                                ? "bg-[#c0ff00] text-black"
+                                : "border-[#444444] text-white hover:bg-[#333333]"
+                            }`}
+                          >
+                            {item.icon}
+                            <span>
+                              {item.id === "admin"
+                                ? "Admin"
+                                : item.id === "feeCollector"
+                                  ? "Fee Collector"
+                                  : item.label}
+                            </span>
+                          </Button>
+                        ))}
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            // Desktop navigation
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex overflow-x-auto hide-scrollbar space-x-2">
+                {navigationItems.map((item) => (
+                  <Button
+                    key={item.id}
+                    variant={activeTab === item.id ? "default" : "ghost"}
+                    onClick={() => setActiveTab(item.id)}
+                    className={
+                      activeTab === item.id
+                        ? "bg-primary text-black"
+                        : "text-text-primary hover:bg-primary hover:text-black"
+                    }
+                    disabled={item.disabled}
+                  >
+                    {React.cloneElement(item.icon, { className: "h-4 w-4 mr-2" })}
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
 
-          {/* Tab content - update background colors to white */}
-          <div className="p-6">
+          {/* Tab content */}
+          <div className={`p-6 ${isMobile ? "pb-24" : ""}`}>
             {/* Overview Tab */}
             {activeTab === "overview" && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
                 <div>
                   <h2 className="text-2xl font-bold text-text-primary mb-4">Jar Details</h2>
 
-                  <div className="bg-background-paper rounded-xl p-6 space-y-4">
+                  <div className="bg-background-paper rounded-xl p-4 md:p-6 space-y-3 md:space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-text-secondary">Access Type</span>
                       <div className="flex items-center">
@@ -955,7 +1013,7 @@ export default function CookieJarConfigDetails() {
                 <div>
                   <h2 className="text-2xl font-bold text-text-primary mb-4">Your Status</h2>
 
-                  <div className="bg-background-paper rounded-xl p-6 space-y-6">
+                  <div className="bg-background-paper rounded-xl p-4 md:p-6 space-y-6">
                     {/* Access status */}
                     <div className="flex flex-col gap-2">
                       <span className="text-text-secondary">Access Status</span>
@@ -1016,65 +1074,6 @@ export default function CookieJarConfigDetails() {
                       </div>
                     )}
 
-                    {/* Roles */}
-                    <div className="flex flex-col gap-2">
-                      <span className="text-text-secondary">Your Roles</span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {isAdmin && (
-                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#fce4ec] text-[#c2185b]">
-                            <ShieldAlert className="h-5 w-5" />
-                            <span className="font-medium">Admin</span>
-                          </div>
-                        )}
-
-                        {isFeeCollector && (
-                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#e3f2fd] text-[#1976d2]">
-                            <Coins className="h-5 w-5" />
-                            <span className="font-medium">Fee Collector</span>
-                          </div>
-                        )}
-
-                        {config.accessType === "Whitelist" && config.whitelist && (
-                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#e6f7e6] text-[#2e7d32]">
-                            <CheckCircle className="h-5 w-5" />
-                            <span className="font-medium">Whitelisted</span>
-                          </div>
-                        )}
-
-                        {config.accessType === "Whitelist" && !config.whitelist && (
-                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#ffebee] text-[#c62828]">
-                            <XCircle className="h-5 w-5" />
-                            <span className="font-medium">Not Whitelisted</span>
-                          </div>
-                        )}
-
-                        {config.accessType === "NFTGated" && hasRequiredNFT && (
-                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#e6f7e6] text-[#2e7d32]">
-                            <CheckCircle className="h-5 w-5" />
-                            <span className="font-medium">NFT Access</span>
-                          </div>
-                        )}
-
-                        {config.accessType === "NFTGated" && !hasRequiredNFT && (
-                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#ffebee] text-[#c62828]">
-                            <XCircle className="h-5 w-5" />
-                            <span className="font-medium">No NFT Access</span>
-                          </div>
-                        )}
-
-                        {!isAdmin &&
-                          !isFeeCollector &&
-                          !(
-                            (config.accessType === "Whitelist" && config.whitelist) ||
-                            (config.accessType === "NFTGated" && hasRequiredNFT)
-                          ) && (
-                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#f5f5f5] text-[#757575]">
-                              <span className="font-medium">No special roles</span>
-                            </div>
-                          )}
-                      </div>
-                    </div>
-
                     {/* Cooldown timer */}
                     {isInCooldown && (
                       <div className="mt-4 bg-background-light rounded-lg p-6">
@@ -1099,7 +1098,7 @@ export default function CookieJarConfigDetails() {
 
             {/* Withdraw Tab */}
             {activeTab === "withdraw" && (
-              <div className="max-w-3xl mx-auto">
+              <div className="w-full max-w-3xl mx-auto">
                 <h2 className="text-2xl font-bold text-white mb-6">Get Cookie</h2>
 
                 <div className="bg-[#2a2a2a] rounded-xl p-6 relative">
@@ -1183,7 +1182,7 @@ export default function CookieJarConfigDetails() {
 
             {/* Deposit/Donate Tab */}
             {activeTab === "deposit" && (
-              <div className="max-w-3xl mx-auto">
+              <div className="w-full max-w-3xl mx-auto">
                 <h2 className="text-2xl font-bold text-white mb-6">{isAdmin ? "Deposit Funds" : "Donate to Jar"}</h2>
 
                 <div className="bg-[#2a2a2a] rounded-xl p-6">
@@ -1229,7 +1228,7 @@ export default function CookieJarConfigDetails() {
               <div>
                 <h2 className="text-2xl font-bold text-[#C3FF00] mb-6">Withdrawal History</h2>
 
-                <div className="bg-[#2a2a2a] rounded-xl p-6 shadow-lg animate-appear">
+                <div className="bg-[#2a2a2a] rounded-xl p-4 md:p-6 shadow-lg animate-appear">
                   <div className="mb-4 p-4 bg-[#333333] rounded-lg border-l-4 border-[#C3FF00]">
                     <p className="text-white">
                       This section shows all past withdrawals from this jar. Each withdrawal includes the amount and
@@ -1248,7 +1247,7 @@ export default function CookieJarConfigDetails() {
               <div>
                 <h2 className="text-2xl font-bold text-white mb-4">Admin Controls</h2>
 
-                <div className="bg-[#2a2a2a] rounded-xl p-6 shadow-lg animate-appear">
+                <div className="bg-[#2a2a2a] rounded-xl p-4 md:p-6 shadow-lg animate-appear">
                   <AdminFunctions address={address as `0x${string}`} />
                 </div>
               </div>

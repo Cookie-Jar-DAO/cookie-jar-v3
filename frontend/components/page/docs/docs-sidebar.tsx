@@ -103,14 +103,14 @@ export function DocsSidebar({ className, activeItem, setActiveItem, ...props }: 
       <div className="space-y-6">
         {items.map((item) => (
           <div key={item.title} className="space-y-2">
-            <h4 className="font-medium text-sm text-gray-300">{item.title}</h4>
+            <h4 className="font-medium text-sm text-gray-300 px-2 py-1 mb-1">{item.title}</h4>
             {item.items.map((subItem) => (
               <Button
                 key={subItem.id}
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "w-full justify-start font-normal",
+                  "w-full justify-start font-normal py-3",
                   activeItem === subItem.id
                     ? "bg-[#333333] text-white font-medium"
                     : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white",

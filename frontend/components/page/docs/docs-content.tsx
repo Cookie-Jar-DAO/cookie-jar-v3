@@ -17,21 +17,21 @@ export function DocsContent({ activeItem }: DocsContentProps) {
       case "introduction":
         return (
           <>
-            <h1 className="text-4xl font-bold text-white mb-6">Introduction to Cookie Jar</h1>
-            <p className="text-[#AAAAAA] text-lg mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 md:mb-6">Introduction to Cookie Jar</h1>
+            <p className="text-[#AAAAAA] text-base md:text-lg mb-4 md:mb-6">
               Cookie Jar is a platform for creating controlled token pools with customizable access rules, withdrawal
               limits, and transparent tracking. It allows teams, communities, and organizations to manage shared funds
               in a transparent and accountable way.
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">What is Cookie Jar?</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">What is Cookie Jar?</h2>
             <p className="text-[#AAAAAA] mb-6">
               Cookie Jar is a decentralized platform built on Ethereum that enables the creation and management of
               shared token pools. These "jars" can be configured with various access controls, withdrawal rules, and
               transparency features to suit different use cases.
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Key Features</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Key Features</h2>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>
                 <strong className="text-[#C3FF00]">Dual Access Control:</strong> Choose between whitelist or NFT-gated
@@ -59,7 +59,7 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Use Cases</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Use Cases</h2>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>
                 <strong className="text-[#C3FF00]">DAO Treasury Management:</strong> Create controlled spending pools
@@ -88,20 +88,20 @@ export function DocsContent({ activeItem }: DocsContentProps) {
       case "installation":
         return (
           <>
-            <h1 className="text-4xl font-bold text-white mb-6">Getting Started with Cookie Jar</h1>
-            <p className="text-[#AAAAAA] text-lg mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 md:mb-6">Getting Started with Cookie Jar</h1>
+            <p className="text-[#AAAAAA] text-base md:text-lg mb-4 md:mb-6">
               This guide will help you get started with Cookie Jar, from connecting your wallet to creating your first
               jar.
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Prerequisites</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Prerequisites</h2>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>A Web3 wallet (MetaMask, Rainbow, etc.)</li>
               <li>ETH or tokens on a supported network</li>
               <li>Basic understanding of Ethereum transactions</li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Supported Networks</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Supported Networks</h2>
             <p className="text-[#AAAAAA] mb-4">Cookie Jar is available on the following networks:</p>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>
@@ -121,7 +121,9 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Connecting Your Wallet</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Connecting Your Wallet
+            </h2>
             <p className="text-[#AAAAAA] mb-4">To use Cookie Jar, you'll need to connect your Web3 wallet:</p>
             <ol className="list-decimal pl-6 space-y-3 text-[#AAAAAA]">
               <li>Click the "Connect Wallet" button in the sidebar</li>
@@ -130,7 +132,9 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               <li>Accept the terms and conditions by signing a message</li>
             </ol>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Navigating the Interface</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Navigating the Interface
+            </h2>
             <p className="text-[#AAAAAA] mb-4">The Cookie Jar interface consists of several main sections:</p>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>
@@ -155,13 +159,15 @@ export function DocsContent({ activeItem }: DocsContentProps) {
       case "cookie-jars":
         return (
           <>
-            <h1 className="text-4xl font-bold text-white mb-6">Understanding Cookie Jars</h1>
-            <p className="text-[#AAAAAA] text-lg mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 md:mb-6">Understanding Cookie Jars</h1>
+            <p className="text-[#AAAAAA] text-base md:text-lg mb-4 md:mb-6">
               Cookie Jars are the core component of the platform. They are smart contract-based token pools with
               customizable rules for access and withdrawals.
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Anatomy of a Cookie Jar</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Anatomy of a Cookie Jar
+            </h2>
             <p className="text-[#AAAAAA] mb-4">Each Cookie Jar consists of several key components:</p>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>
@@ -188,7 +194,7 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Jar Lifecycle</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Jar Lifecycle</h2>
             <ol className="list-decimal pl-6 space-y-3 text-[#AAAAAA]">
               <li>
                 <strong className="text-[#C3FF00]">Creation:</strong> A jar is created with specific configuration
@@ -209,7 +215,9 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </li>
             </ol>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Jar Types and Use Cases</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Jar Types and Use Cases
+            </h2>
             <div className="space-y-4 text-[#AAAAAA]">
               <div>
                 <h3 className="text-xl font-bold text-[#C3FF00] mb-2">Team Treasury</h3>
@@ -246,13 +254,13 @@ export function DocsContent({ activeItem }: DocsContentProps) {
       case "access-control":
         return (
           <>
-            <h1 className="text-4xl font-bold text-white mb-6">Access Control</h1>
-            <p className="text-[#AAAAAA] text-lg mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 md:mb-6">Access Control</h1>
+            <p className="text-[#AAAAAA] text-base md:text-lg mb-4 md:mb-6">
               Cookie Jar offers two primary methods for controlling who can access and withdraw from a jar: Whitelist
               Mode and NFT-Gated Mode.
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Whitelist Mode</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Whitelist Mode</h2>
             <p className="text-[#AAAAAA] mb-4">
               In Whitelist Mode, only explicitly approved addresses can withdraw funds from the jar.
             </p>
@@ -277,7 +285,7 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               <li>Situations requiring high control over access</li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">NFT-Gated Mode</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">NFT-Gated Mode</h2>
             <p className="text-[#AAAAAA] mb-4">
               In NFT-Gated Mode, access is granted to holders of specific NFTs, allowing for more dynamic and scalable
               access control.
@@ -307,7 +315,7 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               <li>Situations where access rights should be transferable</li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Blacklist Feature</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Blacklist Feature</h2>
             <p className="text-[#AAAAAA] mb-4">
               Both access control modes support a blacklist feature, allowing admins to block specific addresses from
               accessing the jar, even if they would otherwise be eligible.
@@ -325,13 +333,15 @@ export function DocsContent({ activeItem }: DocsContentProps) {
       case "withdrawal-rules":
         return (
           <>
-            <h1 className="text-4xl font-bold text-white mb-6">Withdrawal Rules</h1>
-            <p className="text-[#AAAAAA] text-lg mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 md:mb-6">Withdrawal Rules</h1>
+            <p className="text-[#AAAAAA] text-base md:text-lg mb-4 md:mb-6">
               Cookie Jar offers flexible withdrawal rules to control how and when funds can be withdrawn from a jar.
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Fixed vs. Variable Withdrawals</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Fixed vs. Variable Withdrawals
+            </h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-8 mb-8">
               <div className="bg-[#333333] p-6 rounded-lg">
                 <h3 className="text-xl font-bold text-[#C3FF00] mb-4">Fixed Withdrawals</h3>
                 <p className="text-[#AAAAAA] mb-4">
@@ -371,7 +381,7 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Cooldown Periods</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Cooldown Periods</h2>
             <p className="text-[#AAAAAA] mb-4">
               Cooldown periods enforce a waiting time between withdrawals for each user, preventing rapid draining of
               funds.
@@ -390,7 +400,9 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Purpose Requirements</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Purpose Requirements
+            </h2>
             <p className="text-[#AAAAAA] mb-4">
               The "Strict Purpose" feature requires users to provide a reason for each withdrawal, enhancing
               transparency and accountability.
@@ -409,7 +421,9 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Emergency Withdrawal</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Emergency Withdrawal
+            </h2>
             <p className="text-[#AAAAAA] mb-4">
               The optional emergency withdrawal feature allows jar admins to withdraw all funds in case of urgent
               situations.
@@ -428,12 +442,14 @@ export function DocsContent({ activeItem }: DocsContentProps) {
       case "creating-a-jar":
         return (
           <>
-            <h1 className="text-4xl font-bold text-white mb-6">Creating a Cookie Jar</h1>
-            <p className="text-[#AAAAAA] text-lg mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 md:mb-6">Creating a Cookie Jar</h1>
+            <p className="text-[#AAAAAA] text-base md:text-lg mb-4 md:mb-6">
               This guide walks you through the process of creating a new Cookie Jar with your desired configuration.
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Step 1: Basic Information</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Step 1: Basic Information
+            </h2>
             <p className="text-[#AAAAAA] mb-4">Start by providing the fundamental details for your jar:</p>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>
@@ -457,7 +473,9 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Step 2: Access Control</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Step 2: Access Control
+            </h2>
             <p className="text-[#AAAAAA] mb-4">Configure who can access and withdraw from your jar:</p>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>
@@ -469,7 +487,9 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Step 3: Withdrawal Options</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Step 3: Withdrawal Options
+            </h2>
             <p className="text-[#AAAAAA] mb-4">Define how funds can be withdrawn from your jar:</p>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>
@@ -490,7 +510,9 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Step 4: Additional Features</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Step 4: Additional Features
+            </h2>
             <p className="text-[#AAAAAA] mb-4">Configure additional options for your jar:</p>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>
@@ -507,7 +529,9 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Step 5: Review & Create</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Step 5: Review & Create
+            </h2>
             <p className="text-[#AAAAAA] mb-4">Review your jar configuration and create your jar:</p>
             <ol className="list-decimal pl-6 space-y-3 text-[#AAAAAA]">
               <li>Verify all settings are correct</li>
@@ -517,7 +541,7 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               <li>You'll be redirected to your new jar once creation is complete</li>
             </ol>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">After Creation</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">After Creation</h2>
             <p className="text-[#AAAAAA] mb-4">Once your jar is created, you'll need to:</p>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>
@@ -546,18 +570,20 @@ export function DocsContent({ activeItem }: DocsContentProps) {
       case "managing-a-jar":
         return (
           <>
-            <h1 className="text-4xl font-bold text-white mb-6">Managing a Cookie Jar</h1>
-            <p className="text-[#AAAAAA] text-lg mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 md:mb-6">Managing a Cookie Jar</h1>
+            <p className="text-[#AAAAAA] text-base md:text-lg mb-4 md:mb-6">
               This guide covers the various administrative functions available to jar owners and admins.
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Admin Dashboard</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Admin Dashboard</h2>
             <p className="text-[#AAAAAA] mb-4">
               As a jar admin, you'll have access to the Admin Controls tab when viewing your jar. This dashboard
               provides several management functions organized into categories:
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Ownership Management</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Ownership Management
+            </h2>
             <p className="text-[#AAAAAA] mb-4">Control who has administrative rights over the jar:</p>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>
@@ -572,7 +598,9 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Access Control Management</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Access Control Management
+            </h2>
             <p className="text-[#AAAAAA] mb-4">Manage who can access and withdraw from the jar:</p>
 
             <h3 className="text-xl font-bold text-[#C3FF00] mt-6 mb-2">Whitelist Management</h3>
@@ -611,7 +639,7 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Emergency Functions</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Emergency Functions</h2>
             <p className="text-[#AAAAAA] mb-4">Handle urgent situations:</p>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>
@@ -634,7 +662,7 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </ul>
             </div>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Monitoring Activity</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Monitoring Activity</h2>
             <p className="text-[#AAAAAA] mb-4">Keep track of jar activity:</p>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>
@@ -654,12 +682,14 @@ export function DocsContent({ activeItem }: DocsContentProps) {
       case "withdrawing-funds":
         return (
           <>
-            <h1 className="text-4xl font-bold text-white mb-6">Withdrawing Funds</h1>
-            <p className="text-[#AAAAAA] text-lg mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 md:mb-6">Withdrawing Funds</h1>
+            <p className="text-[#AAAAAA] text-base md:text-lg mb-4 md:mb-6">
               This guide explains how to withdraw funds from a Cookie Jar as an authorized user.
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Eligibility Requirements</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Eligibility Requirements
+            </h2>
             <p className="text-[#AAAAAA] mb-4">
               Before attempting to withdraw, ensure you meet the following requirements:
             </p>
@@ -682,7 +712,7 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Withdrawal Process</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Withdrawal Process</h2>
             <ol className="list-decimal pl-6 space-y-3 text-[#AAAAAA]">
               <li>Navigate to the jar's page</li>
               <li>Connect your wallet if not already connected</li>
@@ -690,8 +720,8 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               <li>Follow the specific withdrawal process based on the jar's configuration</li>
             </ol>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Withdrawal Types</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Withdrawal Types</h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-8 mb-8">
               <div className="bg-[#333333] p-6 rounded-lg">
                 <h3 className="text-xl font-bold text-[#C3FF00] mb-4">Whitelist Withdrawal</h3>
                 <p className="text-[#AAAAAA] mb-4">For jars using whitelist access control:</p>
@@ -718,7 +748,9 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Purpose Requirements</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Purpose Requirements
+            </h2>
             <p className="text-[#AAAAAA] mb-4">If the jar has strict purpose requirements enabled:</p>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>You must provide a detailed explanation for your withdrawal</li>
@@ -727,7 +759,7 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               <li>Be specific and honest about the intended use of the funds</li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Cooldown Periods</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Cooldown Periods</h2>
             <p className="text-[#AAAAAA] mb-4">Understanding and managing cooldown periods:</p>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>Each jar has a configured cooldown period between withdrawals</li>
@@ -759,12 +791,14 @@ export function DocsContent({ activeItem }: DocsContentProps) {
       case "smart-contracts":
         return (
           <>
-            <h1 className="text-4xl font-bold text-white mb-6">Smart Contract Reference</h1>
-            <p className="text-[#AAAAAA] text-lg mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 md:mb-6">Smart Contract Reference</h1>
+            <p className="text-[#AAAAAA] text-base md:text-lg mb-4 md:mb-6">
               This section provides technical details about the Cookie Jar smart contracts for developers.
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Contract Architecture</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Contract Architecture
+            </h2>
             <p className="text-[#AAAAAA] mb-4">The Cookie Jar platform consists of three main smart contracts:</p>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>
@@ -781,12 +815,12 @@ export function DocsContent({ activeItem }: DocsContentProps) {
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">CookieJar Contract</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">CookieJar Contract</h2>
             <p className="text-[#AAAAAA] mb-4">The core contract implementing jar functionality:</p>
 
             <h3 className="text-xl font-bold text-[#C3FF00] mt-6 mb-2">Key Structures</h3>
-            <div className="bg-[#333333] p-4 rounded-lg mb-6 overflow-x-auto border border-[#444444]">
-              <pre className="text-white">
+            <div className="bg-[#333333] p-3 md:p-4 rounded-lg mb-4 md:mb-6 overflow-x-auto border border-[#444444]">
+              <pre className="text-white text-sm md:text-base">
                 {`struct JarConfig {
     string name;
     string description;
@@ -925,7 +959,9 @@ struct WithdrawalRecord {
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">CookieJarFactory Contract</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              CookieJarFactory Contract
+            </h2>
             <p className="text-[#AAAAAA] mb-4">Factory contract for creating new CookieJar instances:</p>
 
             <h3 className="text-xl font-bold text-[#C3FF00] mt-6 mb-2">Key Functions</h3>
@@ -962,7 +998,9 @@ struct WithdrawalRecord {
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">CookieJarRegistry Contract</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              CookieJarRegistry Contract
+            </h2>
             <p className="text-[#AAAAAA] mb-4">Registry contract that stores metadata about all created jars:</p>
 
             <h3 className="text-xl font-bold text-[#C3FF00] mt-6 mb-2">Key Functions</h3>
@@ -1000,10 +1038,10 @@ struct WithdrawalRecord {
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Contract Addresses</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Contract Addresses</h2>
             <p className="text-[#AAAAAA] mb-4">Deployed contract addresses on supported networks:</p>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse border-[#444444]">
+            <div className="overflow-x-auto -mx-4 px-4">
+              <table className="w-full border-collapse border-[#444444] min-w-[600px]">
                 <thead>
                   <tr className="bg-[#333333]">
                     <th className="p-3 text-left text-white">Network</th>
@@ -1036,24 +1074,24 @@ struct WithdrawalRecord {
       case "javascript-sdk":
         return (
           <>
-            <h1 className="text-4xl font-bold text-white mb-6">JavaScript SDK</h1>
-            <p className="text-[#AAAAAA] text-lg mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 md:mb-6">JavaScript SDK</h1>
+            <p className="text-[#AAAAAA] text-base md:text-lg mb-4 md:mb-6">
               The Cookie Jar JavaScript SDK allows developers to interact with Cookie Jar contracts from JavaScript
               applications.
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Installation</h2>
-            <div className="bg-[#333333] p-4 rounded-lg mb-6 overflow-x-auto border border-[#444444]">
-              <pre className="text-white">
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Installation</h2>
+            <div className="bg-[#333333] p-3 md:p-4 rounded-lg mb-4 md:mb-6 overflow-x-auto border border-[#444444]">
+              <pre className="text-white text-sm md:text-base">
                 {`npm install @cookie-jar/sdk
 # or
 yarn add @cookie-jar/sdk`}
               </pre>
             </div>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Basic Usage</h2>
-            <div className="bg-[#333333] p-4 rounded-lg mb-6 overflow-x-auto border border-[#444444]">
-              <pre className="text-white">
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Basic Usage</h2>
+            <div className="bg-[#333333] p-3 md:p-4 rounded-lg mb-4 md:mb-6 overflow-x-auto border border-[#444444]">
+              <pre className="text-white text-sm md:text-base">
                 {`import { CookieJarSDK } from '@cookie-jar/sdk';
 
 // Initialize the SDK
@@ -1082,7 +1120,7 @@ const newJar = await cookieJar.createJar({
               </pre>
             </div>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Key Features</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Key Features</h2>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>
                 <strong className="text-[#C3FF00]">TypeScript Support:</strong> Full TypeScript definitions for all
@@ -1106,7 +1144,7 @@ const newJar = await cookieJar.createJar({
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">API Reference</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">API Reference</h2>
             <p className="text-[#AAAAAA] mb-4">
               The SDK provides methods for interacting with all aspects of Cookie Jar contracts:
             </p>
@@ -1213,9 +1251,11 @@ const newJar = await cookieJar.createJar({
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Example: Creating and Managing a Jar</h2>
-            <div className="bg-[#333333] p-4 rounded-lg mb-6 overflow-x-auto border border-[#444444]">
-              <pre className="text-white">
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Example: Creating and Managing a Jar
+            </h2>
+            <div className="bg-[#333333] p-3 md:p-4 rounded-lg mb-4 md:mb-6 overflow-x-auto border border-[#444444]">
+              <pre className="text-white text-sm md:text-base">
                 {`import { CookieJarSDK } from '@cookie-jar/sdk';
 
 // Initialize the SDK
@@ -1271,12 +1311,14 @@ createTeamJar().then(jar => monitorJar(jar.address));`}
       case "faq":
         return (
           <>
-            <h1 className="text-4xl font-bold text-white mb-6">Frequently Asked Questions</h1>
-            <p className="text-[#AAAAAA] text-lg mb-6">Find answers to common questions about Cookie Jar.</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 md:mb-6">Frequently Asked Questions</h1>
+            <p className="text-[#AAAAAA] text-base md:text-lg mb-4 md:mb-6">
+              Find answers to common questions about Cookie Jar.
+            </p>
 
             <div className="space-y-8">
               <div>
-                <h2 className="text-2xl font-bold text-white mb-3">General Questions</h2>
+                <h2 className="text-xl md:text-2xl font-bold text-white mb-3">General Questions</h2>
 
                 <div className="space-y-6">
                   <div>
@@ -1315,7 +1357,7 @@ createTeamJar().then(jar => monitorJar(jar.address));`}
               </div>
 
               <div>
-                <h2 className="text-2xl font-bold text-white mb-3">Creating and Managing Jars</h2>
+                <h2 className="text-xl md:text-2xl font-bold text-white mb-3">Creating and Managing Jars</h2>
 
                 <div className="space-y-6">
                   <div>
@@ -1358,7 +1400,7 @@ createTeamJar().then(jar => monitorJar(jar.address));`}
               </div>
 
               <div>
-                <h2 className="text-2xl font-bold text-white mb-3">Withdrawals and Access</h2>
+                <h2 className="text-xl md:text-2xl font-bold text-white mb-3">Withdrawals and Access</h2>
 
                 <div className="space-y-6">
                   <div>
@@ -1407,7 +1449,7 @@ createTeamJar().then(jar => monitorJar(jar.address));`}
               </div>
 
               <div>
-                <h2 className="text-2xl font-bold text-white mb-3">Technical Questions</h2>
+                <h2 className="text-xl md:text-2xl font-bold text-white mb-3">Technical Questions</h2>
 
                 <div className="space-y-6">
                   <div>
@@ -1453,12 +1495,14 @@ createTeamJar().then(jar => monitorJar(jar.address));`}
       case "troubleshooting":
         return (
           <>
-            <h1 className="text-4xl font-bold text-white mb-6">Troubleshooting</h1>
-            <p className="text-[#AAAAAA] text-lg mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 md:mb-6">Troubleshooting</h1>
+            <p className="text-[#AAAAAA] text-base md:text-lg mb-4 md:mb-6">
               Solutions for common issues you might encounter when using Cookie Jar.
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Wallet Connection Issues</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Wallet Connection Issues
+            </h2>
             <div className="space-y-6">
               <div className="bg-[#333333] p-6 rounded-lg">
                 <h3 className="text-xl font-bold text-[#C3FF00] mb-2">Problem: Cannot connect wallet</h3>
@@ -1488,7 +1532,7 @@ createTeamJar().then(jar => monitorJar(jar.address));`}
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Transaction Issues</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Transaction Issues</h2>
             <div className="space-y-6">
               <div className="bg-[#333333] p-6 rounded-lg">
                 <h3 className="text-xl font-bold text-[#C3FF00] mb-2">Problem: Transaction fails or reverts</h3>
@@ -1516,7 +1560,9 @@ createTeamJar().then(jar => monitorJar(jar.address));`}
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Jar Management Issues</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">
+              Jar Management Issues
+            </h2>
             <div className="space-y-6">
               <div className="bg-[#333333] p-6 rounded-lg">
                 <h3 className="text-xl font-bold text-[#C3FF00] mb-2">Problem: Cannot see admin controls</h3>
@@ -1546,7 +1592,7 @@ createTeamJar().then(jar => monitorJar(jar.address));`}
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Withdrawal Issues</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Withdrawal Issues</h2>
             <div className="space-y-6">
               <div className="bg-[#333333] p-6 rounded-lg">
                 <h3 className="text-xl font-bold text-[#C3FF00] mb-2">
@@ -1577,7 +1623,7 @@ createTeamJar().then(jar => monitorJar(jar.address));`}
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Getting Help</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Getting Help</h2>
             <p className="text-[#AAAAAA] mb-4">
               If you're still experiencing issues after trying the troubleshooting steps:
             </p>
@@ -1609,20 +1655,20 @@ createTeamJar().then(jar => monitorJar(jar.address));`}
       default:
         return (
           <>
-            <h1 className="text-4xl font-bold text-white mb-6">Cookie Jar Documentation</h1>
-            <p className="text-[#AAAAAA] text-lg mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 md:mb-6">Cookie Jar Documentation</h1>
+            <p className="text-[#AAAAAA] text-base md:text-lg mb-4 md:mb-6">
               Welcome to the Cookie Jar documentation. This guide will help you understand how to use the Cookie Jar
               platform to create, manage, and interact with shared token pools.
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">What is Cookie Jar?</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">What is Cookie Jar?</h2>
             <p className="text-[#AAAAAA] mb-6">
               Cookie Jar is a platform for creating controlled token pools with customizable access rules, withdrawal
               limits, and transparent tracking. It allows teams, communities, and organizations to manage shared funds
               in a transparent and accountable way.
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Key Features</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Key Features</h2>
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">
               <li>
                 <strong className="text-[#C3FF00]">Dual Access Control:</strong> Choose between whitelist or NFT-gated
@@ -1646,7 +1692,7 @@ createTeamJar().then(jar => monitorJar(jar.address));`}
               </li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Getting Started</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Getting Started</h2>
             <p className="text-[#AAAAAA] mb-4">
               To get started with Cookie Jar, you'll need to connect your wallet and create your first jar. Follow these
               steps:
@@ -1661,7 +1707,7 @@ createTeamJar().then(jar => monitorJar(jar.address));`}
               <li>Share your jar with your team or community</li>
             </ol>
 
-            <h2 className="text-2xl font-bold text-white mt-10 mb-4">Supported Networks</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mt-8 md:mt-10 mb-3 md:mb-4">Supported Networks</h2>
             <p className="text-[#AAAAAA] mb-4">Cookie Jar is available on the following networks:</p>
 
             <ul className="list-disc pl-6 space-y-3 text-[#AAAAAA]">

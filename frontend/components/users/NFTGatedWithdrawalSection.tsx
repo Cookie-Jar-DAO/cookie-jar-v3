@@ -77,7 +77,7 @@ export const NFTGatedWithdrawalSection: React.FC<NFTGatedWithdrawalSectionProps>
 
   return (
     <div className="space-y-4">
-      <Alert className="bg-[#222222] border-[#c0ff00] text-[#c0ff00]">
+      <Alert className="bg-[#222222] border-[#c0ff00] text-[#c0ff00] p-3 md:p-4">
         <Info className="h-4 w-4" />
         <AlertDescription>
           This jar requires NFT ownership for withdrawals. Please enter the NFT contract address and token ID of your
@@ -87,7 +87,7 @@ export const NFTGatedWithdrawalSection: React.FC<NFTGatedWithdrawalSectionProps>
 
       {/* Display required NFTs */}
       {nftGates && nftGates.length > 0 && (
-        <div className="bg-[#222222] p-4 rounded-lg border border-[#333333]">
+        <div className="bg-[#222222] p-3 md:p-4 rounded-lg border border-[#333333]">
           <h3 className="text-[#c0ff00] font-medium mb-2">Required NFTs</h3>
           <div className="space-y-2">
             {isLoadingNFTs ? (
@@ -125,7 +125,7 @@ export const NFTGatedWithdrawalSection: React.FC<NFTGatedWithdrawalSectionProps>
         <div className="py-4 relative min-h-[600px]">
           {/* Cookie Details Section - Centered and using full width */}
           <div className="cookie-details-container">
-            <h3 className="text-[#c0ff00] text-3xl font-bold mb-8 text-center">Cookie Details</h3>
+            <h3 className="text-[#c0ff00] text-2xl md:text-3xl font-bold mb-4 md:mb-8 text-center">Cookie Details</h3>
 
             <div className="cookie-details-grid mb-8">
               <div className="cookie-detail-item">
@@ -205,7 +205,7 @@ export const NFTGatedWithdrawalSection: React.FC<NFTGatedWithdrawalSectionProps>
           {/* Get Cookie Button - Fixed position at bottom right */}
           <button
             onClick={handleWithdrawNFT}
-            className="cookie-button-animation get-cookie-btn w-48 h-48 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="cookie-button-animation get-cookie-btn w-36 h-36 md:w-48 md:h-48 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={
               !gateAddress ||
               !tokenId ||
@@ -221,8 +221,8 @@ export const NFTGatedWithdrawalSection: React.FC<NFTGatedWithdrawalSectionProps>
               </>
             ) : (
               <>
-                <ArrowDownToLine className="h-12 w-12 mb-3" />
-                <span className="font-bold text-2xl">GET COOKIE</span>
+                <ArrowDownToLine className="h-8 w-8 md:h-12 md:w-12 mb-2 md:mb-3" />
+                <span className="font-bold text-xl md:text-2xl">GET COOKIE</span>
                 <span className="text-xs mt-1">Click to withdraw</span>
               </>
             )}
@@ -314,7 +314,7 @@ export const NFTGatedWithdrawalSection: React.FC<NFTGatedWithdrawalSectionProps>
 
           <button
             onClick={handleWithdrawNFTVariable}
-            className="w-full bg-[#c0ff00] hover:bg-[#a8e600] text-black font-bold px-8 py-6 rounded-lg flex items-center justify-center gap-3 text-xl shadow-lg transform transition-transform hover:scale-105 mt-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            className="w-full bg-[#c0ff00] hover:bg-[#a8e600] text-black font-bold px-4 md:px-8 py-4 md:py-6 rounded-lg flex items-center justify-center gap-2 md:gap-3 text-lg md:text-xl shadow-lg transform transition-transform hover:scale-105 mt-4 md:mt-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             disabled={
               !gateAddress ||
               !tokenId ||

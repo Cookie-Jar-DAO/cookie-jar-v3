@@ -34,7 +34,7 @@ export const WithdrawalHistorySection: React.FC<WithdrawalHistorySectionProps> =
 
   return (
     <motion.div
-      className="mt-6"
+      className="mt-4 md:mt-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -46,12 +46,12 @@ export const WithdrawalHistorySection: React.FC<WithdrawalHistorySectionProps> =
             {pastWithdrawals.map((withdrawal, index) => (
               <motion.li
                 key={index}
-                className="border border-[#333333] p-4 rounded-lg bg-[#2a2a2a] hover:bg-[#333333] transition-all duration-300 shadow-md"
+                className="border border-[#333333] p-3 md:p-4 rounded-lg bg-[#2a2a2a] hover:bg-[#333333] transition-all duration-300 shadow-md"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <div className="flex flex-col md:flex-row md:justify-between gap-3">
+                <div className="flex flex-col md:flex-row md:justify-between gap-2 md:gap-3">
                   <div className="bg-[#333333] px-4 py-2 rounded-lg">
                     <p className="font-medium text-white">
                       <span className="text-gray-400">Amount:</span>{" "}
@@ -71,7 +71,7 @@ export const WithdrawalHistorySection: React.FC<WithdrawalHistorySectionProps> =
         </div>
       ) : (
         <motion.div
-          className="text-center py-12 px-6 text-gray-300 bg-[#2a2a2a] rounded-lg border border-[#333333] shadow-inner"
+          className="text-center py-8 md:py-12 px-4 md:px-6 text-gray-300 bg-[#2a2a2a] rounded-lg border border-[#333333] shadow-inner"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}

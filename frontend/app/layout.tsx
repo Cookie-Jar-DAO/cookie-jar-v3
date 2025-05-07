@@ -4,6 +4,7 @@ import { RainbowKitProviderWrapper } from "@/components/wallet/rainbow-kit-provi
 import { Toaster } from "@/components/ui/toaster"
 import { PageTransition } from "@/components/design/page-transition"
 import { NetworkSwitcher } from "@/components/network/network-switcher"
+import { ScrollToTop } from "@/components/design/scroll-to-top"
 import localFont from "next/font/local"
 import "./countdown-animation.css"
 import "./loading-animation.css"
@@ -33,13 +34,14 @@ export default function RootLayout({
       <body className={`${clashDisplay.variable} font-clash custom-scrollbar`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <RainbowKitProviderWrapper key="rainbow-kit-provider">
-            <div>
-              <Providers>
+            <Providers>
+              <div>
                 <PageTransition noTopMargin>{children}</PageTransition>
-              </Providers>
-            </div>
-            <NetworkSwitcher />
-            <Toaster />
+              </div>
+              <NetworkSwitcher />
+              <ScrollToTop />
+              <Toaster />
+            </Providers>
           </RainbowKitProviderWrapper>
         </ThemeProvider>
       </body>

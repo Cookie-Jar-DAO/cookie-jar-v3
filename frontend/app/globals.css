@@ -771,6 +771,61 @@
     background: #e4405f;
     color: #fff;
   }
+
+  /* Mobile bottom navigation styles */
+  .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(31, 31, 31, 0.95);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid #555555;
+    z-index: 50;
+    padding: 8px 0;
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-nav-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #393939;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+  }
+
+  .mobile-nav-text {
+    font-size: 10px;
+    color: white;
+  }
+
+  /* Adjust padding for pages when mobile bottom nav is present */
+  @media (max-width: 767px) {
+    .page-with-mobile-nav {
+      padding-bottom: 80px;
+    }
+
+    /* Adjust mega text for mobile */
+    .mega-text {
+      font-size: 2.5rem;
+      line-height: 1.2;
+    }
+
+    /* Make buttons full width on mobile */
+    .cssbuttons-io-button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
 }
 
 /* Custom Scrollbar Styles */
@@ -859,6 +914,18 @@
   bottom: 2rem;
   right: 2rem;
   z-index: 50;
+}
+
+/* Add these styles to ensure the scroll-to-top button appears above the navbar */
+.scroll-to-top-button {
+  z-index: 60; /* Higher than the navbar z-index */
+}
+
+/* Adjust the bottom position for mobile to account for the navbar */
+@media (max-width: 767px) {
+  .cookie-button-animation {
+    bottom: 80px; /* Adjust based on your navbar height */
+  }
 }
 
 .cookie-details-container {
@@ -1168,7 +1235,7 @@
 .tag-tooltip::after {
   content: "";
   position: absolute;
-  bottom: 100%;
+  top: 100%;
   right: 5px;
   border-width: 0.25rem;
   border-style: solid;
@@ -1356,4 +1423,28 @@
   height: 100%;
   background-color: #333333;
   opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+  /* Additional mobile-specific styles */
+  .cssbuttons-io-button-jars {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+
+  .cssbuttons-io-button-jars .icon {
+    height: 20px;
+    width: 20px;
+  }
+
+  /* Improved pagination for small screens */
+  .pagination-mobile {
+    gap: 0.25rem;
+  }
+
+  .pagination-mobile .pagination-item {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
 }
