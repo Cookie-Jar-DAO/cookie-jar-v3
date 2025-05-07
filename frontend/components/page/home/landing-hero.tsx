@@ -55,15 +55,20 @@ export function LandingHero() {
             </div>
 
             {/* Cookie jar image - centered in the middle section */}
-            <div className="flex-1 flex items-center justify-center">
-              <Image
-                src="/cookie-jar.gif"
-                alt="Cookie Jar Illustration"
-                width={400}
-                height={400}
-                className="w-[70%] max-w-[400px] h-auto object-contain"
-                priority
-              />
+            <div className="flex-1 flex items-center justify-center px-4">
+              <div className="relative w-[90%] max-w-[500px] aspect-square rounded-3xl border-2 border-[#444444] p-6 transition-all duration-500 hover:border-[#C3FF00] group overflow-hidden">
+                {/* Animated background glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#C3FF00]/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1500 ease-in-out"></div>
+
+                <Image
+                  src="/cookie-jar.gif"
+                  alt="Cookie Jar Illustration"
+                  width={400}
+                  height={400}
+                  className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                  priority
+                />
+              </div>
             </div>
 
             {/* Scroll indicator - now at the bottom with more space */}
@@ -107,7 +112,10 @@ export function LandingHero() {
               </div>
 
               <div className="flex flex-col items-center gap-4 mt-8">
-                <button className="cssbuttons-io-button text-[#333333] w-full" onClick={handleExploreClick}>
+                <button
+                  className="cssbuttons-io-button text-[#333333] w-full h-14 py-4 text-lg font-medium"
+                  onClick={handleExploreClick}
+                >
                   EXPLORE JARS
                   <div className="icon">
                     <svg height="24" width="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -120,7 +128,7 @@ export function LandingHero() {
                   </div>
                 </button>
                 <Link href="/create" className="w-full">
-                  <button className="cssbuttons-io-button dark text-white w-full">
+                  <button className="cssbuttons-io-button dark text-white w-full h-14 py-4 text-lg font-medium">
                     CREATE A JAR
                     <div className="icon">
                       <svg height="24" width="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -138,7 +146,7 @@ export function LandingHero() {
           </div>
         </div>
       ) : (
-        /* Desktop Layout - Keep original */
+        /* Desktop Layout - Keep original with added border */
         <>
           {/* Hero content */}
           <div className="flex-1 flex items-center w-full container mx-auto px-4 relative z-10 pt-28 md:pt-40 pb-20">
@@ -192,16 +200,21 @@ export function LandingHero() {
 
           {/* Decorative elements */}
           <div className="absolute inset-0 pointer-events-none">
-            {/* Cookie jar SVG */}
+            {/* Cookie jar SVG with animated border */}
             <div className="absolute right-[5%] top-[30%] md:top-[20%] w-[200px] h-[200px] sm:w-[250px] sm:h-[250px] md:w-[400px] md:h-[400px]">
-              <Image
-                src="/cookie-jar.gif"
-                alt="Cookie Jar Illustration"
-                width={400}
-                height={400}
-                className="w-full h-full object-contain"
-                priority
-              />
+              <div className="relative w-full h-full rounded-3xl border-2 border-[#444444] p-4 transition-all duration-500 hover:border-[#C3FF00] group overflow-hidden">
+                {/* Animated background glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#C3FF00]/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1500 ease-in-out"></div>
+
+                <Image
+                  src="/cookie-jar.gif"
+                  alt="Cookie Jar Illustration"
+                  width={400}
+                  height={400}
+                  className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                  priority
+                />
+              </div>
             </div>
           </div>
         </>
