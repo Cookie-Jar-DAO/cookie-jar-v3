@@ -36,7 +36,8 @@ interface ContractAddresses {
 // Define the contract addresses for supported networks
 export const contractAddresses: ContractAddresses = {
   cookieJarFactory: {
-    [sepolia.id]: "0x010CE87d0E7F8E818805a27C95E09cb4961C8c6f" ,
+    [sepolia.id]: "0x489b6B697c892832FA1B6ab1e5F6f65E1eF974d0" ,//<-v2 liron's updates
+    // [sepolia.id]: "0x010CE87d0E7F8E818805a27C95E09cb4961C8c6f" ,<- V1
     [baseSepolia.id]: "0x010CE87d0E7F8E818805a27C95E09cb4961C8c6f" ,
     [optimismSepolia.id]: "0x010CE87d0E7F8E818805a27C95E09cb4961C8c6f",
     [celoAlfajores.id]: "0x5FC650F378475d1fF0E608964529E4863A339CD2"

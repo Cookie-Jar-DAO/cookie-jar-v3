@@ -10,7 +10,7 @@ import {
 
 const contractAddresses = {
   cookieJarFactory: {
-    [sepolia.id]: "0x010CE87d0E7F8E818805a27C95E09cb4961C8c6f" as `0x${string}`,
+    [sepolia.id]: "0x489b6B697c892832FA1B6ab1e5F6f65E1eF974d0" as `0x${string}`,
     [baseSepolia.id]: "0x010CE87d0E7F8E818805a27C95E09cb4961C8c6f" as `0x${string}`,
     [optimismSepolia.id]: "0x010CE87d0E7F8E818805a27C95E09cb4961C8c6f" as `0x${string}`,
     [celoAlfajores.id]: "0x010CE87d0E7F8E818805a27C95E09cb4961C8c6f" as `0x${string}`
@@ -24,7 +24,7 @@ const contractAddresses = {
 }
 
 export default defineConfig({
-  out: 'generated2.ts',
+  out: 'generated.ts',
   // Add ERC20 to the root level contracts array
   contracts: [
     {
