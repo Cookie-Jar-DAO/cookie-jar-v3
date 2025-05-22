@@ -8,8 +8,17 @@ libs = ["lib"]
 remappings = [
     "openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/"
 ]
-# [rpc_endpoints]
-# sepolia = "${SEPOLIA_URL}"
+PRIVATE_KEY = "${PRIVATE_KEY}"
+RPC_URL = "${RPC_URL}"
 
+[rpc_endpoints]
+sepolia = "${SEPOLIA_URL}"
+celo-alfajores = "${ALFAJORES_URL}"
+celo = "${CELO_URL}"
+
+[etherscan]
+celo = { key = "blockscout", url = "https://celo.blockscout.com/api" }
+celo-alfajores = { key = "blockscout", url = "https://celo-alfajores.blockscout.com/api" }
+sepolia = { key = "${SEPOLIA_ETHERSCAN_KEY}" }
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
