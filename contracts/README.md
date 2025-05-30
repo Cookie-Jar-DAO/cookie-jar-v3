@@ -13,8 +13,12 @@ A decentralized protocol for controlled fund withdrawals with support for both w
 
 ## Deployments
 
-- CookieJarRegistry deployed at: https://base-sepolia.blockscout.com/address/0xE9c62c210E6d56EbB0718f79DCE2883b8e38B356
-- CookieJarFactory deployed at: https://base-sepolia.blockscout.com/address/0x010CE87d0E7F8E818805a27C95E09cb4961C8c6f
+- CookieJarRegistry deployed on:
+  - Base Sepolia: https://base-sepolia.blockscout.com/address/0xE9c62c210E6d56EbB0718f79DCE2883b8e38B356?tab=contract
+  - Celo Alfajores: https://celo-alfajores.blockscout.com/address/0x8FF4E393D983fb2EEdCfcFcB55a0aaB9250d0AE6?tab=contract
+- CookieJarFactory deployed on:
+  - Base Sepolia: https://base-sepolia.blockscout.com/address/0x010CE87d0E7F8E818805a27C95E09cb4961C8c6f?tab=contract
+  - Celo Alfajores: https://celo-alfajores.blockscout.com/address/0x5FC650F378475d1fF0E608964529E4863A339CD2?tab=contract
 
 ## Smart Contract Architecture
 
@@ -60,6 +64,8 @@ git clone <repository-url>
 cd cookie-jar-v2/contracts
 
 # Install dependencies
+# foundry-rs/forge-std
+# OpenZeppelin/openzeppelin-contracts
 forge install
 ```
 
@@ -86,23 +92,14 @@ forge fmt
 1. Set up your environment variables:
 
 ```shell
-PRIVATE_KEY=
-SEPOLIA_URL=
-SEPOLIA_ETHERSCAN_KEY=
+cp .env.sample .env
+vim .env
 ```
 
 2. Deploy and verify:
 
 ```shell
-source .env
-forge script script/Deploy.s.sol:DeployCookie \
- --via-ir \
- --rpc-url $SEPOLIA_URL \
- --broadcast \
- --verify \
- --etherscan-api-key $SEPOLIA_ETHERSCAN_KEY \
- --verifier-url https://api.basescan.org.io/api \
- -vvvv
+./deploy.sh
 ```
 
 ## Changes Since Last Release
@@ -148,15 +145,3 @@ For detailed documentation about Foundry's capabilities, visit the [Foundry Book
 - Review withdrawal rules and access controls before deployment
 
 fix emergency withdrawal
-
-### To Deploy and verify
-
-source .env
-forge script script/Deploy.s.sol:DeployCookie \
- --via-ir \
- --rpc-url $BASE_SEPOLIA_RPC_URL \
- --broadcast \
- --verify \ --verifier
---etherscan-api-key $SEPOLIA_ETHERSCAN_KEY \
- --verifier-url https://https://sepolia.basescan.org/api/ \
- -vvvv

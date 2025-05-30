@@ -540,7 +540,7 @@ export default function CookieJarConfigDetails() {
                 value="deposit"
                 className="data-[state=active]:bg-white data-[state=active]:text-[#ff5e14] data-[state=active]:shadow-sm text-[#4a3520] flex-1"
               >
-                Jar Donate
+                Jar Deposit
               </TabsTrigger>
 
               {isFeeCollector && (
@@ -557,9 +557,9 @@ export default function CookieJarConfigDetails() {
             <TabsContent value="deposit" className="mt-0">
               <Card className="border-none shadow-md">
                 <CardHeader className="bg-[#fff8f0] rounded-t-lg">
-                  <CardTitle className="text-xl text-[#3c2a14]">Jar Donate</CardTitle>
+                  <CardTitle className="text-xl text-[#3c2a14]">Jar Deposit</CardTitle>
                   <CardDescription className="text-[#8b7355]">
-                    Support this cookie jar with your donation
+                    All jar deposits are subject to a 1% fee
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
@@ -569,6 +569,17 @@ export default function CookieJarConfigDetails() {
                         <label htmlFor="fundAmount" className="block text-[#ff5e14] font-medium mb-2">
                           Amount to Deposit
                         </label>
+                        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-3 rounded">
+                          <div className="flex items-center">
+                            <svg className="h-5 w-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            <p className="text-sm text-yellow-700">
+                              Only deposits made through this interface are recognized.<br />
+                              Do not send funds directly to the smart contract.
+                            </p>
+                          </div>
+                        </div>
                         <Input
                           id="fundAmount"
                           type="text"
@@ -588,7 +599,7 @@ export default function CookieJarConfigDetails() {
                           className="w-full bg-[#ff5e14] hover:bg-[#e54d00] text-white h-10"
                           disabled={!amount || Number(amount) <= 0}
                         >
-                          Donate Now
+                          Deposit Now
                         </Button>
                       </div>
                     </div>

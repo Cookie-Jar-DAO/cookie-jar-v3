@@ -32,7 +32,7 @@ export default function RootLayout({
       </head>
       <body className={`${clashDisplay.variable} font-clash custom-scrollbar`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <RainbowKitProviderWrapper key="rainbow-kit-provider">
+          <RainbowKitProviderWrapper>
             <CollapsibleSidebar />
             <div className="ml-[80px]">
               <PageTransition>{children}</PageTransition>

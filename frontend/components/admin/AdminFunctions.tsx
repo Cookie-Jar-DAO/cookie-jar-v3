@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { parseEther } from "viem"
 import { keccak256, toUtf8Bytes } from "ethers"
+import { ETH_ADDRESS, parseTokenAmount, useTokenInfo } from "@/lib/utils/token-utils"
 import {
   // Commented out missing hooks
   // useWriteCookieJarTransferJarOwnership,
@@ -17,6 +18,7 @@ import {
   // useWriteCookieJarRevokeJarBlacklistRole,
   // useWriteCookieJarEmergencyWithdrawWithoutState,
   // useWriteCookieJarEmergencyWithdrawCurrencyWithState,
+  useWriteCookieJarEmergencyWithdraw,
   useWriteCookieJarAddNftGate,
   useWriteCookieJarRemoveNftGate,
 } from "../../generated"
@@ -44,6 +46,19 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
   const [newJarOwner, setNewJarOwner] = useState("")
   const [withdrawalAmount, setWithdrawalAmount] = useState("")
   const [tokenAddress, setTokenAddress] = useState("")
+  const [tokenToWithdraw, setTokenToWithdraw] = useState<`0x${string}`>(ETH_ADDRESS as `0x${string}`)
+
+  // Update emergency tokenToWithdraw when tokenAddress changes
+  useEffect(() => {
+    if (tokenAddress.length > 3) {
+      setTokenToWithdraw(tokenAddress as `0x${string}`)
+    } else {
+      setTokenToWithdraw(ETH_ADDRESS as `0x${string}`)
+    }
+  }, [tokenAddress])
+
+  // Get token info including decimals and symbol
+  const { symbol, decimals, isERC20 } = useTokenInfo(tokenToWithdraw)
   const [addressToUpdate, setAddressToUpdate] = useState("")
   const [nftAddress, setNftAddress] = useState("")
   const [nftTokenId, setNftTokenId] = useState("")
@@ -74,30 +89,13 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
   const isTransferSuccess = false;
   const isTransferPending = false;
 
-  // Emergency withdraw hooks - commented out due to missing hooks
-  /*
+    // Emergency withdraw hook
   const {
-    writeContract: emergencyWithdrawWithoutState,
-    data: emergencyWithdrawWithoutStateData,
-    error: emergencyWithdrawWithoutStateError,
+    writeContract: emergencyWithdraw,
+    data: emergencyWithdrawData,
+    error: emergencyWithdrawError,
     isSuccess: isEmergencyWithdrawSuccess,
-  } = useWriteCookieJarEmergencyWithdrawWithoutState()
-
-  const {
-    writeContract: emergencyWithdrawCurrencyWithState,
-    data: emergencyWithdrawWithStateData,
-    error: emergencyWithdrawWithStateError,
-  } = useWriteCookieJarEmergencyWithdrawCurrencyWithState()
-  */
-  // Mock values for commented out hooks
-  const emergencyWithdrawWithoutState = undefined;
-  const emergencyWithdrawWithoutStateData = undefined;
-  const emergencyWithdrawWithoutStateError = undefined;
-  const isEmergencyWithdrawSuccess = false;
-  
-  const emergencyWithdrawCurrencyWithState = undefined;
-  const emergencyWithdrawWithStateData = undefined;
-  const emergencyWithdrawWithStateError = undefined;
+  } = useWriteCookieJarEmergencyWithdraw()
 
   const {
     writeContract: grantJarWhitelistRole,
@@ -280,33 +278,31 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
     */
   }
 
-  // Emergency withdraw function - commented out due to missing hooks
+  // Emergency withdraw function
   const handleEmergencyWithdraw = () => {
-    // Function commented out due to missing hooks
-    toast({
-      title: "Feature Unavailable",
-      description: "Emergency withdraw is currently unavailable.",
-      variant: "destructive",
-    });
-    return;
+    if (!withdrawalAmount) return;
+    console.log("Emergency withdrawal amount:", withdrawalAmount);
     
-    /*
-    if (!withdrawalAmount) return
-    console.log("Emergency withdrawal amount:", withdrawalAmount)
-    if (tokenAddress.length > 3) {
-      emergencyWithdrawWithoutState({
+    try {
+      const parsedAmount = parseTokenAmount(withdrawalAmount, decimals);
+      
+      emergencyWithdraw({
         address: address,
-        args: [tokenAddress as `0x${string}`, BigInt(withdrawalAmount || "0")],
-      })
-    } else {
-      emergencyWithdrawCurrencyWithState({
-        address: address,
-        args: [
-          parseEther(withdrawalAmount), // amount as second argument
-        ],
-      })
+        args: [tokenToWithdraw, parsedAmount],
+      });
+      
+      toast({
+        title: "Emergency Withdraw Initiated",
+        description: `Attempting to withdraw ${withdrawalAmount} ${symbol || (tokenToWithdraw === ETH_ADDRESS ? 'ETH' : 'tokens')}.`,
+      });
+    } catch (error) {
+      console.error("Emergency withdrawal error:", error);
+      toast({
+        title: "Emergency Withdraw Failed",
+        description: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
     }
-    */
   }
 
   // Grant blacklist role function - commented out due to missing hook
@@ -536,7 +532,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
 
                   <div className="space-y-2">
                     <label htmlFor="tokenAddress" className="text-[#ff5e14] font-medium">
-                      Token Address (optional)
+                      Token Address
                     </label>
                     <Input
                       id="tokenAddress"
@@ -545,7 +541,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                       onChange={(e) => setTokenAddress(e.target.value)}
                       className="border-[#f0e6d8] bg-white text-[#3c2a14]"
                     />
-                    <p className="text-sm text-[#8b7355]">Only fill this in if withdrawing a specific token</p>
+                    <p className="text-sm text-[#8b7355]">Leave blank if withdrawing ETH/native currency.</p>
                   </div>
                 </div>
               </div>

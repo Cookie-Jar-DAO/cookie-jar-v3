@@ -34,6 +34,7 @@ library CookieJarLib {
     struct WithdrawalData {
         uint256 amount; // Amount of tokens to be withdrawn.
         string purpose; // Reason for the withdrawal.
+        address recipient; // Address of the user who withdrew
     }
 
     // --- Events ---

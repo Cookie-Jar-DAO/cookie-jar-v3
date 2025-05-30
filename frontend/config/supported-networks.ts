@@ -6,6 +6,7 @@ import {
   gnosis,
   sepolia,
   baseSepolia,
+  celo,
   optimismSepolia,
   celoAlfajores
 } from 'wagmi/chains'
@@ -15,17 +16,16 @@ import { Address } from 'viem'
 
 // For RainbowKit provider
 export const supportedChains: readonly [Chain, ...Chain[]] = [
-  // Testnets
-  sepolia,
-  // baseSepolia, 
+  base,
+  celo,
+  gnosis,
+  optimism,
+  baseSepolia, 
   optimismSepolia,
-  celoAlfajores,
+  // celoAlfajores,
   // Mainnets
   // mainnet,
-  // base,
-  optimism,
-  // arbitrum,
-  // gnosis
+
 ]
 
 interface ContractAddresses {
@@ -36,18 +36,15 @@ interface ContractAddresses {
 // Define the contract addresses for supported networks
 export const contractAddresses: ContractAddresses = {
   cookieJarFactory: {
-    [sepolia.id]: "0x8339F06023625F903dc7e8c258aCF3E02d14A3CC",
-    [baseSepolia.id]: "0x010CE87d0E7F8E818805a27C95E09cb4961C8c6f" ,
-    [optimismSepolia.id]: "0xca424e55D7Bf40442397a33790B18665FFb961c3",
-    [celoAlfajores.id]: "0x8339F06023625F903dc7e8c258aCF3E02d14A3CC",
-    [optimism.id]: "0x8339F06023625F903dc7e8c258aCF3E02d14A3CC"
+    [gnosis.id]: "0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9",
+    [base.id]:"0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9",
+    [optimism.id]: "0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9",
+    [celo.id]:"0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9",
+    [baseSepolia.id]: "0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9" ,
+    [optimismSepolia.id]: "0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9",
+    [mainnet.id]:"0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9"
   },
-  cookieJarRegistry: {
-    [sepolia.id]: "0xE9c62c210E6d56EbB0718f79DCE2883b8e38B356" ,
-    [baseSepolia.id]: "0xE9c62c210E6d56EbB0718f79DCE2883b8e38B356",
-    [optimismSepolia.id]: "0xE9c62c210E6d56EbB0718f79DCE2883b8e38B356",
-    [celoAlfajores.id]: "0x8FF4E393D983fb2EEdCfcFcB55a0aaB9250d0AE6",
-  }
+  cookieJarRegistry:{}
 }
 // Get environment variables
 const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || ""
@@ -69,6 +66,7 @@ export const wagmiConfig = getDefaultConfig({
     [mainnet.id]: http(`https://mainnet.infura.io/v3/${infuraId}`),
     [optimismSepolia.id]: http(`https://sepolia.optimism.io`),
     [celoAlfajores.id]: http(`https://alfajores-forno.celo-testnet.org`),
+    [celo.id]: http(`https://forno.celo.org`),
   },
 })
 

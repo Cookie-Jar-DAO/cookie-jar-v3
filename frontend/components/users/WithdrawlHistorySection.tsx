@@ -10,6 +10,7 @@ import { ETH_ADDRESS, useTokenInfo, formatTokenAmount } from "@/lib/utils/token-
 export interface Withdrawal {
   amount: bigint
   purpose: string
+  recipient: string
 }
 
 interface WithdrawalHistorySectionProps {
@@ -29,19 +30,25 @@ export const WithdrawalHistorySection: React.FC<WithdrawalHistorySectionProps> =
       <h1 className="text-lg font-semibold mb-2">Past Withdrawals from this Jar</h1>
       {pastWithdrawals.length > 0 ? (
         <ul className="space-y-4">
-          {pastWithdrawals.map((withdrawal, index) => (
+          {[...pastWithdrawals].reverse().map((withdrawal, index) => (
             <li key={index} className="border border-[#f0e6d8] p-4 rounded-lg bg-[#fff8f0]">
-              <div className="flex flex-col md:flex-row md:justify-between gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <p className="font-medium text-[#3c2a14]">
-                    <span className="text-[#8b7355]">Amount:</span>{" "}
+                    <span className="text-[#3c2a14]">Amount:</span>{" "}
                     <span className="text-[#ff5e14]">{formatTokenAmount(withdrawal.amount, tokenDecimals, tokenSymbol, 6)}</span>
                   </p>
                 </div>
-                <div className="flex-grow">
+                <div>
                   <p className="font-medium text-[#3c2a14]">
-                    <span className="text-[#8b7355]">Purpose:</span>{" "}
-                    <span className="text-[#3c2a14]">{withdrawal.purpose || "No purpose provided"}</span>
+                    <span className="text-[#3c2a14]">Purpose:</span>{" "}
+                    <span className="text-[#8b7355]">{withdrawal.purpose || "No purpose provided"}</span>
+                  </p>
+                </div>
+                <div>
+                  <p className="font-medium text-[#3c2a14]">
+                    <span className="text-[#3c2a14]">Recipient:</span>{" "}
+                    <span className="text-[#8b7355]">{withdrawal.recipient || "No withdrawal address provided"}</span>
                   </p>
                 </div>
               </div>

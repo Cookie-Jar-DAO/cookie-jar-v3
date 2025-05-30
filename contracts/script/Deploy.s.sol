@@ -25,13 +25,10 @@ contract Deploy is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
         vm.startBroadcast(deployerPrivateKey);
-
-        ERC20Mock testtoken = new ERC20Mock();
-        testtoken.mint(deployer, 100e18);
-        console.log("Test ERC", address(testtoken));
+        bytes32 devguildSalt = keccak256(abi.encodePacked("devguild"));
 
         // Deploy Factory with Registry address
-        CookieJarFactory factory = new CookieJarFactory(
+        CookieJarFactory factory = new CookieJarFactory{salt: devguildSalt}(
             config.defaultFeeCollector,
             0x487a30c88900098b765d76285c205c7c47582512,
             config.feePercentageOnDeposit,
@@ -41,7 +38,8 @@ contract Deploy is Script {
 
         console.log("CookieJarFactory deployed at: ", address(factory));
 
-        ERC721Mock erc721 = new ERC721Mock("TestNFT", "TNFT");
+        ERC721Mock erc721 = new ERC721Mock{salt: devguildSalt}("TestNFT", "TNFT");
+
         erc721.mint(deployer, 1);
         console.log("ERC721Mock deployed at:", address(erc721));
         console.log("Token ID 1 minted to:", deployer);

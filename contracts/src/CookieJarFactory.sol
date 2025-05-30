@@ -19,11 +19,11 @@ contract CookieJarFactory is AccessControl {
     address[] public cookieJars;
     string[] public metadatas;
 
-    address public defaultFeeCollector;
-    uint256 public defaultFeePercentage;
+    address public immutable defaultFeeCollector;
+    uint256 public immutable defaultFeePercentage;
 
-    uint256 public minETHDeposit;
-    uint256 public minERC20Deposit;
+    uint256 public immutable minETHDeposit;
+    uint256 public immutable minERC20Deposit;
 
     // --- Custom Error ---
     error CookieJarFactory__Blacklisted();
@@ -39,7 +39,7 @@ contract CookieJarFactory is AccessControl {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     modifier onlyNotBlacklisted(address _user) {
-        if (hasRole(BLACKLISTED_JAR_CREATORS, _user) == true) revert CookieJarFactory__Blacklisted();
+        if (hasRole(BLACKLISTED_JAR_CREATORS, _user)) revert CookieJarFactory__Blacklisted();
         _;
     }
 

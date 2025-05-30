@@ -109,7 +109,8 @@ export function CollapsibleSidebar() {
         <div className="mt-auto px-4 pt-4 space-y-2">
           {isConnected && (
             <>
-              <Link
+            {/* removed profile view for now since it didn't work properly <3MSG 5/19/25 */}
+              {/* <Link
                 href="/profile"
                 className={cn(
                   "flex items-center h-14 px-4 rounded-xl transition-all duration-200",
@@ -139,7 +140,7 @@ export function CollapsibleSidebar() {
                     Profile
                   </div>
                 </div>
-              </Link>
+              </Link> */}
 
               <button
                 onClick={() => disconnect()}

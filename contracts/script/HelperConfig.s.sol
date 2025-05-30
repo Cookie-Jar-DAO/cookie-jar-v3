@@ -3,10 +3,10 @@ pragma solidity ^0.8.19;
 
 contract HelperConfig {
     address DEFAULT_FEE_COLLECTOR = address(0xcFF556854A07A8Ff47F8b178abb617901682D4eb);
-    uint256 FEE_PERCENT_ON_DEPOSIT = 1;
-    /// @dev 1 percent fee on deposit.
-    uint256 MIN_ETH_DEPOSIT = 100;
-    uint256 MIN_ERC20_DEPOST = 100;
+    uint256 FEE_PERCENT_ON_DEPOSIT = 100;
+    /// @dev 1% fee on deposit. 100=1% 1000=10%
+    uint256 MIN_ETH_DEPOSIT = 0;
+    uint256 MIN_ERC20_DEPOST = 0;
 
     struct NetworkConfig {
         address defaultFeeCollector;

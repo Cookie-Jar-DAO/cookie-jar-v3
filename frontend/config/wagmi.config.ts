@@ -1,6 +1,6 @@
 import { defineConfig } from '@wagmi/cli'
 import { foundry, react } from '@wagmi/cli/plugins'
-import { erc20Abi } from 'abitype/abis'
+import { erc20Abi } from 'viem'
 import {
   sepolia,
   baseSepolia,

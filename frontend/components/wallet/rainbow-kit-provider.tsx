@@ -8,7 +8,7 @@ import { mainnet, base, optimism, arbitrum, gnosis, sepolia, baseSepolia } from 
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query"
 import { http } from "wagmi"
 import { useTheme } from "next-themes"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { wagmiConfig } from "@/config/supported-networks"
 
 // Define Base Sepolia chain if not already defined in wagmi/chains

@@ -15,11 +15,13 @@ const TERMS_MESSAGE = `Welcome to Cookie Jar V3!
 
 By signing this message, you agree to our Terms of Service and Privacy Policy:
 
-1. You are responsible for securing your wallet and private keys
-2. You understand the risks associated with blockchain transactions
+
+1. You acknowledge these smart contracts haven't been professionally audited
+2. You acknowledge you are using this app at your own risk. We aren't responsible for any losses you may experience. 
 3. You agree to use the platform in compliance with applicable laws
 4. You acknowledge that smart contracts may contain bugs or vulnerabilities
 5. You understand that transactions on the blockchain are irreversible
+6. You are responsible for securing your wallet and private keys
 
 Date: ${new Date().toISOString().split("T")[0]}
 `
