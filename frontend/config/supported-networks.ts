@@ -10,11 +10,11 @@ import {
   optimismSepolia,
   celoAlfajores
 } from 'wagmi/chains'
-import { Chain, getDefaultConfig } from '@rainbow-me/rainbowkit'
-import { http } from 'wagmi'
+import { createConfig, createStorage, cookieStorage, http } from 'wagmi'
 import { Address } from 'viem'
+import { Chain } from '@rainbow-me/rainbowkit'
 
-// For RainbowKit provider
+// For wagmi provider - use proper wagmi chain types
 export const supportedChains: readonly [Chain, ...Chain[]] = [
   base,
   celo,
@@ -22,9 +22,6 @@ export const supportedChains: readonly [Chain, ...Chain[]] = [
   optimism,
   baseSepolia, 
   optimismSepolia,
-  // celoAlfajores,
-  // Mainnets
-  // mainnet,
 
 ]
 
@@ -46,27 +43,30 @@ export const contractAddresses: ContractAddresses = {
   },
   cookieJarRegistry:{}
 }
+
 // Get environment variables
 const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || ""
 const infuraId = process.env.NEXT_PUBLIC_INFURA_ID || ""
 
-// Export the Wagmi config
-export const wagmiConfig = getDefaultConfig({
-  appName: "Cookie Jar V3",
-  projectId,
-  chains: supportedChains,
-  ssr: true,
-  transports: {
-    [base.id]: http(`https://base-mainnet.infura.io/v3/${infuraId}`),
-    [optimism.id]: http(`https://optimism-mainnet.infura.io/v3/${infuraId}`),
-    [arbitrum.id]: http(`https://arbitrum-mainnet.infura.io/v3/${infuraId}`),
-    [gnosis.id]: http(`https://gnosis-mainnet.infura.io/v3/${infuraId}`),
-    [baseSepolia.id]: http(`https://sepolia.base.org`),
-    [sepolia.id]: http(`https://sepolia.infura.io/v3/${infuraId}`),
-    [mainnet.id]: http(`https://mainnet.infura.io/v3/${infuraId}`),
-    [optimismSepolia.id]: http(`https://sepolia.optimism.io`),
-    [celoAlfajores.id]: http(`https://alfajores-forno.celo-testnet.org`),
-    [celo.id]: http(`https://forno.celo.org`),
-  },
-})
+// Export the Wagmi config with proper SSR support
+export function getWagmiConfig() {
+  return createConfig({
+    chains: supportedChains,
+    ssr: true, // Enable SSR support
+    storage: createStorage({ 
+      storage: cookieStorage, // Use cookie storage for SSR
+    }),
+    transports: {
+      [base.id]: http(`https://base-mainnet.infura.io/v3/${infuraId}`),
+      [optimism.id]: http(`https://optimism-mainnet.infura.io/v3/${infuraId}`),
+      [gnosis.id]: http(`https://gnosis-mainnet.infura.io/v3/${infuraId}`),
+      [baseSepolia.id]: http(`https://sepolia.base.org`),
+      [optimismSepolia.id]: http(`https://sepolia.optimism.io`),
+      [celo.id]: http(`https://forno.celo.org`),
+    },
+  })
+}
+
+// Keep the old export for backward compatibility during transition
+export const wagmiConfig = getWagmiConfig()
 
