@@ -80,7 +80,7 @@ function getConnectors() {
           },
         ],
         {
-          appName: 'Your App Name',
+          appName: 'Cookie Jar V3',
           projectId,
         }
       );
