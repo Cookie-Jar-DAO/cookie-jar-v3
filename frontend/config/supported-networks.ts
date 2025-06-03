@@ -10,9 +10,15 @@ import {
   optimismSepolia,
   celoAlfajores
 } from 'wagmi/chains'
-import { Chain, getDefaultConfig } from '@rainbow-me/rainbowkit'
-import { http } from 'wagmi'
+import { Chain } from '@rainbow-me/rainbowkit'
+import { createConfig, http } from 'wagmi'
 import { Address } from 'viem'
+import { 
+  injected, 
+  metaMask, 
+  coinbaseWallet, 
+  walletConnect 
+} from 'wagmi/connectors'
 
 // For RainbowKit provider
 export const supportedChains: readonly [Chain, ...Chain[]] = [
@@ -46,16 +52,35 @@ export const contractAddresses: ContractAddresses = {
   },
   cookieJarRegistry:{}
 }
+
 // Get environment variables
 const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || ""
 const infuraId = process.env.NEXT_PUBLIC_INFURA_ID || ""
 
-// Export the Wagmi config
-export const wagmiConfig = getDefaultConfig({
-  appName: "Cookie Jar V3",
-  projectId,
+// Export the Wagmi config using createConfig for proper SSR support
+export const wagmiConfig = createConfig({
   chains: supportedChains,
-  ssr: true,
+  ssr: true, // Critical for preventing hydration mismatches
+  connectors: [
+    injected({
+      shimDisconnect: true,
+    }),
+    metaMask(),
+    coinbaseWallet({ 
+      appName: 'Cookie Jar V3',
+      appLogoUrl: 'https://cookiejar.raidguild.org/logo.png'
+    }),
+    walletConnect({ 
+      projectId,
+      showQrModal: true,
+      metadata: {
+        name: 'Cookie Jar V3',
+        description: 'Cookie Jar V3 DApp',
+        url: 'https://cookiejar.raidguild.org',
+        icons: ['https://cookiejar.raidguild.org/logo.png']
+      }
+    }),
+  ],
   transports: {
     [base.id]: http(`https://base-mainnet.infura.io/v3/${infuraId}`),
     [optimism.id]: http(`https://optimism-mainnet.infura.io/v3/${infuraId}`),

@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { PageTransition } from "@/components/design/page-transition"
 import { CollapsibleSidebar } from "@/components/design/collapsible-sidebar"
 import { NetworkSwitcher } from "@/components/network/network-switcher"
+import { ConnectorDebug } from "@/components/debug/connector-debug"
 import localFont from "next/font/local"
 import "./countdown-animation.css"
 import "./loading-animation.css"
@@ -38,6 +39,7 @@ export default function RootLayout({
               <PageTransition>{children}</PageTransition>
             </div>
             <NetworkSwitcher />
+            <ConnectorDebug />
             <Toaster />
           </RainbowKitProviderWrapper>
         </ThemeProvider>
