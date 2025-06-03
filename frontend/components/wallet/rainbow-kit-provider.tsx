@@ -1,15 +1,16 @@
-"use client"
+"use client";
 
-import type { ReactNode } from "react"
-import "@rainbow-me/rainbowkit/styles.css"
-import { getDefaultConfig, RainbowKitProvider, darkTheme, lightTheme } from "@rainbow-me/rainbowkit"
-import { WagmiProvider } from "wagmi"
-import { mainnet, base, optimism, arbitrum, gnosis, sepolia, baseSepolia } from "wagmi/chains"
-import { QueryClientProvider, QueryClient } from "@tanstack/react-query"
-import { http } from "wagmi"
-import { useTheme } from "next-themes"
-import { useEffect, useState } from "react"
-import { wagmiConfig } from "@/config/supported-networks"
+import { wagmiConfig } from "@/config/supported-networks";
+import {
+  darkTheme,
+  lightTheme,
+  RainbowKitProvider,
+} from "@rainbow-me/rainbowkit";
+import "@rainbow-me/rainbowkit/styles.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useTheme } from "next-themes";
+import type { ReactNode } from "react";
+import { WagmiProvider } from "wagmi";
 
 // Define Base Sepolia chain if not already defined in wagmi/chains
 //commenting this out because I not certain if it's important or not
@@ -33,12 +34,16 @@ import { wagmiConfig } from "@/config/supported-networks"
 // }
 
 // Define our custom orange color
-const orangeColor = "#ff5e14"
+const orangeColor = "#ff5e14";
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient();
 
-export function RainbowKitProviderWrapper({ children }: { children: ReactNode }) {
-  const { theme } = useTheme()
+export function RainbowKitProviderWrapper({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const { theme } = useTheme();
 
   // Create custom themes with our orange color
   const customLightTheme = lightTheme({
@@ -47,7 +52,7 @@ export function RainbowKitProviderWrapper({ children }: { children: ReactNode })
     borderRadius: "medium",
     fontStack: "system",
     overlayBlur: "small",
-  })
+  });
 
   const customDarkTheme = darkTheme({
     accentColor: orangeColor,
@@ -55,7 +60,7 @@ export function RainbowKitProviderWrapper({ children }: { children: ReactNode })
     borderRadius: "medium",
     fontStack: "system",
     overlayBlur: "small",
-  })
+  });
 
   // Override the connected button colors
   const themeWithCustomColors = {
@@ -68,22 +73,7 @@ export function RainbowKitProviderWrapper({ children }: { children: ReactNode })
       connectButtonText: "white",
       connectButtonTextError: "white",
     },
-  }
-
-  // Increase max listeners to prevent warnings
-  useEffect(() => {
-    // This helps prevent the MaxListenersExceededWarning
-    if (typeof window !== "undefined" && window.process && window.process.env) {
-      window.process.setMaxListeners(20)
-    }
-
-    return () => {
-      // Clean up any event listeners when component unmounts
-      if (typeof window !== "undefined" && window.process && window.process.env) {
-        window.process.setMaxListeners(10) // Reset to default
-      }
-    }
-  }, [])
+  };
 
   return (
     <WagmiProvider config={wagmiConfig}>
@@ -93,5 +83,5 @@ export function RainbowKitProviderWrapper({ children }: { children: ReactNode })
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
-  )
+  );
 }

@@ -11,7 +11,7 @@ import {
   celoAlfajores
 } from 'wagmi/chains'
 import { Chain, getDefaultConfig } from '@rainbow-me/rainbowkit'
-import { http } from 'wagmi'
+import { createConfig, http } from 'wagmi'
 import { Address } from 'viem'
 
 // For RainbowKit provider
@@ -51,9 +51,7 @@ const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || ""
 const infuraId = process.env.NEXT_PUBLIC_INFURA_ID || ""
 
 // Export the Wagmi config
-export const wagmiConfig = getDefaultConfig({
-  appName: "Cookie Jar V3",
-  projectId,
+export const wagmiConfig = createConfig({
   chains: supportedChains,
   ssr: true,
   transports: {
