@@ -13,6 +13,7 @@ import {
 import { Chain, getDefaultConfig } from '@rainbow-me/rainbowkit'
 import { createConfig, http } from 'wagmi'
 import { Address } from 'viem'
+import { walletConnect, injected, coinbaseWallet } from 'wagmi/connectors'
 
 // For RainbowKit provider
 export const supportedChains: readonly [Chain, ...Chain[]] = [
@@ -46,6 +47,7 @@ export const contractAddresses: ContractAddresses = {
   },
   cookieJarRegistry:{}
 }
+
 // Get environment variables
 const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || ""
 const infuraId = process.env.NEXT_PUBLIC_INFURA_ID || ""
@@ -54,6 +56,21 @@ const infuraId = process.env.NEXT_PUBLIC_INFURA_ID || ""
 export const wagmiConfig = createConfig({
   chains: supportedChains,
   ssr: true,
+  connectors: [
+    // WalletConnect - for mobile wallets and web wallets
+    walletConnect({ projectId }),
+    
+    // Injected wallets (MetaMask, Brave, etc.)
+    injected({
+      shimDisconnect: true,
+    }),
+    
+    // Coinbase Wallet
+    coinbaseWallet({
+      appName: "Cookie Jar V3",
+      appLogoUrl: "https://your-app-logo.com/logo.png", // Optional: replace with your logo
+    }),
+  ],
   transports: {
     [base.id]: http(`https://base-mainnet.infura.io/v3/${infuraId}`),
     [optimism.id]: http(`https://optimism-mainnet.infura.io/v3/${infuraId}`),

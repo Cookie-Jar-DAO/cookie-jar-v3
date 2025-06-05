@@ -13,8 +13,9 @@ import {
 import { useToast } from "@/hooks/design/use-toast";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Loader2 } from "lucide-react";
-import { memo, useState } from "react";
+import { memo, useState, useEffect } from "react";
 import { useAccount, useChainId, useDisconnect, useSignMessage } from "wagmi";
+import { CustomConnectModal } from "./custom-connect-modal";
 
 // Terms and conditions message that users will sign
 const TERMS_MESSAGE = `Welcome to Cookie Jar V3!
@@ -37,19 +38,11 @@ export function CustomConnectButton({ className }: { className?: string }) {
   const chainId = useChainId();
   const { signMessageAsync } = useSignMessage();
   const { disconnect } = useDisconnect();
+  const [showConnectModal, setShowConnectModal] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [isSigningTerms, setIsSigningTerms] = useState(false);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const { toast } = useToast();
-
-  // Add this useEffect to log wallet connection status
-  // useEffect(() => {
-  //   console.log("Wallet connection status changed:", {
-  //     isConnected,
-  //     address,
-  //     ethereum: typeof window !== "undefined" ? !!window.ethereum : false,
-  //   })
-  // }, [isConnected, address])
 
   // Check if user has already accepted terms (could be stored in localStorage)
   const checkTermsAccepted = () => {
@@ -63,6 +56,13 @@ export function CustomConnectButton({ className }: { className?: string }) {
       localStorage.setItem(`terms-accepted-${address}`, "true");
     }
   };
+
+  // Check terms when user connects
+  useEffect(() => {
+    if (isConnected && address && !hasAcceptedTerms && !checkTermsAccepted()) {
+      setTimeout(() => setShowTerms(true), 500);
+    }
+  }, [isConnected, address, hasAcceptedTerms]);
 
   // Handle terms acceptance
   const handleAcceptTerms = async () => {
@@ -105,13 +105,13 @@ Nonce: ${nonce}`;
 
   return (
     <>
+      {/* Only use RainbowKit for account/chain management when connected */}
       <ConnectButton.Custom>
         {({
           account,
           chain,
           openAccountModal,
           openChainModal,
-          openConnectModal,
           authenticationStatus,
           mounted,
         }) => {
@@ -121,11 +121,6 @@ Nonce: ${nonce}`;
             account &&
             chain &&
             (!authenticationStatus || authenticationStatus === "authenticated");
-
-          // If connected but hasn't accepted terms, show terms dialog
-          if (connected && !hasAcceptedTerms && !checkTermsAccepted()) {
-            setTimeout(() => setShowTerms(true), 500);
-          }
 
           return (
             <div
@@ -143,7 +138,7 @@ Nonce: ${nonce}`;
                 if (!connected) {
                   return (
                     <Button
-                      onClick={openConnectModal}
+                      onClick={() => setShowConnectModal(true)}
                       className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
                     >
                       Connect Wallet
@@ -196,6 +191,12 @@ Nonce: ${nonce}`;
           );
         }}
       </ConnectButton.Custom>
+
+      {/* Custom Connect Modal */}
+      <CustomConnectModal 
+        isOpen={showConnectModal}
+        onClose={() => setShowConnectModal(false)}
+      />
 
       {/* Terms and Conditions Dialog */}
       <Dialog open={showTerms} onOpenChange={setShowTerms}>
