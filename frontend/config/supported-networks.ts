@@ -56,20 +56,13 @@ const infuraId = process.env.NEXT_PUBLIC_INFURA_ID || ""
 export const wagmiConfig = createConfig({
   chains: supportedChains,
   ssr: true,
+  multiInjectedProviderDiscovery: true,
   connectors: [
-    // WalletConnect - for mobile wallets and web wallets
-    walletConnect({ projectId }),
-    
-    // Injected wallets (MetaMask, Brave, etc.)
     injected({
       shimDisconnect: true,
     }),
+    walletConnect({ projectId }),
     
-    // Coinbase Wallet
-    coinbaseWallet({
-      appName: "Cookie Jar V3",
-      appLogoUrl: "https://your-app-logo.com/logo.png", // Optional: replace with your logo
-    }),
   ],
   transports: {
     [base.id]: http(`https://base-mainnet.infura.io/v3/${infuraId}`),
@@ -85,3 +78,10 @@ export const wagmiConfig = createConfig({
   },
 })
 
+
+// Register the config type globally for TypeScript inference
+declare module 'wagmi' {
+  interface Register {
+    config: typeof wagmiConfig
+  }
+}

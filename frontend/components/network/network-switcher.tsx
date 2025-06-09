@@ -1,16 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useAccount, useChainId, useConfig } from "wagmi"
+import { useAccount, useChainId } from "wagmi"
 import { Button } from "@/components/ui/button"
 import { useChainModal } from "@rainbow-me/rainbowkit"
 import { supportedChains } from "@/config/supported-networks"
 
 export function NetworkSwitcher() {
-  const { isConnected } = useAccount()
+  const { isConnected, chain } = useAccount()
   const chainId = useChainId()
   const [mounted, setMounted] = useState(false)
-  const config = useConfig()
   const { openChainModal } = useChainModal()
 
   // Prevent hydration mismatch
@@ -18,84 +17,14 @@ export function NetworkSwitcher() {
     setMounted(true)
   }, [])
 
-  // Add an effect to watch for chain changes
-  useEffect(() => {
-    // Set up a watcher for chain changes
-    const unwatch = config.subscribe(
-      (state) => state.chainId,
-      (newChainId: number) => {
-        console.log("Chain changed to:", newChainId)
-      },
-    )
-
-    // Clean up the watcher when component unmounts
-    return () => {
-      unwatch()
-    }
-  }, [config])
-
-  // Get the actual connected chain from the browser's ethereum provider
-  const [actualChainId, setActualChainId] = useState<number | null>(null)
-
-  // Effect to get the actual chain ID from the browser's ethereum provider
-  useEffect(() => {
-    const getActualChainId = async () => {
-      if (typeof window !== 'undefined' && window.ethereum) {
-        try {
-          // Get the actual chainId from the ethereum provider
-          const id = await window.ethereum.request({ method: 'eth_chainId' }) as string
-          const parsedId = parseInt(id, 16)
-          setActualChainId(parsedId)
-          console.log('Actual chainId from provider:', parsedId)
-        } catch (error) {
-          console.error('Error getting chainId from provider:', error)
-        }
-      }
-    }
-    
-    getActualChainId()
-    
-    // Set up listener for chain changes
-    if (typeof window !== 'undefined' && window.ethereum) {
-      window.ethereum.on('chainChanged', (chainId: string) => {
-        const parsedId = parseInt(chainId, 16)
-        setActualChainId(parsedId)
-        console.log('Chain changed to:', parsedId)
-      })
-    }
-    
-    return () => {
-      // Clean up listeners
-      if (typeof window !== 'undefined' && window.ethereum) {
-        window.ethereum.removeListener('chainChanged', () => {})
-      }
-    }
-  }, [])
-  
-  // Check if wagmi's chainId is showing Sepolia (11155111) but the actual chainId is different
-  // This would indicate a fallback mechanism is active
-  const isFallbackActive = chainId === 11155111 as unknown as number && actualChainId !== null && actualChainId !== 11155111
-  
-  // Check if the actual chain is supported
-  const isActualChainSupported = actualChainId ? supportedChains.some(chain => chain.id === actualChainId) : false
-
-  // Debug logs
-  console.log('Wagmi chainId:', chainId)
-  console.log('Actual chainId:', actualChainId)
-  console.log('Is fallback active:', isFallbackActive)
-  console.log('Is actual chain supported:', isActualChainSupported)
-  console.log('Supported chains:', supportedChains.map(chain => ({ id: chain.id, name: chain.name })))
-
   if (!mounted) return null
 
-  // Show network switcher when:
-  // 1. User is connected AND
-  // 2. Either the fallback is active OR the actual chain is not supported
-  if (!isConnected || (!isFallbackActive && isActualChainSupported)) {
+  const isChainSupported = chain ? supportedChains.some(supportedChain => supportedChain.id === chain.id) : false
+  
+  // Show network switcher when user is connected AND on an unsupported network
+  if (!isConnected || isChainSupported) {
     return null
   }
-  
-  // At this point we know the user is connected and on an unsupported network
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
