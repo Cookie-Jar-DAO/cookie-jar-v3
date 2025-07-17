@@ -2,7 +2,7 @@ import {
   mainnet,
   base,
   optimism,
-  arbitrum, 
+  arbitrum,
   gnosis,
   sepolia,
   baseSepolia,
@@ -11,7 +11,7 @@ import {
   celoAlfajores
 } from 'wagmi/chains'
 import { Chain, getDefaultConfig } from '@rainbow-me/rainbowkit'
-import { createConfig, http } from 'wagmi'
+import { createConfig, http, fallback } from 'wagmi'
 import { Address } from 'viem'
 import { walletConnect, injected, coinbaseWallet } from 'wagmi/connectors'
 
@@ -21,7 +21,7 @@ export const supportedChains: readonly [Chain, ...Chain[]] = [
   celo,
   gnosis,
   optimism,
-  baseSepolia, 
+  baseSepolia,
   optimismSepolia,
   // celoAlfajores,
   // Mainnets
@@ -30,27 +30,41 @@ export const supportedChains: readonly [Chain, ...Chain[]] = [
 ]
 
 interface ContractAddresses {
-  cookieJarFactory:Record<number, Address>
-  cookieJarRegistry:Record<number, Address>
+  cookieJarFactory: Record<number, Address>
+  cookieJarRegistry: Record<number, Address>
 }
 
 // Define the contract addresses for supported networks
 export const contractAddresses: ContractAddresses = {
   cookieJarFactory: {
     [gnosis.id]: "0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9",
-    [base.id]:"0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9",
+    [base.id]: "0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9",
     [optimism.id]: "0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9",
-    [celo.id]:"0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9",
-    [baseSepolia.id]: "0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9" ,
+    [celo.id]: "0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9",
+    [baseSepolia.id]: "0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9",
     [optimismSepolia.id]: "0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9",
-    [mainnet.id]:"0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9"
+    [mainnet.id]: "0x86dBf7076202FDf89792038B97e41aC8A4A8Bef9"
   },
-  cookieJarRegistry:{}
+  cookieJarRegistry: {}
 }
 
 // Get environment variables
 const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || ""
-const infuraId = process.env.NEXT_PUBLIC_INFURA_ID || ""
+const alchemyId = process.env.NEXT_PUBLIC_ALCHEMY_ID || ""
+
+// Helper function to create fallback transports with automatic failover
+const createFallbackTransport = (primaryUrls: string[], fallbackUrls: string[]) => {
+  const transports: ReturnType<typeof http>[] = []
+  // Add all primary transports
+  primaryUrls.forEach(url => transports.push(http(url)))
+  // Add all fallback transports
+  fallbackUrls.forEach(url => transports.push(http(url)))
+  // If no transports were added, throw error (should not happen)
+  if (transports.length === 0) {
+    throw new Error('No RPC URLs provided for transport')
+  }
+  return fallback(transports)
+}
 
 // Export the Wagmi config
 export const wagmiConfig = createConfig({
@@ -62,19 +76,117 @@ export const wagmiConfig = createConfig({
       shimDisconnect: true,
     }),
     walletConnect({ projectId }),
-    
   ],
   transports: {
-    [base.id]: http(`https://base-mainnet.infura.io/v3/${infuraId}`),
-    [optimism.id]: http(`https://optimism-mainnet.infura.io/v3/${infuraId}`),
-    [arbitrum.id]: http(`https://arbitrum-mainnet.infura.io/v3/${infuraId}`),
-    [gnosis.id]: http(`https://gnosis-mainnet.infura.io/v3/${infuraId}`),
-    [baseSepolia.id]: http(`https://sepolia.base.org`),
-    [sepolia.id]: http(`https://sepolia.infura.io/v3/${infuraId}`),
-    [mainnet.id]: http(`https://mainnet.infura.io/v3/${infuraId}`),
-    [optimismSepolia.id]: http(`https://sepolia.optimism.io`),
-    [celoAlfajores.id]: http(`https://alfajores-forno.celo-testnet.org`),
-    [celo.id]: http(`https://forno.celo.org`),
+    // Base Mainnet - POKT not available, use Alchemy as secondary
+    [base.id]: createFallbackTransport(
+      [
+        `https://base-mainnet.g.alchemy.com/v2/${alchemyId}`
+      ],
+      [
+        'https://mainnet.base.org',
+        'https://base.blockpi.network/v1/rpc/public',
+        'https://1rpc.io/base'
+      ]
+    ),
+    // Optimism Mainnet
+    [optimism.id]: createFallbackTransport(
+      [
+        'https://op-pokt.nodies.app',
+        `https://opt-mainnet.g.alchemy.com/v2/${alchemyId}`
+      ],
+      [
+        'https://mainnet.optimism.io',
+        'https://optimism.blockpi.network/v1/rpc/public',
+        'https://1rpc.io/op'
+      ]
+    ),
+    // Arbitrum Mainnet
+    [arbitrum.id]: createFallbackTransport(
+      [
+        'https://arb-pokt.nodies.app',
+        `https://arb-mainnet.g.alchemy.com/v2/${alchemyId}`
+      ],
+      [
+        'https://arb1.arbitrum.io/rpc',
+        'https://arbitrum.blockpi.network/v1/rpc/public',
+        'https://1rpc.io/arb'
+      ]
+    ),
+    // Gnosis Chain
+    [gnosis.id]: createFallbackTransport(
+      [
+        'https://gnosis-pokt.nodies.app'
+      ],
+      [
+        'https://rpc.gnosischain.com',
+        'https://gnosis.blockpi.network/v1/rpc/public',
+        'https://1rpc.io/gnosis'
+      ]
+    ),
+    // Base Sepolia Testnet - POKT not available, keep as is
+    [baseSepolia.id]: createFallbackTransport(
+      [
+        'https://sepolia.base.org'
+      ],
+      [
+        'https://base-sepolia.blockpi.network/v1/rpc/public',
+        'https://1rpc.io/base-sepolia'
+      ]
+    ),
+    // Sepolia Testnet - POKT not available, use Alchemy as secondary
+    [sepolia.id]: createFallbackTransport(
+      [
+        `https://eth-sepolia.g.alchemy.com/v2/${alchemyId}`
+      ],
+      [
+        'https://rpc.sepolia.org',
+        'https://sepolia.blockpi.network/v1/rpc/public',
+        'https://1rpc.io/eth-sepolia'
+      ]
+    ),
+    // Mainnet (Ethereum)
+    [mainnet.id]: createFallbackTransport(
+      [
+        'https://eth-pokt.nodies.app',
+        `https://eth-mainnet.g.alchemy.com/v2/${alchemyId}`
+      ],
+      [
+        'https://eth.llamarpc.com',
+        'https://rpc.ankr.com/eth',
+        'https://ethereum.blockpi.network/v1/rpc/public'
+      ]
+    ),
+    // Optimism Sepolia Testnet
+    [optimismSepolia.id]: createFallbackTransport(
+      [
+        'https://op-sepolia-pokt.nodies.app',
+        'https://opt-sepolia.g.alchemy.com/v2/${alchemyId}'
+      ],
+      [
+        'https://optimism-sepolia.blockpi.network/v1/rpc/public',
+        'https://1rpc.io/op-sepolia'
+      ]
+    ),
+    // Celo Alfajores Testnet - POKT not available, keep as is
+    [celoAlfajores.id]: createFallbackTransport(
+      [
+        'https://alfajores-forno.celo-testnet.org'
+      ],
+      [
+        'https://celo-alfajores.blockpi.network/v1/rpc/public'
+      ]
+    ),
+    // Celo Mainnet - POKT not available, keep as is
+    [celo.id]: createFallbackTransport(
+      [
+        'https://forno.celo.org'
+      ],
+      [
+        'https://celo.blockpi.network/v1/rpc/public',
+        'https://1rpc.io/celo'
+      ]
+    ),
   },
 })
 

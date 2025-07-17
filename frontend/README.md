@@ -186,7 +186,7 @@ Create a `.env.local` file with the following variables:
 
 ```plaintext
 NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_wallet_connect_project_id
-NEXT_PUBLIC_INFURA_ID=your_infura_id
+NEXT_PUBLIC_ALCHEMY_ID=your_alchemy_api_key
 ```
 
 4. Run the development server:
