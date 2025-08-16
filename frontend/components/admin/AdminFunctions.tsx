@@ -26,7 +26,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AlertCircle, Shield, UserPlus, UserMinus, AlertTriangle, Tag, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/design/use-toast"
-import { useAccount } from "wagmi"
+import { useAccount, useChainId } from "wagmi"
+import { getNativeCurrency } from '@/config/supported-networks'
 import WhitelistManagement from "./WhiteListManagement"
 
 enum NFTType {
@@ -43,6 +44,8 @@ interface AdminFunctionsProps {
 const JAR_OWNER_ROLE = keccak256(toUtf8Bytes("JAR_OWNER")) as `0x${string}`
 
 export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
+  const chainId = useChainId();
+  const nativeCurrency = getNativeCurrency(chainId);
   const [newJarOwner, setNewJarOwner] = useState("")
   const [withdrawalAmount, setWithdrawalAmount] = useState("")
   const [tokenAddress, setTokenAddress] = useState("")
@@ -89,7 +92,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
   const isTransferSuccess = false;
   const isTransferPending = false;
 
-    // Emergency withdraw hook
+  // Emergency withdraw hook
   const {
     writeContract: emergencyWithdraw,
     data: emergencyWithdrawData,
@@ -132,7 +135,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
   const blacklistGrantData = undefined;
   const blacklistGrantError = undefined;
   const isBlacklistGrantSuccess = false;
-  
+
   const revokeJarBlacklistRole = undefined;
   const blacklistRevokeData = undefined;
   const blacklistRevokeError = undefined;
@@ -282,15 +285,15 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
   const handleEmergencyWithdraw = () => {
     if (!withdrawalAmount) return;
     console.log("Emergency withdrawal amount:", withdrawalAmount);
-    
+
     try {
       const parsedAmount = parseTokenAmount(withdrawalAmount, decimals);
-      
+
       emergencyWithdraw({
         address: address,
         args: [tokenToWithdraw, parsedAmount],
       });
-      
+
       toast({
         title: "Emergency Withdraw Initiated",
         description: `Attempting to withdraw ${withdrawalAmount} ${symbol || (tokenToWithdraw === ETH_ADDRESS ? 'ETH' : 'tokens')}.`,
@@ -314,7 +317,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
       variant: "destructive",
     });
     return;
-    
+
     /*
     if (!addressToUpdate) return
     console.log(`"Adding addresses to blacklist:`, addressToUpdate)
@@ -334,7 +337,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
       variant: "destructive",
     });
     return;
-    
+
     /*
     if (!addressToUpdate) return
     console.log(`Removing address from blacklist:`, addressToUpdate)
@@ -388,7 +391,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
     <div className="space-y-6 bg-[#2b1d0e] p-4 rounded-lg">
       <Tabs defaultValue="access" className="w-full">
         <TabsList className="mb-6 bg-[#fff8f0] p-1">
-        
+
           <TabsTrigger
             value="access"
             className="data-[state=active]:bg-white data-[state=active]:text-[#ff5e14] data-[state=active]:shadow-sm text-[#4a3520]"
@@ -419,7 +422,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
             NFT Gates
           </TabsTrigger> */}
         </TabsList>
-          {/* no longer possible w/ updated scs. <3MSG may15-25 */}
+        {/* no longer possible w/ updated scs. <3MSG may15-25 */}
         {/* <TabsContent value="ownership" className="mt-0">
           <Card className="border-none shadow-sm">
             <CardHeader className="bg-[#fff8f0] rounded-t-lg">
@@ -478,21 +481,21 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
         </TabsContent> */}
 
         <TabsContent value="access" className="mt-0">
-  <Card className="border-none shadow-sm">
-    <CardHeader className="bg-[#fff8f0] rounded-t-lg">
-      <CardTitle className="text-xl text-[#3c2a14] flex items-center">
-        <UserPlus className="h-5 w-5 mr-2 text-[#ff5e14]" />
-        Whitelist Management
-      </CardTitle>
-      <CardDescription className="text-[#8b7355]">
-        Control who can access and withdraw from this jar
-      </CardDescription>
-    </CardHeader>
-    <CardContent className="p-6">
-      <WhitelistManagement cookieJarAddress={address as `0x${string}`} />
-    </CardContent>
-  </Card>
-</TabsContent>
+          <Card className="border-none shadow-sm">
+            <CardHeader className="bg-[#fff8f0] rounded-t-lg">
+              <CardTitle className="text-xl text-[#3c2a14] flex items-center">
+                <UserPlus className="h-5 w-5 mr-2 text-[#ff5e14]" />
+                Whitelist Management
+              </CardTitle>
+              <CardDescription className="text-[#8b7355]">
+                Control who can access and withdraw from this jar
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <WhitelistManagement cookieJarAddress={address as `0x${string}`} />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="emergency" className="mt-0">
           <Card className="border-none shadow-sm">
@@ -541,7 +544,7 @@ export const AdminFunctions: React.FC<AdminFunctionsProps> = ({ address }) => {
                       onChange={(e) => setTokenAddress(e.target.value)}
                       className="border-[#f0e6d8] bg-white text-[#3c2a14]"
                     />
-                    <p className="text-sm text-[#8b7355]">Leave blank if withdrawing ETH/native currency.</p>
+                    <p className="text-sm text-[#8b7355]">Leave blank if withdrawing {nativeCurrency.symbol}/native currency.</p>
                   </div>
                 </div>
               </div>

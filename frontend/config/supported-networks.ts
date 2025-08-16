@@ -34,6 +34,87 @@ interface ContractAddresses {
   cookieJarRegistry: Record<number, Address>
 }
 
+// Chain-specific native currency configuration
+export interface NativeCurrency {
+  symbol: string
+  name: string
+  decimals: number
+  address: Address // Special address to represent native currency
+}
+
+export const nativeCurrencies: Record<number, NativeCurrency> = {
+  [mainnet.id]: {
+    symbol: "ETH",
+    name: "Ethereum",
+    decimals: 18,
+    address: "0x0000000000000000000000000000000000000003"
+  },
+  [base.id]: {
+    symbol: "ETH",
+    name: "Ethereum",
+    decimals: 18,
+    address: "0x0000000000000000000000000000000000000003"
+  },
+  [optimism.id]: {
+    symbol: "ETH",
+    name: "Ethereum",
+    decimals: 18,
+    address: "0x0000000000000000000000000000000000000003"
+  },
+  [arbitrum.id]: {
+    symbol: "ETH",
+    name: "Ethereum",
+    decimals: 18,
+    address: "0x0000000000000000000000000000000000000003"
+  },
+  [gnosis.id]: {
+    symbol: "XDAI",
+    name: "xDai",
+    decimals: 18,
+    address: "0x0000000000000000000000000000000000000003"
+  },
+  [celo.id]: {
+    symbol: "CELO",
+    name: "Celo",
+    decimals: 18,
+    address: "0x0000000000000000000000000000000000000003"
+  },
+  [sepolia.id]: {
+    symbol: "ETH",
+    name: "Ethereum",
+    decimals: 18,
+    address: "0x0000000000000000000000000000000000000003"
+  },
+  [baseSepolia.id]: {
+    symbol: "ETH",
+    name: "Ethereum",
+    decimals: 18,
+    address: "0x0000000000000000000000000000000000000003"
+  },
+  [optimismSepolia.id]: {
+    symbol: "ETH",
+    name: "Ethereum",
+    decimals: 18,
+    address: "0x0000000000000000000000000000000000000003"
+  },
+  [celoAlfajores.id]: {
+    symbol: "CELO",
+    name: "Celo",
+    decimals: 18,
+    address: "0x0000000000000000000000000000000000000003"
+  }
+}
+
+// Helper function to get native currency for a chain
+export function getNativeCurrency(chainId: number): NativeCurrency {
+  return nativeCurrencies[chainId] || {
+    symbol: "ETH",
+    name: "Ethereum",
+    decimals: 18,
+    address: "0x0000000000000000000000000000000000000003"
+  }
+}
+
 // Define the contract addresses for supported networks
 export const contractAddresses: ContractAddresses = {
   cookieJarFactory: {

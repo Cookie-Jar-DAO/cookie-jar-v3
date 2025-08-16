@@ -32,6 +32,7 @@ import { WithdrawalHistorySection, type Withdrawal } from "@/components/users/Wi
 
 // Import token utilities
 import { ETH_ADDRESS, useTokenInfo, parseTokenAmount, formatTokenAmount } from "@/lib/utils/token-utils"
+import { getNativeCurrency } from '@/config/supported-networks'
 
 // Hash the JAR_OWNER role
 const JAR_OWNER_ROLE = keccak256(toUtf8Bytes("JAR_OWNER")) as `0x${string}`
@@ -51,6 +52,7 @@ export default function CookieJarConfigDetails() {
   const [gateAddress, setGateAddress] = useState<string>("")
   const [tokenId, setTokenId] = useState<string>("")
   const chainId = useChainId()
+  const nativeCurrency = getNativeCurrency(chainId)
 
   const addressString = address as `0x${string}`
   const isValidAddress = typeof address === "string" && address.startsWith("0x")
@@ -64,7 +66,7 @@ export default function CookieJarConfigDetails() {
     address: isValidAddress ? (address as `0x${string}`) : undefined,
     args: userAddress ? [JAR_OWNER_ROLE, userAddress as `0x${string}`] : undefined,
   })
-  
+
   const isAdmin = hasJarOwnerRole === true
   const showUserFunctions = config?.whitelist === true && config?.accessType === "Whitelist"
   const showNFTGatedFunctions = config?.accessType === "NFTGated"
@@ -307,8 +309,8 @@ export default function CookieJarConfigDetails() {
   // Format balance for display using the token decimals
   const formattedBalance = () => {
     if (!config.balance) return "0"
-    
-    return formatTokenAmount(config.balance, tokenDecimals, tokenSymbol || "ETH")
+
+    return formatTokenAmount(config.balance, tokenDecimals, tokenSymbol || nativeCurrency.symbol)
   }
 
   return (
@@ -383,12 +385,12 @@ export default function CookieJarConfigDetails() {
                         <span className="text-[#1a1a1a] font-medium">
                           {config.withdrawalInterval
                             ? (() => {
-                                // Import these at the top of the file (around line 15-20)
-                                const { formatTimeComponents, formatTimeString } = require("@/lib/utils/time-utils")
-                                const seconds = Number(config.withdrawalInterval)
-                                const { days, hours, minutes, seconds: secs } = formatTimeComponents(seconds)
-                                return formatTimeString(days, hours, minutes, secs)
-                              })()
+                              // Import these at the top of the file (around line 15-20)
+                              const { formatTimeComponents, formatTimeString } = require("@/lib/utils/time-utils")
+                              const seconds = Number(config.withdrawalInterval)
+                              const { days, hours, minutes, seconds: secs } = formatTimeComponents(seconds)
+                              return formatTimeString(days, hours, minutes, secs)
+                            })()
                             : "N/A"}
                         </span>
                       </div>
@@ -397,15 +399,24 @@ export default function CookieJarConfigDetails() {
                     <Separator />
 
                     <div className="flex justify-between items-center py-2">
-                      <span className="text-[#4a3520] font-medium">Max Withdrawal</span>
+                      <span className="text-[#4a3520] font-medium">
+                        {config.withdrawalOption === "Fixed" ? "Fixed Amount" : "Max Withdrawal"}
+                      </span>
                       <div className="flex items-center">
                         <ArrowUpToLine className="h-4 w-4 text-[#ff5e14] mr-2" />
                         <span className="text-[#1a1a1a] font-medium">
-                          {config.maxWithdrawal
-                            ? config.currency === "0x0000000000000000000000000000000000000003"
-                              ? Number(formatUnits(config.maxWithdrawal, 18)).toFixed(4) + " ETH"
-                              : Number(formatUnits(config.maxWithdrawal, tokenDecimals)).toFixed(4) + " " + tokenSymbol
-                            : "N/A"}
+                          {config.withdrawalOption === "Fixed"
+                            ? (config.fixedAmount
+                              ? config.currency === "0x0000000000000000000000000000000000000003"
+                                ? Number(formatUnits(config.fixedAmount, 18)).toFixed(4) + " " + nativeCurrency.symbol
+                                : Number(formatUnits(config.fixedAmount, tokenDecimals)).toFixed(4) + " " + tokenSymbol
+                              : "N/A")
+                            : (config.maxWithdrawal
+                              ? config.currency === "0x0000000000000000000000000000000000000003"
+                                ? Number(formatUnits(config.maxWithdrawal, 18)).toFixed(4) + " " + nativeCurrency.symbol
+                                : Number(formatUnits(config.maxWithdrawal, tokenDecimals)).toFixed(4) + " " + tokenSymbol
+                              : "N/A")
+                          }
                         </span>
                       </div>
                     </div>
@@ -451,7 +462,7 @@ export default function CookieJarConfigDetails() {
                           {config.withdrawalOption === "Fixed" && config.fixedAmount && (
                             <span className="block text-xs text-[#ff5e14]">
                               {config.currency === "0x0000000000000000000000000000000000000003"
-                                ? Number(formatUnits(config.fixedAmount || BigInt(0), 18)).toFixed(4) + " ETH"
+                                ? Number(formatUnits(config.fixedAmount || BigInt(0), 18)).toFixed(4) + " " + nativeCurrency.symbol
                                 : Number(formatUnits(config.fixedAmount || BigInt(0), tokenDecimals)).toFixed(4) + " " + tokenSymbol}
                             </span>
                           )}
@@ -520,9 +531,9 @@ export default function CookieJarConfigDetails() {
 
         {/* Right side - Jar Actions */}
         <div className="lg:col-span-9">
-        <Tabs defaultValue={isAdmin ? "admin" : "withdraw"} className="w-full">
+          <Tabs defaultValue={isAdmin ? "admin" : "withdraw"} className="w-full">
             <TabsList className="mb-6 bg-[#fff8f0] p-1 w-full">
-            {isAdmin && (
+              {isAdmin && (
                 <TabsTrigger
                   value="admin"
                   className="data-[state=active]:bg-white data-[state=active]:text-[#ff5e14] data-[state=active]:shadow-sm text-[#4a3520] flex-1"
@@ -584,8 +595,8 @@ export default function CookieJarConfigDetails() {
                           id="fundAmount"
                           type="text"
                           placeholder={
-                            config.currency === "0x0000000000000000000000000000000000000003" 
-                              ? "0.1 ETH" 
+                            config.currency === "0x0000000000000000000000000000000000000003"
+                              ? `0.1 ${nativeCurrency.symbol}`
                               : `1${"." + "0".repeat(tokenDecimals > 0 ? 0 : tokenDecimals)} ${tokenSymbol || "Tokens"}`
                           }
                           value={amount}

@@ -5,6 +5,7 @@ import type { Address } from "viem"
 
 // Import token utilities
 import { ETH_ADDRESS, useTokenInfo, formatTokenAmount } from "@/lib/utils/token-utils"
+import { formatAddress } from "@/lib/utils/format"
 
 // Export the Withdrawal interface so it can be imported elsewhere
 export interface Withdrawal {
@@ -18,7 +19,7 @@ interface WithdrawalHistorySectionProps {
   tokenAddress?: Address // New prop to specify token address
 }
 
-export const WithdrawalHistorySection: React.FC<WithdrawalHistorySectionProps> = ({ 
+export const WithdrawalHistorySection: React.FC<WithdrawalHistorySectionProps> = ({
   pastWithdrawals = [],
   tokenAddress = ETH_ADDRESS // Default to ETH if not provided
 }) => {
@@ -48,7 +49,7 @@ export const WithdrawalHistorySection: React.FC<WithdrawalHistorySectionProps> =
                 <div>
                   <p className="font-medium text-[#3c2a14]">
                     <span className="text-[#3c2a14]">Recipient:</span>{" "}
-                    <span className="text-[#8b7355]">{withdrawal.recipient || "No withdrawal address provided"}</span>
+                    <span className="text-[#8b7355]">{withdrawal.recipient ? formatAddress(withdrawal.recipient) : "No withdrawal address provided"}</span>
                   </p>
                 </div>
               </div>

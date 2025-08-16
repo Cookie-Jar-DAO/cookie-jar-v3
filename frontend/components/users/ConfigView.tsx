@@ -12,6 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Coins, ArrowDownToLine } from "lucide-react"
+import { useChainId } from 'wagmi'
+import { getNativeCurrency } from '@/config/supported-networks'
 
 interface ConfigViewProps {
   config: any // Ideally this would be more specifically typed
@@ -35,6 +37,9 @@ export const ConfigView: React.FC<ConfigViewProps> = ({
   setAmount,
   onSubmit,
 }) => {
+  const chainId = useChainId();
+  const nativeCurrency = getNativeCurrency(chainId);
+
   // State management
   const [withdrawAmount, setWithdrawAmount] = useState<string>("")
   const [withdrawPurpose, setWithdrawPurpose] = useState<string>("")
@@ -99,16 +104,16 @@ export const ConfigView: React.FC<ConfigViewProps> = ({
   const formattedBalance = useMemo(() => {
     if (!config.balance) return "0"
 
-    // Format the balance based on whether it's ETH or a token
+    // Format the balance based on whether it's native currency or a token
     if (config.currency === "0x0000000000000000000000000000000000000003") {
-      // For ETH, convert from wei to ETH
-      const ethBalance = Number(config.balance) / 1e18
-      return ethBalance.toFixed(4) + " ETH"
+      // For native currency, convert from wei to native units
+      const nativeBalance = Number(config.balance) / 1e18
+      return nativeBalance.toFixed(4) + " " + nativeCurrency.symbol
     } else {
       // For tokens, just display the raw value
       return config.balance.toString() + " Tokens"
     }
-  }, [config.balance, config.currency])
+  }, [config.balance, config.currency, nativeCurrency.symbol])
 
   return (
     <div className="space-y-8">
@@ -132,7 +137,7 @@ export const ConfigView: React.FC<ConfigViewProps> = ({
                   id="fundAmount"
                   type="text"
                   placeholder={
-                    config.currency === "0x0000000000000000000000000000000000000003" ? "0.1 ETH" : "1000 Tokens"
+                    config.currency === "0x0000000000000000000000000000000000000003" ? `0.1 ${nativeCurrency.symbol}` : "1000 Tokens"
                   }
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}

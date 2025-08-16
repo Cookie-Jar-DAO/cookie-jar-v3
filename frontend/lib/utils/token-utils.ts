@@ -1,7 +1,9 @@
 import { useReadContracts } from 'wagmi';
-import { parseUnits, formatUnits, erc20Abi,isAddress} from 'viem';
-import type {Address} from 'viem';
+import { parseUnits, formatUnits, erc20Abi, isAddress } from 'viem';
+import type { Address } from 'viem';
 import { log } from 'console';
+import { useChainId } from 'wagmi';
+import { getNativeCurrency } from '@/config/supported-networks';
 
 // Known address constants
 export const ETH_ADDRESS = "0x0000000000000000000000000000000000000003";
@@ -12,8 +14,10 @@ export const ETH_ADDRESS = "0x0000000000000000000000000000000000000003";
  * @returns Token information including symbol, decimals, and error states
  */
 export function useTokenInfo(tokenAddress: Address) {
-  const isERC20 = isAddress(tokenAddress)  && tokenAddress !== ETH_ADDRESS;
-  
+  const chainId = useChainId();
+  const nativeCurrency = getNativeCurrency(chainId);
+  const isERC20 = isAddress(tokenAddress) && tokenAddress !== ETH_ADDRESS;
+
   const { data: tokenInfo } = useReadContracts({
     contracts: [
       {
@@ -32,11 +36,11 @@ export function useTokenInfo(tokenAddress: Address) {
     },
   });
 
-  // For ETH, use default values
-  if (tokenAddress===ETH_ADDRESS) {
+  // For native currency, use chain-specific values
+  if (tokenAddress === ETH_ADDRESS) {
     return {
-      symbol: "ETH",
-      decimals: 18,
+      symbol: nativeCurrency.symbol,
+      decimals: nativeCurrency.decimals,
       isERC20: false,
       isEth: true,
       error: false,
@@ -82,8 +86,8 @@ export function useTokenInfo(tokenAddress: Address) {
  * @returns Formatted amount string with symbol
  */
 export function formatTokenAmount(
-  amount: bigint | undefined, 
-  decimals: number, 
+  amount: bigint | undefined,
+  decimals: number,
   symbol: string,
   maxDecimals: number = 4
 ) {
@@ -119,7 +123,7 @@ export function checkDecimals(value: string, tokenDecimals: number): { value: st
   if (value === "") {
     return { value, error: null };
   }
-  
+
   if (/^[0-9]*\.?[0-9]*$/.test(value)) {
     // Validate that the number of decimal places doesn't exceed the token's decimal precision
     const parts = value.split('.');
@@ -130,12 +134,12 @@ export function checkDecimals(value: string, tokenDecimals: number): { value: st
       return { value, error: null };
     } else {
       // Too many decimal places
-      return { 
-        value: null, 
-        error: `You entered too many decimal places. This token only allows ${tokenDecimals} decimals.` 
+      return {
+        value: null,
+        error: `You entered too many decimal places. This token only allows ${tokenDecimals} decimals.`
       };
     }
   }
-  
+
   return { value: null, error: "Please enter a valid number." };
 }

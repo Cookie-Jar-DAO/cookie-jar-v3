@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useRouter } from "next/navigation"
 import { useAccount, useChainId } from "wagmi"
 import { getNetworkName } from "@/lib/utils/network-utils"
+import { getNativeCurrency } from '@/config/supported-networks'
 import { useState, useEffect, useMemo } from "react"
 import { BackButton } from "@/components/design/back-button"
 import { Badge } from "@/components/ui/badge"
@@ -23,6 +24,7 @@ export default function CookieJarPage() {
   const router = useRouter()
   const { isConnected, address: userAddress } = useAccount()
   const chainId = useChainId()
+  const nativeCurrency = getNativeCurrency(chainId)
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const jarsPerPage = 9
@@ -44,7 +46,7 @@ export default function CookieJarPage() {
     if (filterOption === "whitelisted") {
       filtered = filtered.filter((jar) => whitelistedJars[jar.jarAddress])
     }
-    
+
     // Apply admin filter if selected
     if (filterOption === "admin") {
       filtered = filtered.filter((jar) => adminJars[jar.jarAddress])
@@ -75,7 +77,7 @@ export default function CookieJarPage() {
 
       setIsCheckingWhitelist(true)
       setIsCheckingAdmin(true)
-      
+
       const whitelistStatuses: Record<string, boolean> = { ...whitelistedJars }
       const adminStatuses: Record<string, boolean> = { ...adminJars }
 
@@ -115,11 +117,11 @@ export default function CookieJarPage() {
           // Check whitelist role
           const hasWhitelistRole = await contract.hasRole(JAR_WHITELISTED, userAddress)
           whitelistStatuses[jar.jarAddress] = hasWhitelistRole
-          
+
           // Check admin role
           const hasAdminRole = await contract.hasRole(JAR_OWNER_ROLE, userAddress)
           adminStatuses[jar.jarAddress] = hasAdminRole
-          
+
         } catch (error) {
           console.error(`Error checking roles for ${jar.jarAddress}:`, error)
           whitelistStatuses[jar.jarAddress] = false
@@ -226,7 +228,7 @@ export default function CookieJarPage() {
                     className="jar-card bg-white border-none shadow-md hover:shadow-xl transition-all duration-300 relative overflow-hidden before:content-[''] before:absolute before:bottom-0 before:left-0 before:w-full before:h-1 before:bg-[#ff5e14]"
                   >
                     {isWhitelisted && (
-                      <Badge 
+                      <Badge
                         variant="outline"
                         className="absolute top-2 left-2 z-10 flex items-center gap-1 bg-[#e6f7e6] text-[#2e7d32] border-[#2e7d32] px-3 py-1"
                       >
@@ -235,7 +237,7 @@ export default function CookieJarPage() {
                       </Badge>
                     )}
                     {isAdmin && (
-                      <Badge 
+                      <Badge
                         variant="outline"
                         className="absolute top-2 right-8 z-10 flex items-center gap-1 bg-[#fce4ec] text-[#c2185b] border-[#c2185b] px-3 py-1"
                       >
@@ -268,7 +270,7 @@ export default function CookieJarPage() {
                         <div className="flex justify-between items-center">
                           <span className="text-[#8b7355] font-medium">Currency:</span>
                           <span className="text-[#3c2a14] truncate max-w-[180px] text-right">
-                            {jar.currency === "0x0000000000000000000000000000000000000003" ? "ETH" : jar.currency}
+                            {jar.currency === "0x0000000000000000000000000000000000000003" ? nativeCurrency.symbol : jar.currency}
                           </span>
                         </div>
                       </div>

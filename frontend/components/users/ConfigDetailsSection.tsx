@@ -7,12 +7,17 @@ import { ConfigItem } from "./ConfigItem"
 import { formatEther } from "viem"
 import { formatTime, formatValue, formatAddress } from "../../utils"
 import { CountdownTimer } from "./CountdownTimer" // adjust path as needed
+import { useChainId } from 'wagmi'
+import { getNativeCurrency } from '@/config/supported-networks'
 
 interface ConfigDetailsSectionProps {
   config: any // Ideally this would be more specifically typed
 }
 
 export const ConfigDetailsSection: React.FC<ConfigDetailsSectionProps> = ({ config }) => {
+  const chainId = useChainId();
+  const nativeCurrency = getNativeCurrency(chainId);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <ConfigItem label="Access Type" value={formatValue(config.accessType)} highlight />
@@ -22,7 +27,7 @@ export const ConfigDetailsSection: React.FC<ConfigDetailsSectionProps> = ({ conf
         label="Fixed Amount"
         value={
           config.currency === "0x0000000000000000000000000000000000000003"
-            ? `${formatEther(BigInt(config.fixedAmount))} ETH`
+            ? `${formatEther(BigInt(config.fixedAmount))} ${nativeCurrency.symbol}`
             : `${formatValue(config.fixedAmount)} Tokens`
         }
       />
@@ -30,7 +35,7 @@ export const ConfigDetailsSection: React.FC<ConfigDetailsSectionProps> = ({ conf
         label="Currency"
         value={
           config.currency === "0x0000000000000000000000000000000000000003"
-            ? "ETH (Native)"
+            ? `${nativeCurrency.symbol} (Native)`
             : formatAddress(config.currency)
         }
         highlight
@@ -53,9 +58,8 @@ export const ConfigDetailsSection: React.FC<ConfigDetailsSectionProps> = ({ conf
       <div className="flex flex-col gap-1">
         <span className="text-sm text-muted-foreground">Whitelisted</span>
         <span
-          className={`text-base font-medium break-words px-3 py-1 rounded-md text-white ${
-            config.whitelist ? "bg-green-500" : "bg-red-500"
-          }`}
+          className={`text-base font-medium break-words px-3 py-1 rounded-md text-white ${config.whitelist ? "bg-green-500" : "bg-red-500"
+            }`}
         >
           {config.whitelist ? "You are whitelisted" : "You are not whitelisted"}
         </span>

@@ -67,7 +67,7 @@ export default function CreateCookieJarForm() {
   const [metadata, setMetadata] = useState("")
   const { isConnected, address } = useAccount()
   const chainId = useChainId()
-  
+
   // Form validation errors
   const [formErrors, setFormErrors] = useState<{
     network?: string;
@@ -87,10 +87,10 @@ export default function CreateCookieJarForm() {
 
   // Currency type state
   const [currencyType, setCurrencyType] = useState<"eth" | "token">("eth")
-  
+
   // Token information using the useTokenInfo hook
   const { symbol: tokenSymbol, decimals: tokenDecimals, isERC20, error: tokenError, errorMessage: tokenErrorMessage } = useTokenInfo(
-     supportedCurrency 
+    supportedCurrency
   )
 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -99,7 +99,7 @@ export default function CreateCookieJarForm() {
   const [isFormError, setIsFormError] = useState<boolean>(false)
 
   // Get the factory address for the current chain
-  const factoryAddress = chainId 
+  const factoryAddress = chainId
     ? contractAddresses.cookieJarFactory[chainId] : undefined
 
   const {
@@ -141,7 +141,7 @@ export default function CreateCookieJarForm() {
 
     try {
       if (isEthCurrency) {
-        // For ETH, convert from ETH to wei
+        // For native currency, convert from human-readable to smallest unit
         return parseEther(amountStr)
       } else {
         // For tokens, ensure we have valid token data before attempting to parse
@@ -207,8 +207,8 @@ export default function CreateCookieJarForm() {
         if (!factoryAddress) {
           throw new Error(`No contract address found for the current network (Chain ID: ${chainId}). Please switch to a supported network.`)
         }
-        
-       
+
+
         writeContract({
           address: factoryAddress,
           abi: cookieJarFactoryAbi,
@@ -283,7 +283,7 @@ export default function CreateCookieJarForm() {
 
         // If we couldn't find the address, fall back to the jars listing page
         console.log("Could not extract jar address, redirecting to jars page")
-        
+
         // Fallback to jars listing
         setTimeout(() => {
           router.push("/jars")
@@ -291,7 +291,7 @@ export default function CreateCookieJarForm() {
 
       } catch (error) {
         console.error("Error extracting jar address:", error)
-        
+
         // Fallback to jars listing
         setTimeout(() => {
           router.push("/jars")
@@ -304,7 +304,7 @@ export default function CreateCookieJarForm() {
     }
   }, [txConfirmed, receipt, router])
 
-  
+
   // Update the useEffect for create errors to show the error message
   useEffect(() => {
     if (createError) {
@@ -325,7 +325,7 @@ export default function CreateCookieJarForm() {
         if (!selectedNetwork) {
           newErrors.network = "Please select a network";
         }
-        
+
         // Validate owner address if not the connected address
         if (jarOwnerAddress !== address) {
           if (!jarOwnerAddress || !isAddress(jarOwnerAddress)) {
@@ -398,7 +398,7 @@ export default function CreateCookieJarForm() {
       }));
     }
 
-    return { 
+    return {
       isValid: Object.keys(newErrors).length === 0,
       errors: newErrors
     };
@@ -409,14 +409,14 @@ export default function CreateCookieJarForm() {
     // Validate each step
     const step1Result = validateStep(1);
     const step3Result = validateStep(3);
-    
+
     // Combine errors
     const allErrors = {
       ...step1Result.errors,
       ...step3Result.errors
     };
-    
-    return { 
+
+    return {
       isValid: step1Result.isValid && step3Result.isValid,
       errors: allErrors
     };
@@ -434,7 +434,7 @@ export default function CreateCookieJarForm() {
       setIsFormError(true);
       return;
     }
-    
+
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     }
@@ -447,13 +447,13 @@ export default function CreateCookieJarForm() {
   }
 
   // Helper to format placeholder and description based on currency type
-  const getAmountPlaceholder = isEthCurrency ? "0.1 ETH" : "1000 tokens"
+  const getAmountPlaceholder = isEthCurrency ? `0.1 ${tokenSymbol}` : "1000 tokens"
   const getAmountDescription = isEthCurrency
-    ? "Fixed withdrawal amount in ETH (will be converted to wei)"
+    ? `Fixed withdrawal amount in ${tokenSymbol} (will be converted to smallest unit)`
     : "Fixed withdrawal amount in token units"
 
   const getMaxWithdrawalDescription = isEthCurrency
-    ? "Maximum withdrawal amount in ETH (will be converted to wei)"
+    ? `Maximum withdrawal amount in ${tokenSymbol} (will be converted to smallest unit)`
     : "Maximum withdrawal amount in token units"
 
   // Get step title based on current step
@@ -491,8 +491,8 @@ export default function CreateCookieJarForm() {
 
                   if (!connected) {
                     return (
-                      <Button 
-                        onClick={openConnectModal} 
+                      <Button
+                        onClick={openConnectModal}
                         className="w-full bg-white border border-gray-300 text-[#3c2a14] hover:bg-gray-50"
                       >
                         Connect Wallet to Select Network
@@ -502,25 +502,25 @@ export default function CreateCookieJarForm() {
 
                   if (chain?.unsupported) {
                     return (
-                      <Button 
-                        onClick={openChainModal} 
-                        variant="destructive" 
+                      <Button
+                        onClick={openChainModal}
+                        variant="destructive"
                         className="w-full"
                       >
                         Switch to Supported Network
                       </Button>
                     )
                   }
-                  
+
                   return (
-                    <Button 
+                    <Button
                       onClick={(e) => {
                         // Prevent event propagation
                         e.stopPropagation();
                         e.preventDefault();
                         openChainModal();
-                      }} 
-                      variant="outline" 
+                      }}
+                      variant="outline"
                       className="w-full flex items-center justify-between bg-white"
                     >
                       <div className="flex items-center gap-2 text-gray-500">
@@ -552,7 +552,7 @@ export default function CreateCookieJarForm() {
             </div>
 
 
-            
+
             {/* Jar Owner */}
             <div className="space-y-2">
               <Label htmlFor="jarOwner" className="text-[#3c2a14] text-base">
@@ -602,13 +602,13 @@ export default function CreateCookieJarForm() {
                   <SelectValue placeholder="Select currency type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="eth">ETH (Native)</SelectItem>
+                  <SelectItem value="eth">{tokenSymbol} (Native)</SelectItem>
                   <SelectItem value="token">ERC20 Token</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-[#8b7355]">
                 {currencyType === "eth"
-                  ? "Use native ETH as the currency for this jar"
+                  ? `Use native ${tokenSymbol} as the currency for this jar`
                   : "Use an ERC20 token as the currency for this jar"}
               </p>
             </div>
@@ -651,7 +651,7 @@ export default function CreateCookieJarForm() {
                 onChange={(e) => {
                   const value = e.target.value;
                   setMetadata(value);
-                  
+
                   // Validate description length in real-time
                   if (value.length > 0 && value.length < 10) {
                     setFormErrors(prev => ({
@@ -774,7 +774,7 @@ export default function CreateCookieJarForm() {
         return (
           <div className="space-y-6">
 
-            
+
             {/* Withdrawal Option */}
             <div className="space-y-2">
               <Label htmlFor="withdrawalOption" className="text-[#3c2a14] text-base">
@@ -817,7 +817,7 @@ export default function CreateCookieJarForm() {
                       <AlertCircle className="h-4 w-4 mr-1" /> {formErrors.fixedAmount}
                     </p>
                   )}
-                 
+
                 </div>
               </div>
             )}
@@ -844,7 +844,7 @@ export default function CreateCookieJarForm() {
                       <AlertCircle className="h-4 w-4 mr-1" /> {formErrors.maxWithdrawal}
                     </p>
                   )}
-                  
+
                 </div>
               </div>
             )}
@@ -940,7 +940,7 @@ export default function CreateCookieJarForm() {
                   {jarOwnerAddress === address ? "Your wallet" : jarOwnerAddress}
                 </li>
                 <li className="text-[#3c2a14]">
-                  <span className="font-medium">Currency:</span> {isEthCurrency ? "ETH (Native)" : tokenSymbol}
+                  <span className="font-medium">Currency:</span> {isEthCurrency ? `${tokenSymbol} (Native)` : tokenSymbol}
                 </li>
                 <li className="text-[#3c2a14]">
                   <span className="font-medium">Access Type:</span>{" "}
@@ -952,7 +952,7 @@ export default function CreateCookieJarForm() {
                 </li>
                 <li className="text-[#3c2a14]">
                   <span className="font-medium">Amount:</span>{" "}
-                  {withdrawalOption === WithdrawalTypeOptions.Fixed ? `${fixedAmount} ${isERC20 ? tokenSymbol : "ETH"}`: `Up to ${maxWithdrawal} ${isERC20 ? tokenSymbol : "ETH"}`}
+                  {withdrawalOption === WithdrawalTypeOptions.Fixed ? `${fixedAmount} ${isERC20 ? tokenSymbol : tokenSymbol}` : `Up to ${maxWithdrawal} ${isERC20 ? tokenSymbol : tokenSymbol}`}
                 </li>
                 <li className="text-[#3c2a14]">
                   <span className="font-medium">Interval:</span> {(Number(withdrawalInterval) / 86400).toString()} days
@@ -994,13 +994,12 @@ export default function CreateCookieJarForm() {
             <React.Fragment key={step}>
               {step > 1 && <div className={`w-12 h-[2px] ${currentStep >= step ? "bg-[#ff5e14]" : "bg-gray-300"}`} />}
               <div
-                className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                  currentStep === step
+                className={`flex items-center justify-center w-10 h-10 rounded-full ${currentStep === step
+                  ? "bg-[#ff5e14] text-white"
+                  : currentStep > step
                     ? "bg-[#ff5e14] text-white"
-                    : currentStep > step
-                      ? "bg-[#ff5e14] text-white"
-                      : "bg-gray-300 text-gray-600"
-                }`}
+                    : "bg-gray-300 text-gray-600"
+                  }`}
               >
                 {step}
               </div>
@@ -1098,7 +1097,7 @@ export default function CreateCookieJarForm() {
                     {jarOwnerAddress === address ? "Your wallet" : jarOwnerAddress}
                   </li>
                   <li className="text-[#3c2a14]">
-                    <span className="font-medium">Currency:</span> {isEthCurrency ? "ETH (Native)" : `${tokenSymbol}`}
+                    <span className="font-medium">Currency:</span> {isEthCurrency ? `${tokenSymbol} (Native)` : `${tokenSymbol}`}
                   </li>
                   <li className="text-[#3c2a14]">
                     <span className="font-medium">Access Type:</span>{" "}
@@ -1110,9 +1109,9 @@ export default function CreateCookieJarForm() {
                   </li>
                   <li className="text-[#3c2a14]">
                     <span className="font-medium">Amount:</span>{" "}
-                    {withdrawalOption === WithdrawalTypeOptions.Fixed 
-                      ? `${fixedAmount} ${isERC20 ? tokenSymbol : "ETH"}` 
-                      : `Up to ${maxWithdrawal} ${isERC20 ? tokenSymbol : "ETH"}`}
+                    {withdrawalOption === WithdrawalTypeOptions.Fixed
+                      ? `${fixedAmount} ${isERC20 ? tokenSymbol : tokenSymbol}`
+                      : `Up to ${maxWithdrawal} ${isERC20 ? tokenSymbol : tokenSymbol}`}
                   </li>
                   <li className="text-[#3c2a14]">
                     <span className="font-medium">Interval:</span> {(Number(withdrawalInterval) / 86400).toString()}{" "}

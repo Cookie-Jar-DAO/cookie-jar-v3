@@ -13,6 +13,8 @@ import { ArrowUpRight, Copy, ExternalLink, User, Clock, Cookie } from "lucide-re
 import { shortenAddress } from "@/lib/utils/utils"
 import { getExplorerAddressUrl, getNetworkName } from "@/lib/utils/network-utils"
 import { BackButton } from "@/components/design/back-button"
+import { contractAddresses } from "@/config/supported-networks"
+import { getNativeCurrency } from '@/config/supported-networks'
 
 export default function ProfilePage() {
   const { address, isConnected } = useAccount()
@@ -20,6 +22,7 @@ export default function ProfilePage() {
   const router = useRouter()
   const { cookieJarsData, isLoading, error } = useCookieJarData()
   const [mounted, setMounted] = useState(false)
+  const nativeCurrency = getNativeCurrency(chainId)
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -185,7 +188,7 @@ export default function ProfilePage() {
                       <div className="flex justify-between items-center">
                         <span className="text-[#8b7355] font-medium">Currency:</span>
                         <span className="text-[#3c2a14]">
-                          {jar.currency === "0x0000000000000000000000000000000000000003" ? "ETH (Native)" : "ERC20"}
+                          {jar.currency === "0x0000000000000000000000000000000000000003" ? `${nativeCurrency.symbol} (Native)` : "ERC20"}
                         </span>
                       </div>
                     </div>
